@@ -15,10 +15,13 @@ const THEME_COLORS = [
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null)
   
-  // YENİ: Kredi Bilgisi State'i 💰
+  // LOGIN STATE'LERİ (YENİ) 🔐
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  
+  // Kredi ve Diğer State'ler
   const [credits, setCredits] = useState<number | null>(null)
-
-  // FORM GİRİŞLERİ
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [eventDate, setEventDate] = useState('')
@@ -27,18 +30,13 @@ export default function Dashboard() {
   const [file, setFile] = useState<File | null>(null)
   const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
   const [uploading, setUploading] = useState(false)
-
-  // LİSTE VERİLERİ
   const [myEvents, setMyEvents] = useState<any[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
-  
-  // DETAYLAR
   const [guests, setGuests] = useState<any[]>([])
   const [photos, setPhotos] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
-  
   const [origin, setOrigin] = useState('')
 
   useEffect(() => {
@@ -47,24 +45,47 @@ export default function Dashboard() {
       setSession(session)
       if (session) {
         fetchMyEvents(session.user.id)
-        fetchCredits(session.user.id) // Krediyi de çek
+        fetchCredits(session.user.id)
       }
     })
   }, [])
+
+  // YENİ GİRİŞ FONKSİYONU 🔐
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault() // Sayfa yenilenmesini engelle
+    setLoginLoading(true)
+
+    // 1. Giriş Yapmayı Dene
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    })
+
+    if (error) {
+      // 2. Hata verirse (Kullanıcı yoksa), Kayıt Olmayı Dene (MVP Kolaylığı)
+      console.log("Giriş başarısız, kayıt deneniyor...", error.message)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: loginEmail,
+        password: loginPassword,
+      })
+      
+      if (signUpError) {
+        alert('Giriş Hatası: ' + error.message) // İlk hatayı göster
+      } else {
+        alert('Yeni hesap oluşturuldu ve giriş yapıldı!')
+        // Sayfa otomatik yenilenir session state değişince
+      }
+    }
+    setLoginLoading(false)
+  }
 
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     if (data) setMyEvents(data)
   }
 
-  // YENİ: Kredi Çekme Fonksiyonu 💰
   const fetchCredits = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', userId)
-      .single()
-    
+    const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
     if (data) setCredits(data.credits)
   }
 
@@ -91,20 +112,9 @@ export default function Dashboard() {
     }
   }
 
-  const handleTestLogin = async () => {
-    const email = 'test@example.com'; const password = 'password123'
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) await supabase.auth.signUp({ email, password })
-    // Giriş sonrası sayfa yenilenince trigger ile kredi zaten oluşmuş olacak
-  }
-
   const createEvent = async () => {
     if (!title || !slug || !eventDate) return alert('Zorunlu alanları doldurun')
-    
-    // YENİ: Kredi Kontrolü 🛑
-    if (credits !== null && credits < 1) {
-        return alert('Yetersiz Kredi! Lütfen kredi yükleyin.')
-    }
+    if (credits !== null && credits < 1) return alert('Yetersiz Kredi! Lütfen kredi yükleyin.')
 
     setUploading(true)
     let uploadedImageUrl = null
@@ -127,12 +137,9 @@ export default function Dashboard() {
     if (error) {
       alert('Hata: ' + error.message)
     } else {
-      // YENİ: Kredi Düşme İşlemi (Frontend'de gösterim için, backend'de trigger yapılabilir ama şimdilik manuel düşelim)
-      // Not: Gerçek uygulamada bu işlem sunucuda (Postgres Function) yapılmalıdır.
       const newCredit = (credits || 0) - 1
       await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
       setCredits(newCredit)
-      
       alert(`Etkinlik Oluşturuldu! 1 Kredi harcandı. Kalan: ${newCredit}`)
       fetchMyEvents(session.user.id)
       setTitle(''); setSlug('')
@@ -140,28 +147,65 @@ export default function Dashboard() {
     setUploading(false)
   }
 
-  if (!session) return <div className="h-screen flex items-center justify-center"><button onClick={handleTestLogin} className="bg-indigo-600 text-white p-3 rounded">Admin Girişi</button></div>
+  // GİRİŞ EKRANI TASARIMI (YENİ) 🖥️
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+          <h1 className="text-2xl font-bold text-center mb-6 text-indigo-700">Cereget Admin</h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">E-Posta</label>
+              <input 
+                type="email" 
+                required
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@cereget.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
+              <input 
+                type="password" 
+                required
+                className="w-full border p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••"
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={loginLoading}
+              className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 transition disabled:opacity-50"
+            >
+              {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+            </button>
+          </form>
+          <p className="text-xs text-gray-400 text-center mt-4">Hesabınız yoksa otomatik oluşturulur.</p>
+        </div>
+      </div>
+    )
+  }
 
+  // DASHBOARD İÇERİĞİ (DEĞİŞMEDİ)
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-sans">
       <div className="max-w-6xl mx-auto mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Cereget Dashboard</h1>
-        
-        {/* YENİ: KREDİ KARTI 💳 */}
         <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-200 flex items-center gap-3">
             <div className="bg-yellow-100 text-yellow-700 p-2 rounded-full">💰</div>
             <div>
                 <p className="text-xs text-gray-500 uppercase font-bold">Kredilerim</p>
                 <p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p>
             </div>
-            <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold ml-2 hover:bg-indigo-100">
-                + Yükle
-            </button>
+            <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold ml-2 hover:bg-indigo-100" onClick={() => supabase.auth.signOut()}>Çıkış Yap</button>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        
         {/* SOL: YENİ ETKİNLİK FORMU */}
         <div className="md:col-span-1 bg-white p-6 rounded-xl shadow h-fit sticky top-8">
           <h2 className="text-xl font-bold mb-4" style={{ color: themeColor }}>Yeni Etkinlik <span className="text-xs font-normal text-gray-400 ml-2">(-1 Kredi)</span></h2>
@@ -180,7 +224,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SAĞ: ETKİNLİK LİSTESİ (AYNI) */}
+        {/* SAĞ: ETKİNLİK LİSTESİ */}
         <div className="md:col-span-2 space-y-4">
             {myEvents.map(event => (
                 <div key={event.id} className="bg-white p-4 rounded shadow border-l-4" style={{ borderColor: event.design_settings?.theme }}>
