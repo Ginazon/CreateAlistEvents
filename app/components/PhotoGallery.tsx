@@ -16,6 +16,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }, [eventId])
 
   // Fotoğrafları, Beğeni Sayılarını ve Yorumları Çekme (JOIN İşlemi)
+  // FOTOĞRAFLARI, BEĞENİ VE YORUMLARI ÇEKME (Filtre Kaldırıldı)
   const fetchPhotos = async () => {
     const { data, error } = await supabase
       .from('photos')
@@ -23,18 +24,17 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
         *,
         photo_likes (count),
         photo_comments (
-          id,
-          guest_email,
-          message,
-          created_at
+          id, guest_email, message, created_at, status
         )
       `)
       .eq('event_id', eventId)
+      // Fotoğrafları yayınla (bu kural kalsın)
       .eq('status', 'approved')
+      // !!! BURADAN status filtrelemesini kaldırdık. Artık tüm yorumlar görünür.
       .order('created_at', { ascending: false })
     
     if (data) {
-       // Yorumları tarihe göre sıralayalım (Eskiden yeniye)
+       // Yorumları tarihe göre sıralayalım
        const sortedData = data.map((photo: any) => ({
          ...photo,
          photo_comments: photo.photo_comments.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())

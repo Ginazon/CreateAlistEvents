@@ -1,6 +1,6 @@
 # CEREGET - PROJECT MASTER CONTEXT
 Tarih: 07.12.2025
-Durum: v1.3 - Sosyal Özellikler (Beğeni/Yorum) Eklendi
+Durum: v1.4 - Ticari Entegrasyon (Etsy/Make.com) ve Yasal Altyapı Eklendi
 
 ## 1. TEKNOLOJİ STACK'İ
 - **Frontend:** Next.js 15 (App Router), TypeScript, Tailwind CSS
@@ -15,6 +15,7 @@ Durum: v1.3 - Sosyal Özellikler (Beğeni/Yorum) Eklendi
 - id (UUID, PK) -> auth.users.id
 - email (TEXT)
 - credits (INT) -> Trigger ile otomatik oluşur. RLS: Update izni açık.
+- is_premium (BOOLEAN) -> Sınırsız paket için eklenebilir.
 
 ### Tablo: `events` (Etkinlikler)
 - id (UUID, PK), user_id (FK), title, slug (otomatik), event_date, location_name, location_url
@@ -31,35 +32,46 @@ Durum: v1.3 - Sosyal Özellikler (Beğeni/Yorum) Eklendi
 - id, event_id, guest_email, image_url, status
 * **Kural:** Herkes yükleyebilir, sadece admin silebilir.
 
-### Tablo: `photo_likes` (YENİ - Beğeniler)
+### Tablo: `photo_likes` (Beğeniler)
 - id (UUID), photo_id (FK), guest_email (TEXT)
-- UNIQUE(photo_id, guest_email) -> Bir kişi bir fotoyu 1 kere beğenebilir.
+- UNIQUE(photo_id, guest_email)
 * **Kural:** Public INSERT/DELETE açık.
 
-### Tablo: `photo_comments` (YENİ - Yorumlar)
+### Tablo: `photo_comments` (Yorumlar)
 - id (UUID), photo_id (FK), guest_email (TEXT), message (TEXT), created_at
+- **status (TEXT):** Moderasyon için eklenmiştir (`pending`, `approved`, `rejected`). Şu an için filtre kaldırıldı.
 * **Kural:** Public INSERT/SELECT açık.
+
+### Tablo: `etsy_products` (YENİ - Ürün Kataloğu)
+- listing_id (TEXT, PK) -> Etsy Ürün Numarası
+- name (TEXT)
+- credits (INT) -> Verilecek Kredi Miktarı
+- is_unlimited (BOOLEAN) -> Sınırsız paket mi?
+* **Kural:** Sadece admin erişebilir.
 
 ## 3. SAYFA YAPISI
 
 ### `/app/page.tsx` (Dashboard)
 - Etkinlik Listesi, QR Kod, Kredi Gösterimi.
 - Yönetim Paneli: Davetli Listesi + Galeri Moderasyonu (Silme).
+- **Yasal Linkler:** Footer'da `/legal/terms` ve `/legal/privacy` linkleri mevcut.
 
-### `/app/create/page.tsx` (Tasarım Stüdyosu - Split View)
-- **Sol:** Editör (Form, Font/Renk/Boyut Seçici, Dosya Yükleme).
-- **Sağ:** Canlı iPhone Önizlemesi (Mockup).
-- **Fontlar:** Inter, Playfair Display, Dancing Script, Merriweather, Montserrat.
+### `/app/create/page.tsx` (Tasarım Stüdyosu)
+- Split View (Editör / Önizleme).
 
 ### `/app/[slug]/page.tsx` (Misafir Deneyimi)
-- **Tasarım:** Dinamik Font/Renk render edilir.
-- **Kilit:** Giriş yapmamışsa galeri kilitli.
-- **Sosyal Galeri (`PhotoGallery.tsx`):**
-  - Fotoğraf Yükleme (Hızlı).
-  - Beğeni (Kalp) Sayacı.
-  - Yorum Yapma ve Listeleme.
+- Dinamik Tasarım.
+- Kilitli Galeri.
+- Sosyal Galeri (Yükleme, Beğeni, Yorumlar).
+
+### `/app/legal/terms/page.tsx`
+- Kullanım Şartları (Placeholder).
+
+### `/app/legal/privacy/page.tsx`
+- Gizlilik Politikası ve KVKK (Placeholder).
 
 ## 4. KRİTİK İŞ KURALLARI
-1. **Kredi:** Etkinlik oluştururken -1 düşer.
+1. **Kredi Tüketimi:** Etkinlik oluştururken -1 düşer.
 2. **Slug:** Türkçe karakterler temizlenir + Random ID eklenir.
-3. **Google Fonts:** `layout.tsx` içinde tanımlı.
+3. **Etsy Webhook (Make.com):** Etsy satışı -> Vercel API (`/api/webhook/etsy`) -> Supabase Kredi Yükleme (Otomatik).
+4. **Yorum Moderasyonu:** Status filtresi kaldırılmıştır, tüm yorumlar anında yayınlanır.

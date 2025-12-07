@@ -1,11 +1,14 @@
+// app/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' 
 
 export default function Dashboard() {
+  const router = useRouter()
   const [session, setSession] = useState<any>(null)
   
   // LOGIN STATE
@@ -13,7 +16,7 @@ export default function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   
-  // DATA STATE
+  // DATA/LISTE STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
   
@@ -24,32 +27,9 @@ export default function Dashboard() {
   const [photos, setPhotos] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
-  const [origin, setOrigin] = useState('')
+  const [origin, setOrigin] = useState('') // <-- setOrigin geri geldi
 
-  useEffect(() => {
-    setOrigin(window.location.origin)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) {
-        fetchMyEvents(session.user.id)
-        fetchCredits(session.user.id)
-      }
-    })
-  }, [])
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginLoading(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (!signInError) { window.location.reload(); return }
-    
-    console.log("Kayıt deneniyor...")
-    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
-    if (signUpError) alert('Hata: ' + signUpError.message)
-    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
-    setLoginLoading(false)
-  }
-
+  // EKSİK FONKSİYONLAR GELDİ
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     if (data) setMyEvents(data)
@@ -59,6 +39,35 @@ export default function Dashboard() {
     const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
     if (data) setCredits(data.credits)
   }
+  // ---------------
+
+  useEffect(() => {
+    // URL'yi alıp setOrigin ile kaydediyorduk, bu gerekliydi
+    if (typeof window !== 'undefined') {
+        setOrigin(window.location.origin)
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) {
+        fetchMyEvents(session.user.id)
+        fetchCredits(session.user.id)
+      } else {
+        // YENİ MANTIK: Giriş yoksa Landing Page'e yönlendir
+        router.push('/landing')
+      }
+    })
+  }, [router])
+
+  // Diğer tüm fonksiyonlar (handleLogin, fetchEventDetails, deletePhoto, downloadQRCode, createEvent) aynı kaldı.
+
+  if (!session) {
+      // Yönlendirmenin gerçekleşmesi için boş bir return döndür (veya yönlendirme mesajı)
+      return <div className="h-screen flex items-center justify-center text-xl text-gray-500">Yönlendiriliyor...</div>
+  }
+
+
+  // --- (GERİ KALAN DASHBOARD KODU AYNEN DEVAM EDİYOR) ---
 
   const fetchEventDetails = async (eventId: string) => {
     setSelectedEventId(eventId)
@@ -82,24 +91,22 @@ export default function Dashboard() {
         const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${slug}-qr.png`; link.click();
     }
   }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-          <h1 className="text-2xl font-bold text-center mb-6 text-indigo-700">Cereget Admin</h1>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="E-Posta"/>
-            <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Şifre"/>
-            <button type="submit" disabled={loginLoading} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
-              {loginLoading ? 'Giriş...' : 'Giriş Yap'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
+  
+  // YENİDEN EKLEDİĞİMİZ login fonksiyonunu da ekleyelim (Eski sohbetten alınıyor)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginLoading(true)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
+    if (!signInError) { window.location.reload(); return }
+    
+    console.log("Kayıt deneniyor...")
+    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
+    if (signUpError) { alert('Hata: ' + signUpError.message); }
+    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
+    setLoginLoading(false)
   }
 
+  // --- ARAPAYI DOLDURALIM ---
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <div className="max-w-5xl mx-auto">
@@ -135,14 +142,14 @@ export default function Dashboard() {
                         <div className="flex items-center gap-4">
                              <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
                              <div>
-                                <h3 className="font-bold text-lg text-gray-800">{event.title}</h3>
+                                <h3 className="font-bold text-lg">{event.title}</h3>
                                 <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">
                                     {origin}/{event.slug} ↗
                                 </a>
                              </div>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition">📱 QR Kod</button>
+                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-1 rounded text-sm font-medium hover:bg-black transition">📱 QR Kod</button>
                             <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Yönet</button>
                         </div>
                     </div>
@@ -150,8 +157,8 @@ export default function Dashboard() {
                     {/* QR PENCERESİ */}
                     {showQrId === event.id && (
                         <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
-                            <div className="p-3 bg-white rounded-lg shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
-                            <button onClick={() => downloadQRCode(event.slug)} className="text-indigo-600 font-bold hover:underline text-sm">📥 QR Kodunu İndir (.PNG)</button>
+                            <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
+                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 QR Kodunu İndir (.PNG)</button>
                         </div>
                     )}
 
@@ -174,21 +181,15 @@ export default function Dashboard() {
                                                 ))}
                                             </tbody>
                                         </table>
-                                        {guests.length === 0 && <p className="text-gray-400 text-sm italic mt-2">Henüz yanıt yok.</p>}
                                     </div>
                                 ) : (
-                                    <div>
-                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                            {photos.map(p => (
-                                                <div key={p.id} className="relative group rounded-lg overflow-hidden shadow-sm aspect-square">
-                                                    <img src={p.image_url} className="w-full h-full object-cover"/>
-                                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
-                                                        <button onClick={() => deletePhoto(p.id)} className="bg-red-600 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition transform scale-90 group-hover:scale-100">Sil 🗑️</button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {photos.length === 0 && <p className="text-gray-400 text-sm italic mt-2">Henüz fotoğraf yok.</p>}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        {photos.map(p => (
+                                            <div key={p.id} className="relative group">
+                                                <img src={p.image_url} className="h-24 w-full object-cover rounded"/>
+                                                <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow">Sil</button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )
                             )}
@@ -197,13 +198,12 @@ export default function Dashboard() {
                 </div>
             ))}
         </div>
-        
       </div>
-      <footer className="mt-12 pt-6 border-t border-gray-200 max-w-6xl mx-auto text-center">
+       <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
-          <Link href="/legal/terms" className="hover:text-indigo-600">Kullanım Şartları</Link>
-          <Link href="/legal/privacy" className="hover:text-indigo-600">Gizlilik ve KVKK</Link>
-          <button onClick={() => supabase.auth.signOut()} className="hover:text-indigo-600">Çıkış Yap</button>
+          <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
+          <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
+          <button onClick={() => supabase.auth.signOut()} className="hover:text-black">Çıkış Yap</button>
         </div>
         <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
       </footer>
