@@ -51,32 +51,39 @@ export default function Dashboard() {
   }, [])
 
   // YENİ GİRİŞ FONKSİYONU 🔐
+  // GÜNCELLENMİŞ GİRİŞ FONKSİYONU (Sayfa Yenilemeli Versiyon) 🔄
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault() // Sayfa yenilenmesini engelle
+    e.preventDefault()
     setLoginLoading(true)
 
-    // 1. Giriş Yapmayı Dene
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // 1. Önce Giriş Yapmayı Dene
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
     })
 
-    if (error) {
-      // 2. Hata verirse (Kullanıcı yoksa), Kayıt Olmayı Dene (MVP Kolaylığı)
-      console.log("Giriş başarısız, kayıt deneniyor...", error.message)
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: loginEmail,
-        password: loginPassword,
-      })
-      
-      if (signUpError) {
-        alert('Giriş Hatası: ' + error.message) // İlk hatayı göster
-      } else {
-        alert('Yeni hesap oluşturuldu ve giriş yapıldı!')
-        // Sayfa otomatik yenilenir session state değişince
-      }
+    if (!signInError) {
+      // BAŞARILIYSA: Hiçbir şey sorma, direkt sayfayı yenile ve içeri al!
+      window.location.reload()
+      return
     }
-    setLoginLoading(false)
+
+    // 2. Eğer Giriş Hata Verdiyse (Muhtemelen kullanıcı yok), Kayıt Olmayı Dene
+    console.log("Giriş yapılamadı, kayıt deneniyor...")
+    
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: loginEmail,
+      password: loginPassword,
+    })
+    
+    if (signUpError) {
+      alert('İşlem Hatası: ' + signUpError.message)
+      setLoginLoading(false)
+    } else {
+      // KAYIT DA BAŞARILIYSA: Haber ver ve sayfayı yenile
+      alert('Hesap oluşturuldu ve giriş yapıldı! Yönlendiriliyorsunuz...')
+      window.location.reload()
+    }
   }
 
   const fetchMyEvents = async (userId: string) => {
