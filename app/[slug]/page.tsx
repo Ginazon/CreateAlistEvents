@@ -5,10 +5,11 @@ import { supabase } from '../lib/supabaseClient'
 import RsvpForm from '../components/RsvpForm'
 import PhotoGallery from '../components/PhotoGallery'
 import Countdown from '../components/Countdown'
-import { useRouter } from 'next/navigation' // <-- YENİ: Yönlendirme için
+import { useRouter } from 'next/navigation' 
+import Link from 'next/link' // Link import'unu ekledik
 
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
-  const router = useRouter() // <-- YENİ
+  const router = useRouter()
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
@@ -25,26 +26,29 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
         return
       }
 
-      // 2. Oturum Bilgisini Çek (Admin Girişi Var mı?)
+      // 2. Oturum Bilgisini Çek
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
-      // 3. YETKİLENDİRME KONTROLÜ (KRİTİK)
+      // 3. YETKİLENDİRME KONTROLÜ (Sıkı Güvenlik)
       if (currentUserId) {
-          if (data.user_id !== currentUserId) {
-              // Kullanıcı admin paneline giriş yapmış, ama bu etkinliğin sahibi DEĞİL.
-              // Bu durumda Landing Page'e geri fırlat!
+          if (data.user_id === currentUserId) {
+              // Etkinlik sahibi, Dashboard'a gitmeli
+              router.push('/')
+              return
+          } else {
+              // Başka bir admin, Landing Page'e gitmeli
               router.push('/landing')
               return
           }
       }
 
-      // Eğer anonim misafir ise veya etkinliğin sahibi ise devam et
+      // 4. Anonim misafir ise, sayfayı göster
       setEvent(data)
       setLoading(false)
     }
     fetchData()
-  }, [params, router])
+  }, [params, router]) 
 
   if (loading) return <div className="h-screen flex items-center justify-center">Yükleniyor...</div>
   if (!event) return <div className="h-screen flex items-center justify-center">Bulunamadı</div>
@@ -132,6 +136,16 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
             </div>
         )}
       </div>
+
+      {/* YENİ: ANA SAYFA BUTONU (En Alta Eklendi) */}
+      <div className="max-w-xl w-full px-6 mt-8 pb-10">
+          <Link href="/landing" className="block w-full text-center">
+              <button className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                  ← Ana Sayfa (Cereget'e Dön)
+              </button>
+          </Link>
+      </div>
+
     </div>
   )
 }
