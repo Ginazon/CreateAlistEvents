@@ -1,69 +1,101 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-// YENİ: Form bileşenini sayfaya çağırıyoruz
 import RsvpForm from '../components/RsvpForm'
+import PhotoGallery from '../components/PhotoGallery'
+import Countdown from '../components/Countdown' // <-- YENİ
 
-async function getEvent(slug: string) {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+  const [event, setEvent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
 
-  return { data, error }
-}
+  useEffect(() => {
+    const fetchData = async () => {
+      const resolvedParams = await params
+      const { data } = await supabase.from('events').select('*').eq('slug', resolvedParams.slug).single()
+      if (data) setEvent(data)
+      setLoading(false)
+    }
+    fetchData()
+  }, [params])
 
-export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const { data: event, error } = await getEvent(slug)
+  if (loading) return <div className="h-screen flex items-center justify-center">Yükleniyor...</div>
+  if (!event) return <div className="h-screen flex items-center justify-center">Bulunamadı</div>
 
-  if (error || !event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <h1 className="text-2xl font-bold">404 - Etkinlik Bulunamadı</h1>
-      </div>
-    )
-  }
+  const themeColor = event.design_settings?.theme || '#4F46E5'
+
+  // Tarih Formatlama (Örn: 15 Ağustos 2025, 20:30)
+  const formattedDate = event.event_date 
+    ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })
+    : 'Tarih Belirlenmedi'
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center pb-20">
-     {/* YENİ: Görsel Alanı */}
-     {event.image_url ? (
-        // Eğer resim varsa onu göster
-        <div className="w-full max-h-[500px] overflow-hidden bg-gray-100 flex items-center justify-center">
-          <img src={event.image_url} alt={event.title} className="object-contain w-full h-full" />
+    <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
+      
+      {/* 1. GÖRSEL */}
+      {event.image_url ? (
+        <div className="w-full max-h-[500px] overflow-hidden bg-gray-100 flex items-center justify-center" style={{ backgroundColor: themeColor + '10' }}>
+          <img src={event.image_url} className="object-contain w-full h-full" />
         </div>
       ) : (
-        // Resim yoksa eski gri kutuyu göster
-        <div className="w-full h-64 bg-indigo-100 flex items-center justify-center">
-          <span className="text-indigo-400 font-medium">Görsel Eklenmemiş</span>
-        </div>
+        <div className="w-full h-64 flex items-center justify-center text-white" style={{ backgroundColor: themeColor }}>Görsel Yok</div>
       )}
 
-      <div className="max-w-xl w-full px-6 -mt-10">
-        <div className="bg-white rounded-xl shadow-xl p-8 border border-gray-100">
+      {/* 2. DETAYLAR */}
+      <div className="max-w-xl w-full px-6 -mt-10 relative z-10">
+        <div className="bg-white rounded-xl shadow-xl p-8 border-t-4" style={{ borderColor: themeColor }}>
           
-          <h1 className="text-3xl font-bold text-center text-gray-900 mb-4">
-            {event.title}
-          </h1>
+          <h1 className="text-3xl font-bold text-center mb-2" style={{ color: themeColor }}>{event.title}</h1>
+          <p className="text-center text-gray-500 mb-6 text-sm">Sizleri aramızda görmekten mutluluk duyarız.</p>
 
-          <div className="text-center text-gray-500 mb-8">
-             <p className="mb-2">Hoşgeldiniz! Bu özel günümüzde sizi de aramızda görmekten mutluluk duyarız.</p>
-             <hr className="my-4"/>
-             {/* Buraya veritabanından tarih/konum da gelebilir ileride */}
-             <p>📍 Konum Detayı</p>
-             <p>📅 Tarih Detayı</p>
+          {/* YENİ: GERİ SAYIM SAYACI */}
+          {event.event_date && <Countdown targetDate={event.event_date} themeColor={themeColor} />}
+
+          <hr className="my-6 border-gray-100"/>
+          
+          {/* YENİ: DİNAMİK TARİH VE KONUM */}
+          <div className="grid grid-cols-1 gap-4 text-center">
+             <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="font-bold text-gray-800 text-lg mb-1">📅 Tarih</p>
+                <p className="text-gray-600">{formattedDate}</p>
+             </div>
+             
+             <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="font-bold text-gray-800 text-lg mb-1">📍 Konum</p>
+                <p className="text-gray-600 mb-3">{event.location_name || 'Konum bilgisi girilmedi'}</p>
+                {event.location_url && (
+                    <a 
+                        href={event.location_url} 
+                        target="_blank"
+                        className="inline-block px-4 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90"
+                        style={{ backgroundColor: themeColor }}
+                    >
+                        Yol Tarifi Al 🗺️
+                    </a>
+                )}
+             </div>
           </div>
-
-          {/* YENİ: LCV Formunu Buraya Yerleştiriyoruz */}
-          {/* event.id bilgisini forma gönderiyoruz ki hangi etkinliğe kayıt olacağını bilsin */}
-          <RsvpForm eventId={event.id} />
-
+          
+          {/* 3. FORM */}
+          <RsvpForm eventId={event.id} themeColor={themeColor} onLoginSuccess={setCurrentUserEmail} />
         </div>
       </div>
-      
-      <footer className="mt-12 text-gray-400 text-sm">
-        Cereget ile oluşturuldu
-      </footer>
+
+      {/* 4. GALERİ */}
+      <div className="max-w-xl w-full px-6 mt-8">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: themeColor }}>📸 Fotoğraflar</h2>
+        {currentUserEmail ? (
+             <PhotoGallery eventId={event.id} currentUserEmail={currentUserEmail} themeColor={themeColor} />
+        ) : (
+            <div className="bg-gray-100 rounded-xl p-8 text-center border border-dashed border-gray-300">
+                <div className="text-4xl mb-2">🔒</div>
+                <h3 className="font-bold">Galeri Kilitli</h3>
+                <p className="text-sm text-gray-500">Görmek için yukarıdan giriş yapın.</p>
+            </div>
+        )}
+      </div>
     </div>
   )
 }
