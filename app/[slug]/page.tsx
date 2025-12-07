@@ -6,13 +6,14 @@ import RsvpForm from '../components/RsvpForm'
 import PhotoGallery from '../components/PhotoGallery'
 import Countdown from '../components/Countdown'
 import { useRouter } from 'next/navigation' 
-import Link from 'next/link' // Link import'unu ekledik
+import Link from 'next/link'
 
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
+  const [isOwner, setIsOwner] = useState(false) // Sahip Kontrolü yeniden eklendi
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,24 +27,23 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
         return
       }
 
-      // 2. Oturum Bilgisini Çek
+      // 2. Oturum Bilgisini Çek (Admin Girişi Var mı?)
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
-      // 3. YETKİLENDİRME KONTROLÜ (Sıkı Güvenlik)
+      // 3. YETKİLENDİRME KONTROLÜ (KRİTİK - YENİ MANTIK)
       if (currentUserId) {
           if (data.user_id === currentUserId) {
-              // Etkinlik sahibi, Dashboard'a gitmeli
-              router.push('/')
-              return
+              // Etkinlik sahibi. Yönlendirme yok, sayfada kalıp isOwner true olacak.
+              setIsOwner(true) 
           } else {
-              // Başka bir admin, Landing Page'e gitmeli
+              // Başka bir admin. Landing Page'e gitmeli.
               router.push('/landing')
               return
           }
       }
 
-      // 4. Anonim misafir ise, sayfayı göster
+      // 4. Anonim misafir veya sahibi ise, sayfayı göster
       setEvent(data)
       setLoading(false)
     }
@@ -63,6 +63,9 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   const formattedDate = event.event_date 
     ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })
     : '...'
+
+  // Butonun gideceği adresi belirle
+  const homeLink = isOwner ? "/" : "/landing";
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
@@ -137,11 +140,11 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
         )}
       </div>
 
-      {/* YENİ: ANA SAYFA BUTONU (En Alta Eklendi) */}
+      {/* YENİ: ANA SAYFA BUTONU (Dinamik Yönlendirme) */}
       <div className="max-w-xl w-full px-6 mt-8 pb-10">
-          <Link href="/landing" className="block w-full text-center">
+          <Link href={homeLink} className="block w-full text-center">
               <button className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
-                  ← Ana Sayfa (Cereget'e Dön)
+                  ← {isOwner ? "Dashboard'a Dön" : "Ana Sayfa (Cereget'e Dön)"}
               </button>
           </Link>
       </div>
