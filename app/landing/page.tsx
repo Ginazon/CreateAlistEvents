@@ -65,12 +65,12 @@ export default function LandingPage() {
             <div className="bg-indigo-700 text-white py-4 px-8 flex justify-between items-center sticky top-0 z-50">
                 <h1 className="text-xl font-bold">Cereget</h1>
                 <div className='flex items-center gap-4'>
-                    <a href="#fiyatlandirma" className="bg-white text-indigo-700 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
+                    {/*<a href="#fiyatlandirma" className="bg-white text-indigo-700 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">
                         Hemen Satın Al
-                    </a>
+                    </a>*/}
                     {/* YENİ: Admin Giriş Butonu */}
                     <button onClick={() => setShowLoginModal(true)} className='text-white border border-white px-4 py-2 rounded-full text-sm font-bold hover:bg-white hover:text-indigo-700 transition'>
-                        Admin
+                        Giriş
                     </button>
                 </div>
             </div>
