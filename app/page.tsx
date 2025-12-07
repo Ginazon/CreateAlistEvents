@@ -12,27 +12,44 @@ const THEME_COLORS = [
   { name: 'Simsiyah', hex: '#111827' },
 ]
 
+// Türkçe Karakterleri Temizleyen Fonksiyon
+const turkishSlugify = (text: string) => {
+  const trMap: { [key: string]: string } = {
+    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+    'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+  };
+  return text
+    .replace(/[çğıöşüÇĞİÖŞÜ]/g, (match) => trMap[match] || match)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null)
   
-  // LOGIN STATE'LERİ (YENİ) 🔐
+  // LOGIN STATE
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   
-  // Kredi ve Diğer State'ler
+  // DASHBOARD STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [title, setTitle] = useState('')
-  const [slug, setSlug] = useState('')
+  // slug state'ini sildik, çünkü artık otomatik üretiliyor
   const [eventDate, setEventDate] = useState('')
   const [locationName, setLocationName] = useState('')
   const [locationUrl, setLocationUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
   const [uploading, setUploading] = useState(false)
+  
   const [myEvents, setMyEvents] = useState<any[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
+  
   const [guests, setGuests] = useState<any[]>([])
   const [photos, setPhotos] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
@@ -50,40 +67,21 @@ export default function Dashboard() {
     })
   }, [])
 
-  // YENİ GİRİŞ FONKSİYONU 🔐
-  // GÜNCELLENMİŞ GİRİŞ FONKSİYONU (Sayfa Yenilemeli Versiyon) 🔄
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoginLoading(true)
-
-    // 1. Önce Giriş Yapmayı Dene
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginPassword,
-    })
-
-    if (!signInError) {
-      // BAŞARILIYSA: Hiçbir şey sorma, direkt sayfayı yenile ve içeri al!
-      window.location.reload()
-      return
-    }
-
-    // 2. Eğer Giriş Hata Verdiyse (Muhtemelen kullanıcı yok), Kayıt Olmayı Dene
-    console.log("Giriş yapılamadı, kayıt deneniyor...")
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
+    if (!signInError) { window.location.reload(); return }
     
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: loginEmail,
-      password: loginPassword,
-    })
-    
+    console.log("Giriş başarısız, kayıt deneniyor...")
+    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
     if (signUpError) {
-      alert('İşlem Hatası: ' + signUpError.message)
-      setLoginLoading(false)
+      alert('Hata: ' + signUpError.message)
     } else {
-      // KAYIT DA BAŞARILIYSA: Haber ver ve sayfayı yenile
-      alert('Hesap oluşturuldu ve giriş yapıldı! Yönlendiriliyorsunuz...')
+      alert('Hesap oluşturuldu ve giriş yapıldı!')
       window.location.reload()
     }
+    setLoginLoading(false)
   }
 
   const fetchMyEvents = async (userId: string) => {
@@ -120,8 +118,13 @@ export default function Dashboard() {
   }
 
   const createEvent = async () => {
-    if (!title || !slug || !eventDate) return alert('Zorunlu alanları doldurun')
+    if (!title || !eventDate) return alert('Başlık ve Tarih zorunludur')
     if (credits !== null && credits < 1) return alert('Yetersiz Kredi! Lütfen kredi yükleyin.')
+
+    // YENİ: Slug'ı OTOMATİK üret (Başlık + Rastgele Sayı)
+    // Örn: "Ayşe & Ali" -> "ayse-ali-4821"
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+    const autoSlug = `${turkishSlugify(title)}-${randomSuffix}`
 
     setUploading(true)
     let uploadedImageUrl = null
@@ -136,7 +139,9 @@ export default function Dashboard() {
     }
 
     const { error } = await supabase.from('events').insert([{ 
-        title, slug, user_id: session.user.id, image_url: uploadedImageUrl, 
+        title, 
+        slug: autoSlug, // Otomatik slug kullanılıyor
+        user_id: session.user.id, image_url: uploadedImageUrl, 
         event_date: eventDate, location_name: locationName, location_url: locationUrl, 
         design_settings: { theme: themeColor } 
     }])
@@ -147,14 +152,14 @@ export default function Dashboard() {
       const newCredit = (credits || 0) - 1
       await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
       setCredits(newCredit)
-      alert(`Etkinlik Oluşturuldu! 1 Kredi harcandı. Kalan: ${newCredit}`)
+      alert(`Etkinlik Oluşturuldu! Link: cereget.com/${autoSlug}`)
       fetchMyEvents(session.user.id)
-      setTitle(''); setSlug('')
+      setTitle('')
+      // setSlug('') // Artık slug state yok
     }
     setUploading(false)
   }
 
-  // GİRİŞ EKRANI TASARIMI (YENİ) 🖥️
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -163,62 +168,41 @@ export default function Dashboard() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">E-Posta</label>
-              <input 
-                type="email" 
-                required
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@cereget.com"
-              />
+              <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="admin@cereget.com"/>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
-              <input 
-                type="password" 
-                required
-                className="w-full border p-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••"
-              />
+              <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••"/>
             </div>
-            <button 
-              type="submit" 
-              disabled={loginLoading}
-              className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 transition disabled:opacity-50"
-            >
-              {loginLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+            <button type="submit" disabled={loginLoading} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
+              {loginLoading ? 'İşleniyor...' : 'Giriş Yap'}
             </button>
           </form>
-          <p className="text-xs text-gray-400 text-center mt-4">Hesabınız yoksa otomatik oluşturulur.</p>
         </div>
       </div>
     )
   }
 
-  // DASHBOARD İÇERİĞİ (DEĞİŞMEDİ)
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-sans">
       <div className="max-w-6xl mx-auto mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Cereget Dashboard</h1>
         <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-200 flex items-center gap-3">
             <div className="bg-yellow-100 text-yellow-700 p-2 rounded-full">💰</div>
-            <div>
-                <p className="text-xs text-gray-500 uppercase font-bold">Kredilerim</p>
-                <p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p>
-            </div>
-            <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold ml-2 hover:bg-indigo-100" onClick={() => supabase.auth.signOut()}>Çıkış Yap</button>
+            <div><p className="text-xs text-gray-500 uppercase font-bold">Kredilerim</p><p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p></div>
+            <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold ml-2 hover:bg-indigo-100" onClick={() => supabase.auth.signOut()}>Çıkış</button>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* SOL: YENİ ETKİNLİK FORMU */}
+        {/* SOL: YENİ ETKİNLİK */}
         <div className="md:col-span-1 bg-white p-6 rounded-xl shadow h-fit sticky top-8">
           <h2 className="text-xl font-bold mb-4" style={{ color: themeColor }}>Yeni Etkinlik <span className="text-xs font-normal text-gray-400 ml-2">(-1 Kredi)</span></h2>
           <div className="space-y-3">
-            <input type="text" placeholder="Etkinlik Adı" className="w-full border p-2 rounded" value={title} onChange={e => setTitle(e.target.value)}/>
-            <input type="text" placeholder="slug" className="w-full border p-2 rounded" value={slug} onChange={e => setSlug(e.target.value)}/>
+            
+            {/* Sadece Başlık Var - Slug Yok */}
+            <input type="text" placeholder="Etkinlik Adı (Otomatik Link Oluşur)" className="w-full border p-2 rounded" value={title} onChange={e => setTitle(e.target.value)}/>
+            
             <div><label className="text-xs text-gray-500">Tarih</label><input type="datetime-local" className="w-full border p-2 rounded" value={eventDate} onChange={e => setEventDate(e.target.value)}/></div>
             <input type="text" placeholder="Mekan Adı" className="w-full border p-2 rounded" value={locationName} onChange={e => setLocationName(e.target.value)}/>
             <input type="text" placeholder="Harita Linki" className="w-full border p-2 rounded" value={locationUrl} onChange={e => setLocationUrl(e.target.value)}/>
@@ -231,7 +215,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SAĞ: ETKİNLİK LİSTESİ */}
+        {/* SAĞ: LİSTE */}
         <div className="md:col-span-2 space-y-4">
             {myEvents.map(event => (
                 <div key={event.id} className="bg-white p-4 rounded shadow border-l-4" style={{ borderColor: event.design_settings?.theme }}>
