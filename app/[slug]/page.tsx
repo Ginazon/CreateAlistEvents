@@ -24,43 +24,54 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   if (loading) return <div className="h-screen flex items-center justify-center">Yükleniyor...</div>
   if (!event) return <div className="h-screen flex items-center justify-center">Bulunamadı</div>
 
+  // AYARLARI ÇEK
   const themeColor = event.design_settings?.theme || '#4F46E5'
-  // YENİ: Font verisini al (yoksa varsayılan)
-  const fontBody = event.design_settings?.font || "'Inter', sans-serif"
   
-  // YENİ: Mesaj verisini al (yoksa varsayılan)
-  const eventMessage = event.message || "Sizleri aramızda görmekten mutluluk duyarız."
+  // Fontlar ve Boyutlar
+  const titleFont = event.design_settings?.titleFont || "'Inter', sans-serif"
+  const titleSize = event.design_settings?.titleSize || 2.5
+  
+  const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
+  const messageSize = event.design_settings?.messageSize || 1
 
-  const formattedDate = event.event_date 
-    ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })
-    : 'Tarih Belirlenmedi'
+  const eventMessage = event.message || ""
+  const formattedDate = event.event_date ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
       
-      {/* Görsel */}
+      {/* 1. KAPAK GÖRSELİ (Varsa Göster) */}
       {event.image_url ? (
         <div className="w-full max-h-[500px] overflow-hidden bg-gray-100 flex items-center justify-center" style={{ backgroundColor: themeColor + '10' }}>
           <img src={event.image_url} className="object-contain w-full h-full" />
         </div>
       ) : (
-        <div className="w-full h-64 flex items-center justify-center text-white" style={{ backgroundColor: themeColor }}>Görsel Yok</div>
+        <div className="w-full h-32 bg-gray-50"></div> // Resim yoksa boşluk bırakma, ince çizgi olsun
       )}
 
-      <div className="max-w-xl w-full px-6 -mt-10 relative z-10">
-        <div className="bg-white rounded-xl shadow-xl p-8 border-t-4" style={{ borderColor: themeColor }}>
+      <div className="max-w-xl w-full px-5 -mt-8 relative z-10">
+        <div className="bg-white rounded-xl shadow-xl p-6 border-t-4" style={{ borderColor: themeColor }}>
           
-          {/* YENİ: Başlık Fontu Uygulandı */}
-          <h1 className="text-3xl font-bold text-center mb-4 leading-tight" 
-              style={{ color: themeColor, fontFamily: fontBody }}>
+          {/* 2. BAŞLIK (Özel Font ve Boyut) */}
+          <h1 className="font-bold text-center mb-4 leading-tight" 
+              style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>
             {event.title}
           </h1>
 
-          {/* YENİ: Mesaj Fontu ve İçeriği Uygulandı */}
-          <p className="text-center text-gray-600 mb-8 whitespace-pre-line text-lg"
-             style={{ fontFamily: fontBody }}>
-             {eventMessage}
-          </p>
+          {/* 3. ANA GÖRSEL (Varsa Göster) */}
+          {event.main_image_url && (
+            <div className="mb-6 rounded-lg overflow-hidden shadow-sm">
+                <img src={event.main_image_url} className="w-full h-auto object-cover" />
+            </div>
+          )}
+
+          {/* 4. MESAJ (Varsa Göster - Özel Font ve Boyut) */}
+          {eventMessage && (
+            <p className="text-center text-gray-600 mb-8 whitespace-pre-line"
+               style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
+               {eventMessage}
+            </p>
+          )}
 
           {event.event_date && <Countdown targetDate={event.event_date} themeColor={themeColor} />}
 
@@ -73,7 +84,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
              </div>
              <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="font-bold text-gray-800 text-lg mb-1">📍 Konum</p>
-                <p className="text-gray-600 mb-3">{event.location_name || 'Konum bilgisi girilmedi'}</p>
+                <p className="text-gray-600 mb-3">{event.location_name || '...'}</p>
                 {event.location_url && (
                     <a href={event.location_url} target="_blank" className="inline-block px-4 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90" style={{ backgroundColor: themeColor }}>
                         Yol Tarifi Al 🗺️
