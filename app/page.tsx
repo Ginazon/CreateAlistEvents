@@ -197,7 +197,16 @@ export default function Dashboard() {
                 </div>
             ))}
         </div>
+        
       </div>
+      <footer className="mt-12 pt-6 border-t border-gray-200 max-w-6xl mx-auto text-center">
+        <div className="flex justify-center space-x-6 text-sm text-gray-500">
+          <Link href="/legal/terms" className="hover:text-indigo-600">Kullanım Şartları</Link>
+          <Link href="/legal/privacy" className="hover:text-indigo-600">Gizlilik ve KVKK</Link>
+          <button onClick={() => supabase.auth.signOut()} className="hover:text-indigo-600">Çıkış Yap</button>
+        </div>
+        <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
+      </footer>
     </div>
   )
 }
