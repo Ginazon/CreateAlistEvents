@@ -38,7 +38,7 @@ export default function Dashboard() {
   // DASHBOARD STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [title, setTitle] = useState('')
-  // slug state'ini sildik, çünkü artık otomatik üretiliyor
+  // Slug state yok, otomatik
   const [eventDate, setEventDate] = useState('')
   const [locationName, setLocationName] = useState('')
   const [locationUrl, setLocationUrl] = useState('')
@@ -121,8 +121,7 @@ export default function Dashboard() {
     if (!title || !eventDate) return alert('Başlık ve Tarih zorunludur')
     if (credits !== null && credits < 1) return alert('Yetersiz Kredi! Lütfen kredi yükleyin.')
 
-    // YENİ: Slug'ı OTOMATİK üret (Başlık + Rastgele Sayı)
-    // Örn: "Ayşe & Ali" -> "ayse-ali-4821"
+    // Slug Üretimi
     const randomSuffix = Math.floor(1000 + Math.random() * 9000)
     const autoSlug = `${turkishSlugify(title)}-${randomSuffix}`
 
@@ -140,7 +139,7 @@ export default function Dashboard() {
 
     const { error } = await supabase.from('events').insert([{ 
         title, 
-        slug: autoSlug, // Otomatik slug kullanılıyor
+        slug: autoSlug,
         user_id: session.user.id, image_url: uploadedImageUrl, 
         event_date: eventDate, location_name: locationName, location_url: locationUrl, 
         design_settings: { theme: themeColor } 
@@ -155,7 +154,7 @@ export default function Dashboard() {
       alert(`Etkinlik Oluşturuldu! Link: cereget.com/${autoSlug}`)
       fetchMyEvents(session.user.id)
       setTitle('')
-      // setSlug('') // Artık slug state yok
+      setFile(null) // Dosyayı da sıfırla
     }
     setUploading(false)
   }
@@ -195,18 +194,28 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* SOL: YENİ ETKİNLİK */}
+        {/* SOL: YENİ ETKİNLİK FORMU */}
         <div className="md:col-span-1 bg-white p-6 rounded-xl shadow h-fit sticky top-8">
           <h2 className="text-xl font-bold mb-4" style={{ color: themeColor }}>Yeni Etkinlik <span className="text-xs font-normal text-gray-400 ml-2">(-1 Kredi)</span></h2>
           <div className="space-y-3">
             
-            {/* Sadece Başlık Var - Slug Yok */}
             <input type="text" placeholder="Etkinlik Adı (Otomatik Link Oluşur)" className="w-full border p-2 rounded" value={title} onChange={e => setTitle(e.target.value)}/>
             
             <div><label className="text-xs text-gray-500">Tarih</label><input type="datetime-local" className="w-full border p-2 rounded" value={eventDate} onChange={e => setEventDate(e.target.value)}/></div>
             <input type="text" placeholder="Mekan Adı" className="w-full border p-2 rounded" value={locationName} onChange={e => setLocationName(e.target.value)}/>
             <input type="text" placeholder="Harita Linki" className="w-full border p-2 rounded" value={locationUrl} onChange={e => setLocationUrl(e.target.value)}/>
-            <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm"/>
+            
+            {/* GERİ GELEN KISIM: ŞIK GÖRSEL YÜKLEME ALANI */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Davetiye Kapak Görseli</label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={e => setFile(e.target.files?.[0] || null)} 
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
+              />
+            </div>
+
             <div className="flex gap-2 justify-center py-2">{THEME_COLORS.map(c => <button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-6 h-6 rounded-full border-2 ${themeColor === c.hex ? 'border-black' : ''}`} style={{ backgroundColor: c.hex }}/>)}</div>
 
             <button onClick={createEvent} disabled={uploading || (credits || 0) < 1} className="w-full text-white py-3 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: themeColor }}>
@@ -215,7 +224,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SAĞ: LİSTE */}
+        {/* SAĞ: ETKİNLİK LİSTESİ */}
         <div className="md:col-span-2 space-y-4">
             {myEvents.map(event => (
                 <div key={event.id} className="bg-white p-4 rounded shadow border-l-4" style={{ borderColor: event.design_settings?.theme }}>
