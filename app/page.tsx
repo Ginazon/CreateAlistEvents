@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -27,22 +26,9 @@ export default function Dashboard() {
   const [photos, setPhotos] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
-  const [origin, setOrigin] = useState('') // <-- setOrigin geri geldi
-
-  // EKSİK FONKSİYONLAR GELDİ
-  const fetchMyEvents = async (userId: string) => {
-    const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-    if (data) setMyEvents(data)
-  }
-
-  const fetchCredits = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
-    if (data) setCredits(data.credits)
-  }
-  // ---------------
+  const [origin, setOrigin] = useState('')
 
   useEffect(() => {
-    // URL'yi alıp setOrigin ile kaydediyorduk, bu gerekliydi
     if (typeof window !== 'undefined') {
         setOrigin(window.location.origin)
     }
@@ -53,21 +39,33 @@ export default function Dashboard() {
         fetchMyEvents(session.user.id)
         fetchCredits(session.user.id)
       } else {
-        // YENİ MANTIK: Giriş yoksa Landing Page'e yönlendir
         router.push('/landing')
       }
     })
   }, [router])
 
-  // Diğer tüm fonksiyonlar (handleLogin, fetchEventDetails, deletePhoto, downloadQRCode, createEvent) aynı kaldı.
-
-  if (!session) {
-      // Yönlendirmenin gerçekleşmesi için boş bir return döndür (veya yönlendirme mesajı)
-      return <div className="h-screen flex items-center justify-center text-xl text-gray-500">Yönlendiriliyor...</div>
+  // --- FONKSİYONLAR ---
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginLoading(true)
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
+    if (!signInError) { window.location.reload(); return }
+    
+    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
+    if (signUpError) alert('Hata: ' + signUpError.message);
+    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
+    setLoginLoading(false)
   }
 
+  const fetchMyEvents = async (userId: string) => {
+    const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    if (data) setMyEvents(data)
+  }
 
-  // --- (GERİ KALAN DASHBOARD KODU AYNEN DEVAM EDİYOR) ---
+  const fetchCredits = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
+    if (data) setCredits(data.credits)
+  }
 
   const fetchEventDetails = async (eventId: string) => {
     setSelectedEventId(eventId)
@@ -91,53 +89,55 @@ export default function Dashboard() {
         const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${slug}-qr.png`; link.click();
     }
   }
-  
-  // YENİDEN EKLEDİĞİMİZ login fonksiyonunu da ekleyelim (Eski sohbetten alınıyor)
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginLoading(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (!signInError) { window.location.reload(); return }
-    
-    console.log("Kayıt deneniyor...")
-    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
-    if (signUpError) { alert('Hata: ' + signUpError.message); }
-    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
-    setLoginLoading(false)
+  // --- SON FONKSİYONLAR ---
+
+  if (!session) {
+    return <div className="h-screen flex items-center justify-center text-xl text-gray-500">Yönlendiriliyor...</div>
   }
 
-  // --- ARAPAYI DOLDURALIM ---
   return (
-    <div className="min-h-screen bg-gray-50 p-8 font-sans">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         
-        {/* ÜST BAR */}
-        <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border">
+        {/* 1. ÜST BAŞLIK BÖLÜMÜ (SADE) */}
+        <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">Cereget Dashboard</h1>
                 <p className="text-gray-500 text-sm">Etkinliklerini buradan yönet.</p>
             </div>
+            {/* ÇIKIŞ BUTONU */}
+            <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline shrink-0">Çıkış</button>
+        </div>
+        
+        {/* 2. AKSİYON BAR VE KREDİ BÖLÜMÜ (MOBİL DOSTU) */}
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
             
-            <div className="flex items-center gap-4">
-                <div className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-xl font-bold border border-yellow-200 flex items-center gap-2">
-                    💰 <span>{credits ?? '...'} Kredi</span>
+            {/* KREDİ KUTUSU (SOL) */}
+            <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
+                <div>
+                  <p className="text-xs uppercase font-bold">Kredilerim</p>
+                  <p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p>
                 </div>
-                {/* YENİ OLUŞTUR BUTONU ➕ */}
-                <Link href="/create">
-                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition transform">
+            </div>
+
+            {/* YENİ OLUŞTUR BUTONU (SAĞ) */}
+            <div className="order-1 md:order-2 w-full md:w-auto">
+                <Link href="/create" className="w-full">
+                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full">
                         + Yeni Etkinlik Oluştur
                     </button>
                 </Link>
-                <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline">Çıkış</button>
             </div>
         </div>
 
-        {/* ETKİNLİK LİSTESİ */}
+        {/* 3. ETKİNLİK LİSTESİ */}
         <div className="space-y-4">
-            {myEvents.length === 0 && <div className="text-center py-20 text-gray-400">Henüz hiç etkinliğin yok. Yukarıdan oluşturabilirsin.</div>}
+            {myEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">Henüz hiç etkinliğin yok.</div>}
             
             {myEvents.map(event => (
                 <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                    {/* ... (Liste İçeriği Aynı Kalır) ... */}
                     <div className="flex justify-between items-center flex-wrap gap-4">
                         <div className="flex items-center gap-4">
                              <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
@@ -149,7 +149,7 @@ export default function Dashboard() {
                              </div>
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-1 rounded text-sm font-medium hover:bg-black transition">📱 QR Kod</button>
+                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition">📱 QR Kod</button>
                             <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Yönet</button>
                         </div>
                     </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
                     {showQrId === event.id && (
                         <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
                             <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
-                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 QR Kodunu İndir (.PNG)</button>
+                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 İndir</button>
                         </div>
                     )}
 
@@ -174,7 +174,7 @@ export default function Dashboard() {
                                 activeTab === 'guests' ? (
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-sm text-left">
-                                            <thead className="bg-gray-50 text-gray-500 uppercase text-xs"><tr><th className="px-4 py-2">İsim</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Durum</th><th className="px-4 py-2">Kişi</th></tr></thead>
+                                            <thead className="bg-gray-100 text-gray-500 uppercase text-xs"><tr><th className="px-4 py-2">İsim</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Durum</th><th className="px-4 py-2">Kişi</th></tr></thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {guests.map(g => (
                                                     <tr key={g.id}><td className="px-4 py-3 font-medium">{g.name}</td><td className="px-4 py-3 text-gray-500">{g.email}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs ${g.status==='katiliyor'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{g.status}</span></td><td className="px-4 py-3">+{g.plus_one}</td></tr>
@@ -183,7 +183,7 @@ export default function Dashboard() {
                                         </table>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {photos.map(p => (
                                             <div key={p.id} className="relative group">
                                                 <img src={p.image_url} className="h-24 w-full object-cover rounded"/>
@@ -199,6 +199,7 @@ export default function Dashboard() {
             ))}
         </div>
       </div>
+      
        <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
           <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
