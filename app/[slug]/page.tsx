@@ -5,8 +5,10 @@ import { supabase } from '../lib/supabaseClient'
 import RsvpForm from '../components/RsvpForm'
 import PhotoGallery from '../components/PhotoGallery'
 import Countdown from '../components/Countdown'
+import { useRouter } from 'next/navigation' // <-- YENİ: Yönlendirme için
 
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+  const router = useRouter() // <-- YENİ
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
@@ -14,58 +16,79 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   useEffect(() => {
     const fetchData = async () => {
       const resolvedParams = await params
-      const { data } = await supabase.from('events').select('*').eq('slug', resolvedParams.slug).single()
-      if (data) setEvent(data)
+      
+      // 1. Etkinlik Verisini Çek
+      const { data, error } = await supabase.from('events').select('*').eq('slug', resolvedParams.slug).single()
+      
+      if (error || !data) {
+        setLoading(false)
+        return
+      }
+
+      // 2. Oturum Bilgisini Çek (Admin Girişi Var mı?)
+      const { data: authData } = await supabase.auth.getSession()
+      const currentUserId = authData.session?.user.id
+      
+      // 3. YETKİLENDİRME KONTROLÜ (KRİTİK)
+      if (currentUserId) {
+          if (data.user_id !== currentUserId) {
+              // Kullanıcı admin paneline giriş yapmış, ama bu etkinliğin sahibi DEĞİL.
+              // Bu durumda Landing Page'e geri fırlat!
+              router.push('/landing')
+              return
+          }
+      }
+
+      // Eğer anonim misafir ise veya etkinliğin sahibi ise devam et
+      setEvent(data)
       setLoading(false)
     }
     fetchData()
-  }, [params])
+  }, [params, router])
 
   if (loading) return <div className="h-screen flex items-center justify-center">Yükleniyor...</div>
   if (!event) return <div className="h-screen flex items-center justify-center">Bulunamadı</div>
 
   // AYARLARI ÇEK
   const themeColor = event.design_settings?.theme || '#4F46E5'
-  
-  // Fontlar ve Boyutlar
   const titleFont = event.design_settings?.titleFont || "'Inter', sans-serif"
   const titleSize = event.design_settings?.titleSize || 2.5
-  
   const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
   const messageSize = event.design_settings?.messageSize || 1
-
   const eventMessage = event.message || ""
-  const formattedDate = event.event_date ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
+  const formattedDate = event.event_date 
+    ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })
+    : '...'
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
       
-      {/* 1. KAPAK GÖRSELİ (Varsa Göster) */}
+      {/* 1. KAPAK GÖRSELİ */}
       {event.image_url ? (
         <div className="w-full max-h-[500px] overflow-hidden bg-gray-100 flex items-center justify-center" style={{ backgroundColor: themeColor + '10' }}>
           <img src={event.image_url} className="object-contain w-full h-full" />
         </div>
       ) : (
-        <div className="w-full h-32 bg-gray-50"></div> // Resim yoksa boşluk bırakma, ince çizgi olsun
+        <div className="w-full h-32 bg-gray-50"></div>
       )}
 
-      <div className="max-w-xl w-full px-5 -mt-8 relative z-10">
+      <div className="max-w-xl w-full px-5 -mt-10 relative z-10">
         <div className="bg-white rounded-xl shadow-xl p-6 border-t-4" style={{ borderColor: themeColor }}>
           
-          {/* 2. BAŞLIK (Özel Font ve Boyut) */}
+          {/* BAŞLIK */}
           <h1 className="font-bold text-center mb-4 leading-tight" 
               style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>
             {event.title}
           </h1>
 
-          {/* 3. ANA GÖRSEL (Varsa Göster) */}
+          {/* ANA GÖRSEL (Varsa Göster) */}
           {event.main_image_url && (
             <div className="mb-6 rounded-lg overflow-hidden shadow-sm">
                 <img src={event.main_image_url} className="w-full h-auto object-cover" />
             </div>
           )}
 
-          {/* 4. MESAJ (Varsa Göster - Özel Font ve Boyut) */}
+          {/* MESAJ (Varsa Göster) */}
           {eventMessage && (
             <p className="text-center text-gray-600 mb-8 whitespace-pre-line"
                style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
