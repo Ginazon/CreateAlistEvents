@@ -3,29 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { QRCodeCanvas } from 'qrcode.react'
-
-const THEME_COLORS = [
-  { name: 'Klasik Mavi', hex: '#4F46E5' },
-  { name: 'Gold (Altın)', hex: '#D97706' },
-  { name: 'Rose (Gül)', hex: '#E11D48' },
-  { name: 'Zümrüt Yeşil', hex: '#059669' },
-  { name: 'Simsiyah', hex: '#111827' },
-]
-
-// Türkçe Karakterleri Temizleyen Fonksiyon
-const turkishSlugify = (text: string) => {
-  const trMap: { [key: string]: string } = {
-    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
-    'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
-  };
-  return text
-    .replace(/[çğıöşüÇĞİÖŞÜ]/g, (match) => trMap[match] || match)
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-}
+import Link from 'next/link'
 
 export default function Dashboard() {
   const [session, setSession] = useState<any>(null)
@@ -35,21 +13,13 @@ export default function Dashboard() {
   const [loginPassword, setLoginPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   
-  // DASHBOARD STATE
+  // DATA STATE
   const [credits, setCredits] = useState<number | null>(null)
-  const [title, setTitle] = useState('')
-  // Slug state yok, otomatik
-  const [eventDate, setEventDate] = useState('')
-  const [locationName, setLocationName] = useState('')
-  const [locationUrl, setLocationUrl] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
-  const [uploading, setUploading] = useState(false)
-  
   const [myEvents, setMyEvents] = useState<any[]>([])
+  
+  // UI STATE
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
-  
   const [guests, setGuests] = useState<any[]>([])
   const [photos, setPhotos] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
@@ -73,14 +43,10 @@ export default function Dashboard() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
     if (!signInError) { window.location.reload(); return }
     
-    console.log("Giriş başarısız, kayıt deneniyor...")
+    console.log("Kayıt deneniyor...")
     const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
-    if (signUpError) {
-      alert('Hata: ' + signUpError.message)
-    } else {
-      alert('Hesap oluşturuldu ve giriş yapıldı!')
-      window.location.reload()
-    }
+    if (signUpError) alert('Hata: ' + signUpError.message)
+    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
     setLoginLoading(false)
   }
 
@@ -117,64 +83,16 @@ export default function Dashboard() {
     }
   }
 
-  const createEvent = async () => {
-    if (!title || !eventDate) return alert('Başlık ve Tarih zorunludur')
-    if (credits !== null && credits < 1) return alert('Yetersiz Kredi! Lütfen kredi yükleyin.')
-
-    // Slug Üretimi
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000)
-    const autoSlug = `${turkishSlugify(title)}-${randomSuffix}`
-
-    setUploading(true)
-    let uploadedImageUrl = null
-
-    if (file) {
-      const fileName = `${Math.random()}.${file.name.split('.').pop()}`
-      const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, file)
-      if (!error) {
-        const { data } = supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)
-        uploadedImageUrl = data.publicUrl
-      }
-    }
-
-    const { error } = await supabase.from('events').insert([{ 
-        title, 
-        slug: autoSlug,
-        user_id: session.user.id, image_url: uploadedImageUrl, 
-        event_date: eventDate, location_name: locationName, location_url: locationUrl, 
-        design_settings: { theme: themeColor } 
-    }])
-
-    if (error) {
-      alert('Hata: ' + error.message)
-    } else {
-      const newCredit = (credits || 0) - 1
-      await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-      setCredits(newCredit)
-      alert(`Etkinlik Oluşturuldu! Link: cereget.com/${autoSlug}`)
-      fetchMyEvents(session.user.id)
-      setTitle('')
-      setFile(null) // Dosyayı da sıfırla
-    }
-    setUploading(false)
-  }
-
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
           <h1 className="text-2xl font-bold text-center mb-6 text-indigo-700">Cereget Admin</h1>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-Posta</label>
-              <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="admin@cereget.com"/>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
-              <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••"/>
-            </div>
+            <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="E-Posta"/>
+            <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Şifre"/>
             <button type="submit" disabled={loginLoading} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
-              {loginLoading ? 'İşleniyor...' : 'Giriş Yap'}
+              {loginLoading ? 'Giriş...' : 'Giriş Yap'}
             </button>
           </form>
         </div>
@@ -183,83 +101,95 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 font-sans">
-      <div className="max-w-6xl mx-auto mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Cereget Dashboard</h1>
-        <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-200 flex items-center gap-3">
-            <div className="bg-yellow-100 text-yellow-700 p-2 rounded-full">💰</div>
-            <div><p className="text-xs text-gray-500 uppercase font-bold">Kredilerim</p><p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p></div>
-            <button className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold ml-2 hover:bg-indigo-100" onClick={() => supabase.auth.signOut()}>Çıkış</button>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* SOL: YENİ ETKİNLİK FORMU */}
-        <div className="md:col-span-1 bg-white p-6 rounded-xl shadow h-fit sticky top-8">
-          <h2 className="text-xl font-bold mb-4" style={{ color: themeColor }}>Yeni Etkinlik <span className="text-xs font-normal text-gray-400 ml-2">(-1 Kredi)</span></h2>
-          <div className="space-y-3">
-            
-            <input type="text" placeholder="Etkinlik Adı (Otomatik Link Oluşur)" className="w-full border p-2 rounded" value={title} onChange={e => setTitle(e.target.value)}/>
-            
-            <div><label className="text-xs text-gray-500">Tarih</label><input type="datetime-local" className="w-full border p-2 rounded" value={eventDate} onChange={e => setEventDate(e.target.value)}/></div>
-            <input type="text" placeholder="Mekan Adı" className="w-full border p-2 rounded" value={locationName} onChange={e => setLocationName(e.target.value)}/>
-            <input type="text" placeholder="Harita Linki" className="w-full border p-2 rounded" value={locationUrl} onChange={e => setLocationUrl(e.target.value)}/>
-            
-            {/* GERİ GELEN KISIM: ŞIK GÖRSEL YÜKLEME ALANI */}
+    <div className="min-h-screen bg-gray-50 p-8 font-sans">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* ÜST BAR */}
+        <div className="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Davetiye Kapak Görseli</label>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={e => setFile(e.target.files?.[0] || null)} 
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition"
-              />
+                <h1 className="text-2xl font-bold text-gray-800">Cereget Dashboard</h1>
+                <p className="text-gray-500 text-sm">Etkinliklerini buradan yönet.</p>
             </div>
-
-            <div className="flex gap-2 justify-center py-2">{THEME_COLORS.map(c => <button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-6 h-6 rounded-full border-2 ${themeColor === c.hex ? 'border-black' : ''}`} style={{ backgroundColor: c.hex }}/>)}</div>
-
-            <button onClick={createEvent} disabled={uploading || (credits || 0) < 1} className="w-full text-white py-3 rounded font-bold disabled:opacity-50 disabled:cursor-not-allowed" style={{ backgroundColor: themeColor }}>
-              {(credits || 0) < 1 ? 'Yetersiz Kredi' : uploading ? 'İşleniyor...' : 'Oluştur (-1 Kredi)'}
-            </button>
-          </div>
+            
+            <div className="flex items-center gap-4">
+                <div className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-xl font-bold border border-yellow-200 flex items-center gap-2">
+                    💰 <span>{credits ?? '...'} Kredi</span>
+                </div>
+                {/* YENİ OLUŞTUR BUTONU ➕ */}
+                <Link href="/create">
+                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition transform">
+                        + Yeni Etkinlik Oluştur
+                    </button>
+                </Link>
+                <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline">Çıkış</button>
+            </div>
         </div>
 
-        {/* SAĞ: ETKİNLİK LİSTESİ */}
-        <div className="md:col-span-2 space-y-4">
+        {/* ETKİNLİK LİSTESİ */}
+        <div className="space-y-4">
+            {myEvents.length === 0 && <div className="text-center py-20 text-gray-400">Henüz hiç etkinliğin yok. Yukarıdan oluşturabilirsin.</div>}
+            
             {myEvents.map(event => (
-                <div key={event.id} className="bg-white p-4 rounded shadow border-l-4" style={{ borderColor: event.design_settings?.theme }}>
-                    <div className="flex justify-between items-center flex-wrap gap-2">
-                        <div>
-                             <h3 className="font-bold text-lg">{event.title}</h3>
-                             <a href={`/${event.slug}`} target="_blank" className="text-blue-500 text-xs hover:underline">{origin}/{event.slug} ↗</a>
+                <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                    <div className="flex justify-between items-center flex-wrap gap-4">
+                        <div className="flex items-center gap-4">
+                             <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
+                             <div>
+                                <h3 className="font-bold text-lg text-gray-800">{event.title}</h3>
+                                <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">
+                                    {origin}/{event.slug} ↗
+                                </a>
+                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-1 rounded text-sm">📱 QR</button>
-                            <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 px-3 py-1 rounded text-sm">Yönet</button>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black transition">📱 QR Kod</button>
+                            <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Yönet</button>
                         </div>
                     </div>
+
+                    {/* QR PENCERESİ */}
                     {showQrId === event.id && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded border flex flex-col items-center">
-                            <div className="p-2 bg-white rounded shadow-sm"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={150} level={"H"}/></div>
-                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 İndir</button>
+                        <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
+                            <div className="p-3 bg-white rounded-lg shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
+                            <button onClick={() => downloadQRCode(event.slug)} className="text-indigo-600 font-bold hover:underline text-sm">📥 QR Kodunu İndir (.PNG)</button>
                         </div>
                     )}
+
+                    {/* YÖNETİM PANELİ */}
                     {selectedEventId === event.id && (
-                        <div className="mt-4 bg-gray-50 p-4 rounded border-t">
-                            <div className="flex gap-4 border-b mb-2">
-                                <button onClick={() => setActiveTab('guests')} className={`p-1 ${activeTab==='guests' && 'font-bold'}`}>Davetliler ({guests.length})</button>
-                                <button onClick={() => setActiveTab('photos')} className={`p-1 ${activeTab==='photos' && 'font-bold'}`}>Fotolar ({photos.length})</button>
+                        <div className="mt-6 border-t pt-6">
+                            <div className="flex gap-6 border-b border-gray-100 mb-4 pb-1">
+                                <button onClick={() => setActiveTab('guests')} className={`pb-2 px-1 text-sm font-bold transition ${activeTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Davetliler ({guests.length})</button>
+                                <button onClick={() => setActiveTab('photos')} className={`pb-2 px-1 text-sm font-bold transition ${activeTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Fotoğraflar ({photos.length})</button>
                             </div>
-                            {loadingDetails ? 'Yükleniyor...' : (
+
+                            {loadingDetails ? <p className="text-gray-400 text-sm">Yükleniyor...</p> : (
                                 activeTab === 'guests' ? (
-                                    <ul className="text-sm">{guests.map(g => <li key={g.id} className="border-b py-1">{g.name} ({g.status})</li>)}</ul>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-gray-50 text-gray-500 uppercase text-xs"><tr><th className="px-4 py-2">İsim</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Durum</th><th className="px-4 py-2">Kişi</th></tr></thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {guests.map(g => (
+                                                    <tr key={g.id}><td className="px-4 py-3 font-medium">{g.name}</td><td className="px-4 py-3 text-gray-500">{g.email}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs ${g.status==='katiliyor'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{g.status}</span></td><td className="px-4 py-3">+{g.plus_one}</td></tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {guests.length === 0 && <p className="text-gray-400 text-sm italic mt-2">Henüz yanıt yok.</p>}
+                                    </div>
                                 ) : (
-                                    <div className="grid grid-cols-4 gap-2">{photos.map(p => (
-                                        <div key={p.id} className="relative group">
-                                            <img src={p.image_url} className="h-20 w-20 object-cover rounded"/>
-                                            <button onClick={() => deletePhoto(p.id)} className="absolute top-0 right-0 bg-red-600 text-white text-xs px-1">X</button>
+                                    <div>
+                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                            {photos.map(p => (
+                                                <div key={p.id} className="relative group rounded-lg overflow-hidden shadow-sm aspect-square">
+                                                    <img src={p.image_url} className="w-full h-full object-cover"/>
+                                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                                                        <button onClick={() => deletePhoto(p.id)} className="bg-red-600 text-white text-xs px-3 py-1 rounded-full opacity-0 group-hover:opacity-100 transition transform scale-90 group-hover:scale-100">Sil 🗑️</button>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}</div>
+                                        {photos.length === 0 && <p className="text-gray-400 text-sm italic mt-2">Henüz fotoğraf yok.</p>}
+                                    </div>
                                 )
                             )}
                         </div>
