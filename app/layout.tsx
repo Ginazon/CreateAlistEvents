@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "./providers"; // <-- YENİ IMPORT
 
 export const metadata: Metadata = {
   title: "Cereget",
@@ -13,12 +12,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        {/* Tüm uygulamayı Providers ile sarıyoruz */}
-        <Providers>
-            {children}
-        </Providers>
+    <html lang="tr">
+      <body className="antialiased bg-gray-50 text-gray-900">
+        {children}
       </body>
     </html>
   );
