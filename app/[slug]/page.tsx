@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from './../lib/supabaseClient' // Dosya yoluna dikkat: ../../lib/supabaseClient
-import RsvpForm from './../components/RsvpForm' // Dosya yoluna dikkat: ../../components/RsvpForm
-import PhotoGallery from './../components/PhotoGallery' // Dosya yoluna dikkat: ../../components/PhotoGallery
-import Countdown from './../components/Countdown' // Dosya yoluna dikkat: ../../components/Countdown
+import { supabase } from './../lib/supabaseClient'
+import RsvpForm from './../components/RsvpForm'
+import PhotoGallery from './../components/PhotoGallery'
+import Countdown from './../components/Countdown'
 import { useRouter } from 'next/navigation' 
 import Link from 'next/link'
-import { useTranslation } from './../i18n' // Dosya yoluna dikkat: ../../i18n
+import { useTranslation } from './../i18n'
 
-// Sayfa Bileşeni (Default Export Olmalı)
+// DÜZELTME: 'export default' burada olmak ZORUNDA
 export default function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const { t } = useTranslation()
@@ -21,7 +21,6 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
 
   useEffect(() => {
     const fetchData = async () => {
-      // Next.js 15+ Params Promise Çözümü
       const resolvedParams = await params
       const { data, error } = await supabase.from('events').select('*').eq('slug', resolvedParams.slug).single()
       
@@ -66,7 +65,7 @@ export default function EventPage({ params }: { params: Promise<{ slug: string }
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
       
-      {/* 1. KAPAK */}
+      {/* 1. KAPAK GÖRSELİ */}
       {event.image_url ? (
         <div className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative" style={{ backgroundColor: themeColor + '10' }}>
           <img src={event.image_url} className="object-cover w-full h-full" />
