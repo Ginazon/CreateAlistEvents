@@ -37,6 +37,7 @@ export const dictionary = {
   modal_no_response: 'Bu misafir özel sorulara cevap vermemiş.',
   modal_close_btn: 'Kapat',
   view_details_btn: 'Cevapları Gör',
+  export_pdf_btn: 'PDF İndir 📄',
 },
   en: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', edit: 'Edit', delete: 'Delete', logout: 'Log Out', confirm_delete: 'Are you sure?',
@@ -55,8 +56,11 @@ export const dictionary = {
   modal_no_response: 'No custom responses from this guest.',
   modal_close_btn: 'Close',
   view_details_btn: 'View Answers',
+  export_pdf_btn: 'Download PDF 📄',
+  
 },
   de: {
+    
     loading: 'Laden...', save: 'Speichern', cancel: 'Abbrechen', edit: 'Bearbeiten', delete: 'Löschen', logout: 'Abmelden', confirm_delete: 'Löschen?',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Verwalten Sie Ihre Events.', my_credits: 'Credits', create_new_event: '+ Neu', no_events: 'Keine Events.', manage: 'Verwalten', download: 'Laden', guests_tab: '📋 Gäste', photos_tab: '📸 Galerie',
     export_btn: 'Excel Laden 📥',

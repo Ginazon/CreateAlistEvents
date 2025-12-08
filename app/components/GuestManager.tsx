@@ -6,6 +6,9 @@ import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import { useTranslation } from '../i18n'
 import * as XLSX from 'xlsx'
+// YENİ İMPORTLAR
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface GuestManagerProps {
     eventId: string;
@@ -22,14 +25,11 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   const [inviteTemplate, setInviteTemplate] = useState(`Merhaba [Ad], seni ${eventTitle} etkinliğimize bekliyoruz! 🥂\nDetaylar ve LCV için: [Link]`)
   const [isEditingTemplate, setIsEditingTemplate] = useState(false)
   
-  // YENİ GİRİŞ STATE'LERİ
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newMethod, setNewMethod] = useState('whatsapp')
   const [defaultCountry, setDefaultCountry] = useState('tr')
-  
-  // YENİ: DETAY MODALI İÇİN STATE
   const [selectedGuest, setSelectedGuest] = useState<any>(null)
 
   const eventLink = typeof window !== 'undefined' ? `${window.location.origin}/${eventSlug}` : `/${eventSlug}`
@@ -78,7 +78,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
       fetchGuests()
   }
   
-  // EXCEL İNDİRME
+  // --- EXCEL İNDİRME ---
   const downloadExcel = () => {
       const dataToExport = guests.map(g => ({
           "İsim": g.name,
@@ -86,15 +86,64 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
           "+Kişi": g.plus_one,
           "Yöntem": g.invite_method,
           "Telefon": g.phone,
-          "Email": g.email,
+          "E-Posta": g.email,
           "Not": g.note,
-          ...(g.form_responses || {}), // ÖZEL CEVAPLARI SÜTUN OLARAK EKLE
+          ...(g.form_responses || {}), 
           "Kayıt": new Date(g.created_at).toLocaleDateString()
       }))
       const worksheet = XLSX.utils.json_to_sheet(dataToExport)
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, "Davetliler")
       XLSX.writeFile(workbook, `Davetli_Listesi_${eventSlug}.xlsx`)
+  }
+
+  // --- YENİ: PDF İNDİRME (BLOK GÖRÜNÜM) ---
+  const downloadPdf = () => {
+    const doc = new jsPDF()
+
+    // Başlık
+    doc.setFontSize(18)
+    doc.text(eventTitle, 14, 20)
+    doc.setFontSize(10)
+    doc.text(`Davetli Listesi - Toplam: ${stats.total}`, 14, 28)
+
+    // Tablo Verisini Hazırla (Alt Alta Satırlar İçin)
+    const tableBody = guests.map((g, index) => {
+        // 1. Sütun: Kimlik Bilgileri
+        const identity = `AD: ${g.name}\nDURUM: ${g.status.toUpperCase()}\n+KİŞİ: ${g.plus_one}`
+        
+        // 2. Sütun: İletişim
+        const contact = `TEL: ${g.phone || '-'}\nMAIL: ${g.email || '-'}\nYÖNTEM: ${g.invite_method}`
+        
+        // 3. Sütun: Detaylar & Form Cevapları
+        let details = ''
+        if (g.note) details += `NOT: ${g.note}\n`
+        if (g.form_responses) {
+            Object.entries(g.form_responses).forEach(([key, val]) => {
+                details += `${key}: ${val}\n`
+            })
+        }
+        if (!details) details = '-'
+
+        return [index + 1, identity, contact, details]
+    })
+
+    autoTable(doc, {
+        head: [['#', 'KİMLİK BİLGİLERİ', 'İLETİŞİM', 'DETAYLAR & CEVAPLAR']],
+        body: tableBody,
+        startY: 35,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 3, valign: 'middle' },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Indigo rengi
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 60 },
+            3: { cellWidth: 'auto' } // Kalan alanı doldur
+        },
+    })
+
+    doc.save(`Davetli_Listesi_${eventSlug}.pdf`)
   }
 
   const generateMessage = (guestName: string) => inviteTemplate.replace('[Ad]', guestName).replace('[Link]', eventLink)
@@ -122,8 +171,6 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                                 <p className="text-xs text-gray-500">{selectedGuest.email || selectedGuest.phone}</p>
                             </div>
                         </div>
-
-                        {/* ÖZEL CEVAPLAR */}
                         <div className="space-y-3">
                             <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Form Cevapları</h5>
                             {selectedGuest.form_responses && Object.keys(selectedGuest.form_responses).length > 0 ? (
@@ -137,8 +184,6 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                                 <p className="text-sm text-gray-400 italic">{t('modal_no_response')}</p>
                             )}
                         </div>
-
-                        {/* NOT */}
                         {selectedGuest.note && (
                             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
                                 <p className="text-xs font-bold text-yellow-700 mb-1">Not:</p>
@@ -161,14 +206,17 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-indigo-900 text-sm uppercase">{t('guest_status')}</h3>
                     
-                    {/* EXCEL BUTONU (HER ZAMAN GÖRÜNÜR) */}
-                    <button 
-                        onClick={downloadExcel} 
-                        disabled={guests.length === 0}
-                        className="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700 transition flex items-center gap-1 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {t('export_btn')}
-                    </button>
+                    {/* İNDİRME BUTONLARI GRUBU */}
+                    {guests.length > 0 && (
+                        <div className="flex gap-2">
+                            <button onClick={downloadExcel} className="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700 transition flex items-center gap-1 font-bold">
+                                {t('export_btn')}
+                            </button>
+                            <button onClick={downloadPdf} className="bg-red-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-red-700 transition flex items-center gap-1 font-bold">
+                                {t('export_pdf_btn')}
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-4">
                     <div className="bg-white p-3 rounded shadow-sm flex-1 text-center"><div className="text-2xl font-bold text-gray-800">{stats.total}</div><div className="text-xs text-gray-500">{t('total')}</div></div>
@@ -215,7 +263,6 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         <tr key={g.id} className="hover:bg-gray-50 transition cursor-pointer" onClick={() => setSelectedGuest(g)}>
                             <td className="px-4 py-3 font-bold text-gray-800 flex items-center gap-2">
                                 {g.name}
-                                {/* DETAY İKONU (GÖZ) */}
                                 {g.form_responses && Object.keys(g.form_responses).length > 0 && (
                                     <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title={t('view_details_btn')}>👁️</span>
                                 )}
