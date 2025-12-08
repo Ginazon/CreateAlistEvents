@@ -207,50 +207,7 @@ function CreateEventContent() {
         <div className="p-8 overflow-y-auto h-[calc(100vh-80px)] bg-white border-r">
             <div className="max-w-md mx-auto space-y-8">
                 {/* 1. Görseller */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">1. Görseller</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">Kapak</label>
-                            <input type="file" onChange={(e) => handleFileChange(e, 'cover')} className="text-xs"/>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">İçerik</label>
-                            <input type="file" onChange={(e) => handleFileChange(e, 'main')} className="text-xs"/>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 2. İçerik */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">2. İçerik</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border mb-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Başlık</label>
-                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2"/>
-                         <div className="flex gap-2"><select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="1.5" max="5" step="0.1" value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-xl border">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Mesaj</label>
-                        <textarea value={message} onChange={e => setMessage(e.target.value)} className="w-full border p-2 rounded mb-2 h-20 text-sm"/>
-                        <div className="flex gap-2"><select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="0.8" max="2" step="0.1" value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
-                    </div>
-                </section>
-
-                {/* 3. Tarih & Mekan */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">3. Detaylar</h3>
-                    <input type="datetime-local" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border p-3 rounded-lg mb-3"/>
-                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Mekan Adı" className="w-full border p-3 rounded-lg mb-2"/>
-                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} placeholder="Harita Linki" className="w-full border p-3 rounded-lg"/>
-                </section>
-
-                {/* 4. Renk */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">4. Tema Rengi</h3>
-                    <div className="flex gap-3">{THEME_COLORS.map(c => (<button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-8 h-8 rounded-full border-4 ${themeColor === c.hex ? 'border-gray-400 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c.hex }}/>))}</div>
-                </section>
-
-                {/* 5. FORM BUILDER (YENİ BÖLÜM) */}
+                {/* 5. FORM BUILDER (GÜNCELLENDİ) */}
                 <section className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                     <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-200 pb-2 flex justify-between items-center">
                         5. Kayıt Formu Soruları
@@ -258,18 +215,32 @@ function CreateEventContent() {
                     </h3>
                     
                     <div className="space-y-4">
-                        {formFields.length === 0 && <p className="text-xs text-gray-500 italic text-center">Henüz ekstra soru eklemediniz. (İsim, Email ve Katılım Durumu standarttır.)</p>}
                         
+                        {/* 🔒 SABİT (STANDART) ALANLAR - Sadece Bilgi İçin */}
+                        <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none">
+                            <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">🔒 Standart Alanlar (Otomatik Eklenir)</p>
+                            <div className="space-y-2">
+                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Ad Soyad</span> <span className="text-[10px] bg-gray-200 px-1 rounded">Zorunlu</span></div>
+                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>E-Posta</span> <span className="text-[10px] bg-gray-200 px-1 rounded">Zorunlu</span></div>
+                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Katılım Durumu (Evet/Hayır)</span> <span className="text-[10px] bg-gray-200 px-1 rounded">Zorunlu</span></div>
+                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>+ Kişi Sayısı</span> <span className="text-[10px] bg-gray-200 px-1 rounded">Opsiyonel</span></div>
+                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Notunuz</span> <span className="text-[10px] bg-gray-200 px-1 rounded">Opsiyonel</span></div>
+                            </div>
+                        </div>
+
+                        {/* EKSTRA SORULAR LİSTESİ */}
+                        {formFields.length > 0 && <p className="text-xs font-bold text-indigo-800 mt-2">Eklediğiniz Özel Sorular:</p>}
+
                         {formFields.map((field, index) => (
-                            <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group">
-                                <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold">&times;</button>
+                            <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group animate-fadeIn">
+                                <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
                                 
                                 {/* Soru Başlığı */}
                                 <input 
                                     type="text" 
                                     value={field.label} 
                                     onChange={(e) => updateField(index, 'label', e.target.value)}
-                                    className="w-full font-bold text-sm border-b border-dashed border-gray-300 outline-none focus:border-indigo-500 mb-2"
+                                    className="w-full font-bold text-sm border-b border-dashed border-gray-300 outline-none focus:border-indigo-500 mb-2 text-gray-900"
                                     placeholder="Sorunuzu yazın (Örn: Menü Tercihi)"
                                 />
 
@@ -278,7 +249,7 @@ function CreateEventContent() {
                                     <select 
                                         value={field.type} 
                                         onChange={(e) => updateField(index, 'type', e.target.value)}
-                                        className="text-xs border rounded p-1 bg-gray-50"
+                                        className="text-xs border rounded p-1 bg-gray-50 text-gray-900"
                                     >
                                         <option value="text">Kısa Metin</option>
                                         <option value="textarea">Uzun Metin</option>
@@ -286,7 +257,7 @@ function CreateEventContent() {
                                     </select>
                                     
                                     {/* Zorunlu Mu? */}
-                                    <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+                                    <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer select-none">
                                         <input 
                                             type="checkbox" 
                                             checked={field.required}
@@ -302,7 +273,7 @@ function CreateEventContent() {
                                         value={field.options}
                                         onChange={(e) => updateField(index, 'options', e.target.value)}
                                         placeholder="Seçenekleri virgülle ayırın (Tavuk, Et, Sebze)"
-                                        className="w-full text-xs border p-2 rounded bg-yellow-50"
+                                        className="w-full text-xs border p-2 rounded bg-yellow-50 text-gray-900"
                                     />
                                 )}
                             </div>
