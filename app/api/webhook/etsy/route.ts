@@ -1,83 +1,83 @@
 import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
-
-// Admin yetkisiyle Supabase (Service Role Key kullanacağız çünkü krediyi herkes değiştirememeli)
-// NOT: Bu işlemi güvenli yapmak için Service Role Key'i env dosyana eklemen lazım.
-// Şimdilik 'anon' key ile yapalım ama RLS'de 'profiles' update iznini herkese açmıştık, o yüzden çalışır.
-// Gerçek canlı ortamda buraya SUPABASE_SERVICE_ROLE_KEY gerekir.
+import { NextRequest, NextResponse } from 'next/server'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! 
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY! 
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    // 1. Make.com'dan gelen veriyi al
-    const body = await request.json()
+    if (!supabaseServiceKey) {
+      return NextResponse.json({ error: 'Server Config Error' }, { status: 500 })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const body = await req.json()
     const { email, listing_id } = body
 
     if (!email || !listing_id) {
-      return NextResponse.json({ error: 'Email ve Listing ID zorunlu' }, { status: 400 })
+      return NextResponse.json({ error: 'Eksik bilgi' }, { status: 400 })
     }
 
-    console.log(`Webhook Geldi: ${email} için ürün ${listing_id}`)
+    console.log(`Webhook Tetiklendi: ${email} - Ürün ${listing_id}`)
 
-    // 2. Bu ürün ne kadar kredi veriyor? Veritabanına sor
-    const { data: product, error: productError } = await supabase
-      .from('etsy_products')
+    // 1. Paket Bilgisini Al
+    const { data: packageData, error: packageError } = await supabase
+      .from('credit_packages')
       .select('*')
-      .eq('listing_id', listing_id)
+      .eq('etsy_listing_id', listing_id.toString())
       .single()
 
-    if (productError || !product) {
-      return NextResponse.json({ error: 'Tanımsız ürün ID' }, { status: 404 })
+    if (packageError || !packageData) {
+      return NextResponse.json({ error: 'Tanımsız Paket ID' }, { status: 404 })
     }
 
-    // 3. Kullanıcıyı Bul (Email ile)
-    let { data: userProfile } = await supabase
+    // 2. Kullanıcı Var mı?
+    const { data: userData } = await supabase
       .from('profiles')
       .select('*')
       .eq('email', email)
       .single()
 
-    // Eğer kullanıcı yoksa? (Henüz siteye girmemiş ama satın almış)
-    // Bu durumda "Hayalet Profil" oluşturamayız çünkü Auth ID lazım.
-    // Şimdilik sadece kayıtlı kullanıcılara kredi yükleyelim.
-    // (İleri seviyede: Email tablosuna atıp, kayıt olunca kredi verebiliriz)
+    // SENARYO A: Kullanıcı Zaten Üye -> Direkt Yükle
+    if (userData) {
+      const newCredits = (userData.credits || 0) + packageData.credits_amount
+      await supabase.from('profiles').update({ credits: newCredits }).eq('id', userData.id)
+      
+      // Satış sayacını artır
+      await supabase.rpc('increment_sales_count', { row_id: packageData.id })
+
+      return NextResponse.json({ 
+        success: true, 
+        message: `Mevcut kullanıcıya ${packageData.credits_amount} kredi yüklendi.`,
+        status: 'DIRECT_LOAD'
+      })
+    } 
     
-    if (!userProfile) {
-      // Geçici Çözüm: Kullanıcı yoksa işlem yapma (veya logla)
-      return NextResponse.json({ message: 'Kullanıcı henüz siteye üye değil, kredi beklemeye alındı.' }, { status: 200 })
+    // SENARYO B: Kullanıcı Yok -> Emanet Kasasına (Pending) Yaz
+    else {
+      const { error: pendingError } = await supabase.from('pending_credits').insert([{
+        email: email,
+        credits_amount: packageData.credits_amount,
+        listing_id: listing_id.toString()
+      }])
+
+      if (pendingError) {
+        console.error('Pending Kayıt Hatası:', pendingError)
+        return NextResponse.json({ error: 'Pending kayıt hatası' }, { status: 500 })
+      }
+
+      // Satış sayacını yine de artır (Para alındı sonuçta)
+      await supabase.rpc('increment_sales_count', { row_id: packageData.id })
+
+      return NextResponse.json({ 
+        success: true, 
+        message: `Kullanıcı bulunamadı. ${packageData.credits_amount} kredi 'Bekleyen' olarak kaydedildi. Üye olunca yüklenecek.`,
+        status: 'PENDING_LOAD'
+      })
     }
-
-    // 4. Krediyi Yükle
-    let updateData: any = {}
-    let message = ''
-
-    if (product.is_unlimited) {
-      // Sınırsız Paket
-      updateData = { is_premium: true, credits: 9999 } // Göstermelik yüksek kredi
-      message = 'Sınırsız Erişim Tanımlandı'
-    } else {
-      // Kredi Paketi
-      const newCredits = (userProfile.credits || 0) + product.credits
-      updateData = { credits: newCredits }
-      message = `${product.credits} Kredi Eklendi. Yeni Bakiye: ${newCredits}`
-    }
-
-    // Güncelle
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('email', email)
-
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, message, user: email })
 
   } catch (error: any) {
+    console.error('Webhook Hatası:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
