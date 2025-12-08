@@ -1,25 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabaseClient'
+// DÜZELTME: '..' yerine '.' kullanıyoruz çünkü lib klasörü page.tsx ile aynı yerde
+import { supabase } from './lib/supabaseClient' 
 import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-// YENİ İMPORTLAR
-import { useLanguage } from './context/LanguageContext'
+// DÜZELTME: context klasörü de aynı seviyede
+import { useLanguage } from './context/LanguageContext' 
 import LanguageSwitcher from './components/LanguageSwitcher'
 import GuestManager from './components/GuestManager'
+import Countdown from './components/Countdown' 
 
 export default function Dashboard() {
   const router = useRouter()
-  // DİL HOOK'U
   const { t } = useLanguage() 
-  
   const [session, setSession] = useState<any>(null)
   
-  // ... (DİĞER STATE'LER AYNI KALACAK: credits, myEvents, loadingDetails vb.) ...
-  // git push sorunu çıkarsa kaydet için güncellenecek satır
-  // Lütfen mevcut state kodlarınızı silmeyin, buraya sığdırmak için kısaltıyorum.
+  // ... (Diğer state tanımları aynen kalsın) ...
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
@@ -30,9 +28,12 @@ export default function Dashboard() {
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [origin, setOrigin] = useState('')
 
+  // DÜZELTME: 'session' tipi any olarak belirtildi
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+
+    supabase.auth.getSession().then(({ data }: { data: { session: any } }) => {
+      const session = data.session
       setSession(session)
       if (session) {
         fetchMyEvents(session.user.id)
@@ -42,6 +43,10 @@ export default function Dashboard() {
       }
     })
   }, [router])
+
+  // ... (Dosyanın geri kalan fonksiyonları ve return kısmı aynen kalsın) ...
+  // Kodu kısaltmak için buraya hepsini koymuyorum, sadece import ve useEffect değişecek.
+  // ...
 
   // ... (TÜM FONKSİYONLAR AYNI KALACAK: fetchMyEvents, deletePhoto vb.) ...
   const fetchMyEvents = async (userId: string) => {
