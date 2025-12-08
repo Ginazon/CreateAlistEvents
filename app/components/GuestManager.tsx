@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import PhoneInput from 'react-phone-input-2' // <-- KÜTÜPHANE EKLENDİ
+import 'react-phone-input-2/lib/style.css' // <-- CSS EKLENDİ
 
 interface GuestManagerProps {
     eventId: string;
@@ -24,7 +26,10 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
-  const [newMethod, setNewMethod] = useState('whatsapp') // Varsayılan
+  const [newMethod, setNewMethod] = useState('whatsapp')
+  
+  // Ülke Kodu Varsayılanı (Browser Ayarı)
+  const [defaultCountry, setDefaultCountry] = useState('tr')
 
   // Link (Mesajda kullanılacak)
   const eventLink = typeof window !== 'undefined' ? `${window.location.origin}/${eventSlug}` : `/${eventSlug}`
@@ -32,6 +37,12 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   useEffect(() => {
     fetchGuests()
     fetchTemplate()
+    
+    // Tarayıcı dilinden ülkeyi bul (Örn: "en-US" -> "us", "tr-TR" -> "tr")
+    if (typeof window !== 'undefined' && navigator.language) {
+        const countryCode = navigator.language.split('-').pop()?.toLowerCase();
+        if (countryCode) setDefaultCountry(countryCode);
+    }
   }, [eventId])
 
   const fetchGuests = async () => {
@@ -72,15 +83,15 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
       const { error } = await supabase.from('guests').insert([{
           event_id: eventId,
           name: newName,
-          email: newEmail, // Boş olabilir
-          phone: newPhone, // Boş olabilir
+          email: newEmail, 
+          phone: newPhone, 
           invite_method: newMethod,
           status: 'bekleniyor'
       }])
 
       if (error) alert(error.message)
       else {
-          setNewName(''); setNewEmail(''); setNewPhone(''); // Formu temizle
+          setNewName(''); setNewEmail(''); setNewPhone(''); 
           fetchGuests()
       }
       setLoading(false)
@@ -98,8 +109,9 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   }
 
   const sendWhatsapp = (phone: string, name: string) => {
+      // PhoneInput bize temiz data verir (örn: 905551234567), direkt kullanabiliriz.
       const msg = encodeURIComponent(generateMessage(name))
-      window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${msg}`, '_blank')
+      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
   }
 
   const sendEmail = (email: string, name: string) => {
@@ -173,17 +185,31 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                     </select>
                 </div>
 
-                {/* Telefon (Koşullu) */}
+                {/* Telefon (Global Format - YENİ) */}
                 <div className="md:col-span-3">
                     <label className={`text-[10px] font-bold block mb-1 ${newMethod === 'email' ? 'text-gray-300' : 'text-gray-600'}`}>TELEFON</label>
-                    <input 
-                        type="text" 
-                        value={newPhone} 
-                        onChange={e => setNewPhone(e.target.value)} 
-                        disabled={newMethod === 'email'}
-                        className={`w-full border p-2 rounded text-sm ${newMethod === 'email' ? 'bg-gray-100 text-gray-300' : 'bg-white'}`}
-                        placeholder="5XX..."
-                    />
+                    <div className={newMethod === 'email' ? 'opacity-50 pointer-events-none' : ''}>
+                        <PhoneInput
+                            country={defaultCountry} // Tarayıcıdan gelen varsayılan ülke
+                            value={newPhone}
+                            onChange={phone => setNewPhone(phone)}
+                            inputStyle={{
+                                width: '100%',
+                                height: '38px',
+                                fontSize: '14px',
+                                borderColor: '#e5e7eb', // Tailwind gray-200
+                                borderRadius: '0.375rem', // Tailwind rounded
+                                backgroundColor: newMethod === 'email' ? '#f3f4f6' : 'white'
+                            }}
+                            buttonStyle={{
+                                borderColor: '#e5e7eb',
+                                borderTopLeftRadius: '0.375rem',
+                                borderBottomLeftRadius: '0.375rem',
+                            }}
+                            disabled={newMethod === 'email'}
+                            placeholder="555..."
+                        />
+                    </div>
                 </div>
 
                 {/* Email (Koşullu) */}
@@ -194,7 +220,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         value={newEmail} 
                         onChange={e => setNewEmail(e.target.value)} 
                         disabled={newMethod !== 'email'}
-                        className={`w-full border p-2 rounded text-sm ${newMethod !== 'email' ? 'bg-gray-100 text-gray-300' : 'bg-white'}`}
+                        className={`w-full border p-2 rounded text-sm h-[38px] ${newMethod !== 'email' ? 'bg-gray-100 text-gray-300' : 'bg-white'}`}
                         placeholder="@"
                     />
                 </div>
@@ -225,7 +251,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         <tr key={g.id} className="hover:bg-gray-50 transition">
                             <td className="px-4 py-3 font-bold text-gray-800">{g.name}</td>
                             <td className="px-4 py-3 text-gray-500 font-mono text-xs">
-                                {g.phone && <div className="flex items-center gap-1">📱 {g.phone}</div>}
+                                {g.phone && <div className="flex items-center gap-1">📱 +{g.phone}</div>}
                                 {g.email && <div className="flex items-center gap-1">📧 {g.email}</div>}
                             </td>
                             <td className="px-4 py-3">
@@ -241,19 +267,19 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                                 {/* WhatsApp Butonu */}
                                 {g.invite_method === 'whatsapp' && (
                                     <button onClick={() => sendWhatsapp(g.phone, g.name)} className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-green-600 shadow-sm transition transform active:scale-95">
-                                        WhatsApp Gönder ↗
+                                        WhatsApp ↗
                                     </button>
                                 )}
                                 {/* SMS Butonu */}
                                 {g.invite_method === 'sms' && (
-                                    <a href={`sms:${g.phone}?body=${encodeURIComponent(generateMessage(g.name))}`} className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-black shadow-sm inline-block">
-                                        SMS Gönder ↗
+                                    <a href={`sms:+${g.phone}?body=${encodeURIComponent(generateMessage(g.name))}`} className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-black shadow-sm inline-block">
+                                        SMS ↗
                                     </a>
                                 )}
                                 {/* Email Butonu */}
                                 {g.invite_method === 'email' && (
                                     <button onClick={() => sendEmail(g.email, g.name)} className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-600 shadow-sm transition transform active:scale-95">
-                                        Mail Gönder ↗
+                                        Mail ↗
                                     </button>
                                 )}
                             </td>
