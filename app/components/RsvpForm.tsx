@@ -16,7 +16,6 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
   const [customSchema, setCustomSchema] = useState<any[]>([])
   const [formResponses, setFormResponses] = useState<Record<string, any>>({})
 
-  // Form Şemasını Çek
   useEffect(() => {
       const fetchSchema = async () => {
           const { data } = await supabase.from('events').select('custom_form_schema').eq('id', eventId).single()
@@ -27,7 +26,6 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
       fetchSchema()
   }, [eventId])
 
-  // Dinamik Input Değişimi
   const handleCustomChange = (label: string, value: any) => {
       setFormResponses(prev => ({ ...prev, [label]: value }))
   }
@@ -36,7 +34,6 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
     e.preventDefault()
     setLoading(true)
 
-    // Önce aynı email var mı kontrol et
     const { data: existing } = await supabase.from('guests').select('*').eq('event_id', eventId).eq('email', email).single()
 
     const payload = {
@@ -51,11 +48,9 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
 
     let error;
     if (existing) {
-        // Varsa güncelle
         const { error: err } = await supabase.from('guests').update(payload).eq('id', existing.id)
         error = err
     } else {
-        // Yoksa ekle
         const { error: err } = await supabase.from('guests').insert([payload])
         error = err
     }
@@ -80,34 +75,45 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
     )
   }
 
+  // --- STİL AYARI: iOS Dark Mode Fix ---
+  const inputStyle = { colorScheme: 'light' } // Bu satır iPhone'da siyah yazı/beyaz arkaplanı zorlar.
+
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left bg-gray-50 p-6 rounded-xl border border-gray-100">
       <h3 className="font-bold text-center text-gray-800 mb-4">LCV Formu</h3>
       
       {/* STANDART ALANLAR */}
-      {/* NOT: Tüm inputlara 'text-gray-900' eklendi (iPhone Dark Mode Fix) */}
-      
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">Ad Soyad *</label>
-        <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white" placeholder="İsminiz"/>
+        <input required type="text" value={name} onChange={e => setName(e.target.value)} 
+               className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white appearance-none"
+               style={inputStyle} 
+               placeholder="İsminiz"/>
       </div>
 
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">E-Posta * (Galeriye giriş için)</label>
-        <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white" placeholder="ornek@email.com"/>
+        <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
+               className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white appearance-none"
+               style={inputStyle}
+               placeholder="ornek@email.com"/>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-1">Durum</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full border p-3 rounded-lg bg-white text-gray-900">
+            <select value={status} onChange={e => setStatus(e.target.value)} 
+                    className="w-full border p-3 rounded-lg bg-white text-gray-900 appearance-none"
+                    style={inputStyle}>
                 <option value="katiliyor">Katılıyorum 🥳</option>
                 <option value="katilmiyor">Katılamıyorum 😔</option>
             </select>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 mb-1">+ Kişi Sayısı</label>
-            <input type="number" min="0" max="10" value={plusOne} onChange={e => setPlusOne(Number(e.target.value))} className="w-full border p-3 rounded-lg text-gray-900 bg-white"/>
+            <input type="number" min="0" max="10" value={plusOne} onChange={e => setPlusOne(Number(e.target.value))} 
+                   className="w-full border p-3 rounded-lg text-gray-900 bg-white appearance-none"
+                   style={inputStyle}/>
           </div>
       </div>
 
@@ -121,26 +127,25 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
                       </label>
                       
                       {field.type === 'text' && (
-                          <input 
-                              type="text" 
-                              required={field.required}
-                              className="w-full border p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 text-gray-900 bg-white"
+                          <input type="text" required={field.required}
+                              className="w-full border p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 text-gray-900 bg-white appearance-none"
+                              style={inputStyle}
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                           />
                       )}
 
                       {field.type === 'textarea' && (
-                          <textarea 
-                              required={field.required}
-                              className="w-full border p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 h-20 text-gray-900 bg-white"
+                          <textarea required={field.required}
+                              className="w-full border p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 h-20 text-gray-900 bg-white appearance-none"
+                              style={inputStyle}
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                           />
                       )}
 
                       {field.type === 'select' && (
-                          <select 
-                              required={field.required}
-                              className="w-full border p-3 rounded-lg bg-white text-gray-900"
+                          <select required={field.required}
+                              className="w-full border p-3 rounded-lg bg-white text-gray-900 appearance-none"
+                              style={inputStyle}
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                               defaultValue=""
                           >
@@ -155,10 +160,13 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
           </div>
       )}
 
-      {/* NOT ALANI (Standart) */}
+      {/* NOT ALANI */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">Notunuz (Opsiyonel)</label>
-        <textarea value={note} onChange={e => setNote(e.target.value)} className="w-full border p-3 rounded-lg h-20 outline-none text-gray-900 bg-white" placeholder="İletmek istediğiniz bir mesaj..."/>
+        <textarea value={note} onChange={e => setNote(e.target.value)} 
+                  className="w-full border p-3 rounded-lg h-20 outline-none text-gray-900 bg-white appearance-none"
+                  style={inputStyle}
+                  placeholder="İletmek istediğiniz bir mesaj..."/>
       </div>
 
       <button type="submit" disabled={loading} className="w-full text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-90 transition disabled:opacity-50" style={{ backgroundColor: themeColor }}>
