@@ -6,7 +6,6 @@ import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/style.css'
 import { useTranslation } from '../i18n'
 import * as XLSX from 'xlsx'
-// YENİ İMPORTLAR
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -78,26 +77,26 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
       fetchGuests()
   }
   
-  // --- EXCEL İNDİRME ---
+  // --- EXCEL İNDİRME (DİNAMİK DİL) ---
   const downloadExcel = () => {
       const dataToExport = guests.map(g => ({
-          "İsim": g.name,
-          "Durum": g.status,
-          "+Kişi": g.plus_one,
-          "Yöntem": g.invite_method,
-          "Telefon": g.phone,
-          "E-Posta": g.email,
-          "Not": g.note,
+          [t('col_name')]: g.name,
+          [t('col_status')]: g.status,
+          [t('col_count')]: g.plus_one,
+          [t('col_contact')]: g.invite_method, // Yöntem
+          [t('pdf_label_phone')]: g.phone,
+          [t('pdf_label_email')]: g.email,
+          [t('col_note')]: g.note,
           ...(g.form_responses || {}), 
-          "Kayıt": new Date(g.created_at).toLocaleDateString()
+          "Date": new Date(g.created_at).toLocaleDateString()
       }))
       const worksheet = XLSX.utils.json_to_sheet(dataToExport)
       const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Davetliler")
-      XLSX.writeFile(workbook, `Davetli_Listesi_${eventSlug}.xlsx`)
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Guests")
+      XLSX.writeFile(workbook, `Guests_${eventSlug}.xlsx`)
   }
 
-  // --- YENİ: PDF İNDİRME (BLOK GÖRÜNÜM) ---
+  // --- PDF İNDİRME (DİNAMİK DİL) ---
   const downloadPdf = () => {
     const doc = new jsPDF()
 
@@ -105,19 +104,20 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
     doc.setFontSize(18)
     doc.text(eventTitle, 14, 20)
     doc.setFontSize(10)
-    doc.text(`Davetli Listesi - Toplam: ${stats.total}`, 14, 28)
+    // "Total: 15" gibi dinamik
+    doc.text(`${t('total')}: ${stats.total}`, 14, 28)
 
-    // Tablo Verisini Hazırla (Alt Alta Satırlar İçin)
+    // Tablo Verisini Hazırla
     const tableBody = guests.map((g, index) => {
-        // 1. Sütun: Kimlik Bilgileri
-        const identity = `AD: ${g.name}\nDURUM: ${g.status.toUpperCase()}\n+KİŞİ: ${g.plus_one}`
+        // 1. Sütun: Kimlik
+        const identity = `${t('pdf_label_name')}: ${g.name}\n${t('pdf_label_status')}: ${g.status.toUpperCase()}\n+${t('pdf_label_count')}: ${g.plus_one}`
         
         // 2. Sütun: İletişim
-        const contact = `TEL: ${g.phone || '-'}\nMAIL: ${g.email || '-'}\nYÖNTEM: ${g.invite_method}`
+        const contact = `${t('pdf_label_phone')}: ${g.phone || '-'}\n${t('pdf_label_email')}: ${g.email || '-'}\n${t('pdf_label_method')}: ${g.invite_method}`
         
-        // 3. Sütun: Detaylar & Form Cevapları
+        // 3. Sütun: Detaylar
         let details = ''
-        if (g.note) details += `NOT: ${g.note}\n`
+        if (g.note) details += `${t('pdf_label_note')}: ${g.note}\n`
         if (g.form_responses) {
             Object.entries(g.form_responses).forEach(([key, val]) => {
                 details += `${key}: ${val}\n`
@@ -129,21 +129,22 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
     })
 
     autoTable(doc, {
-        head: [['#', 'KİMLİK BİLGİLERİ', 'İLETİŞİM', 'DETAYLAR & CEVAPLAR']],
+        // BAŞLIKLAR DİNAMİK
+        head: [['#', t('pdf_header_identity'), t('pdf_header_contact'), t('pdf_header_details')]],
         body: tableBody,
         startY: 35,
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 3, valign: 'middle' },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Indigo rengi
+        headStyles: { fillColor: [79, 70, 229], textColor: 255 },
         columnStyles: {
             0: { cellWidth: 10 },
             1: { cellWidth: 50 },
             2: { cellWidth: 60 },
-            3: { cellWidth: 'auto' } // Kalan alanı doldur
+            3: { cellWidth: 'auto' }
         },
     })
 
-    doc.save(`Davetli_Listesi_${eventSlug}.pdf`)
+    doc.save(`Guests_${eventSlug}.pdf`)
   }
 
   const generateMessage = (guestName: string) => inviteTemplate.replace('[Ad]', guestName).replace('[Link]', eventLink)
@@ -153,7 +154,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   return (
     <div className="space-y-6 animate-fadeIn relative">
         
-        {/* MODAL PENCERESİ (DETAYLAR) */}
+        {/* MODAL PENCERESİ */}
         {selectedGuest && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedGuest(null)}>
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -172,7 +173,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                             </div>
                         </div>
                         <div className="space-y-3">
-                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Form Cevapları</h5>
+                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Form</h5>
                             {selectedGuest.form_responses && Object.keys(selectedGuest.form_responses).length > 0 ? (
                                 Object.entries(selectedGuest.form_responses).map(([key, value]: [string, any]) => (
                                     <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
@@ -186,7 +187,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         </div>
                         {selectedGuest.note && (
                             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                                <p className="text-xs font-bold text-yellow-700 mb-1">Not:</p>
+                                <p className="text-xs font-bold text-yellow-700 mb-1">{t('col_note')}:</p>
                                 <p className="text-sm text-gray-700 italic">"{selectedGuest.note}"</p>
                             </div>
                         )}
@@ -200,13 +201,13 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
             </div>
         )}
 
-        {/* 1. İSTATİSTİK & MESAJ PANELİ */}
+        {/* 1. PANEL */}
         <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 grid md:grid-cols-2 gap-6">
             <div>
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-indigo-900 text-sm uppercase">{t('guest_status')}</h3>
                     
-                    {/* İNDİRME BUTONLARI GRUBU */}
+                    {/* İNDİRME BUTONLARI */}
                     {guests.length > 0 && (
                         <div className="flex gap-2">
                             <button onClick={downloadExcel} className="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700 transition flex items-center gap-1 font-bold">
@@ -233,7 +234,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
             </div>
         </div>
 
-        {/* 2. GİRİŞ SATIRI */}
+        {/* 2. GİRİŞ */}
         <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-indigo-100">
             <h3 className="font-bold text-gray-800 mb-3 text-sm">{t('add_guest_title')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
@@ -264,7 +265,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                             <td className="px-4 py-3 font-bold text-gray-800 flex items-center gap-2">
                                 {g.name}
                                 {g.form_responses && Object.keys(g.form_responses).length > 0 && (
-                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title={t('view_details_btn')}>👁️</span>
+                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title="Detay">👁️</span>
                                 )}
                             </td>
                             <td className="px-4 py-3 text-gray-500 font-mono text-xs">
