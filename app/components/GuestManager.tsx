@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import PhoneInput from 'react-phone-input-2' // <-- KÜTÜPHANE EKLENDİ
-import 'react-phone-input-2/lib/style.css' // <-- CSS EKLENDİ
+// Supabase yolu dosya yapınıza göre (genelde ../lib/supabaseClient)
+import { supabase } from '../lib/supabaseClient' 
+import PhoneInput from 'react-phone-input-2'
+import 'react-phone-input-2/lib/style.css'
+// YENİ TEK DOSYA DİL MOTORUNU ÇAĞIRIYORUZ (Bir üst klasörde)
+import { useTranslation } from '../i18n' 
 
 interface GuestManagerProps {
     eventId: string;
@@ -12,6 +15,9 @@ interface GuestManagerProps {
 }
 
 export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestManagerProps) {
+  // HOOK: Çeviri fonksiyonunu buradan çekiyoruz
+  const { t } = useTranslation()
+  
   const [guests, setGuests] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   
@@ -69,15 +75,15 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   const saveTemplate = async () => {
       await supabase.from('events').update({ invite_template: inviteTemplate }).eq('id', eventId)
       setIsEditingTemplate(false)
-      alert('Davet şablonu kaydedildi! ✅')
+      alert(t('save_template') + ' OK! ✅')
   }
 
   const addGuest = async () => {
       if (!newName) return alert('İsim zorunludur.')
       
       // ZORUNLULUK KONTROLLERİ
-      if (newMethod === 'email' && !newEmail) return alert('E-Posta ile davet için mail adresi zorunludur.')
-      if ((newMethod === 'whatsapp' || newMethod === 'sms') && !newPhone) return alert('Telefon ile davet için numara zorunludur.')
+      if (newMethod === 'email' && !newEmail) return alert('E-Posta zorunludur.')
+      if ((newMethod === 'whatsapp' || newMethod === 'sms') && !newPhone) return alert('Telefon zorunludur.')
 
       setLoading(true)
       const { error } = await supabase.from('guests').insert([{
@@ -98,7 +104,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   }
 
   const deleteGuest = async (id: string) => {
-      if(!confirm('Silinsin mi?')) return
+      if(!confirm(t('confirm_delete'))) return
       await supabase.from('guests').delete().eq('id', id)
       fetchGuests()
   }
@@ -109,7 +115,6 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   }
 
   const sendWhatsapp = (phone: string, name: string) => {
-      // PhoneInput bize temiz data verir (örn: 905551234567), direkt kullanabiliriz.
       const msg = encodeURIComponent(generateMessage(name))
       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
   }
@@ -128,19 +133,19 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
             
             {/* Sol: İstatistikler */}
             <div>
-                <h3 className="font-bold text-indigo-900 text-sm uppercase mb-3">Davetli Durumu</h3>
+                <h3 className="font-bold text-indigo-900 text-sm uppercase mb-3">{t('guest_status')}</h3>
                 <div className="flex gap-4">
                     <div className="bg-white p-3 rounded shadow-sm flex-1 text-center">
                         <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
-                        <div className="text-xs text-gray-500">Toplam</div>
+                        <div className="text-xs text-gray-500">{t('total')}</div>
                     </div>
                     <div className="bg-white p-3 rounded shadow-sm flex-1 text-center">
                         <div className="text-2xl font-bold text-green-600">{stats.phone}</div>
-                        <div className="text-xs text-gray-500">📱 Telefon</div>
+                        <div className="text-xs text-gray-500">📱</div>
                     </div>
                     <div className="bg-white p-3 rounded shadow-sm flex-1 text-center">
                         <div className="text-2xl font-bold text-blue-600">{stats.email}</div>
-                        <div className="text-xs text-gray-500">📧 E-Mail</div>
+                        <div className="text-xs text-gray-500">📧</div>
                     </div>
                 </div>
             </div>
@@ -148,9 +153,9 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
             {/* Sağ: Mesaj Şablonu */}
             <div>
                 <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-indigo-900 text-sm uppercase">Davet Mesajı</h3>
+                    <h3 className="font-bold text-indigo-900 text-sm uppercase">{t('invite_message')}</h3>
                     <button onClick={() => isEditingTemplate ? saveTemplate() : setIsEditingTemplate(true)} className="text-xs font-bold text-indigo-600 hover:underline">
-                        {isEditingTemplate ? '💾 Kaydet' : '✏️ Düzenle'}
+                        {isEditingTemplate ? '💾 ' + t('save_template') : '✏️ ' + t('edit_template')}
                     </button>
                 </div>
                 {isEditingTemplate ? (
@@ -160,45 +165,45 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         "{inviteTemplate}"
                     </div>
                 )}
-                <p className="text-[10px] text-gray-400 mt-1">* [Ad] ve [Link] otomatik değişecektir.</p>
+                <p className="text-[10px] text-gray-400 mt-1">* [Ad] / [Link] auto.</p>
             </div>
         </div>
 
         {/* 2. EXCEL TARZI GİRİŞ SATIRI */}
         <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-indigo-100">
-            <h3 className="font-bold text-gray-800 mb-3 text-sm">Yeni Davetli Ekle</h3>
+            <h3 className="font-bold text-gray-800 mb-3 text-sm">{t('add_guest_title')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
                 
                 {/* İsim */}
                 <div className="md:col-span-3">
-                    <label className="text-[10px] font-bold text-gray-400 block mb-1">AD SOYAD</label>
-                    <input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50" placeholder="İsim Giriniz"/>
+                    <label className="text-[10px] font-bold text-gray-400 block mb-1">{t('name_label')}</label>
+                    <input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50" placeholder="..."/>
                 </div>
 
                 {/* Yöntem Seçimi */}
                 <div className="md:col-span-2">
-                    <label className="text-[10px] font-bold text-gray-400 block mb-1">YÖNTEM</label>
+                    <label className="text-[10px] font-bold text-gray-400 block mb-1">{t('method_label')}</label>
                     <select value={newMethod} onChange={e => setNewMethod(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50 font-bold text-gray-700">
                         <option value="whatsapp">📱 WhatsApp</option>
                         <option value="sms">💬 SMS</option>
-                        <option value="email">📧 E-Posta</option>
+                        <option value="email">📧 Email</option>
                     </select>
                 </div>
 
-                {/* Telefon (Global Format - YENİ) */}
+                {/* Telefon (Global Format) */}
                 <div className="md:col-span-3">
-                    <label className={`text-[10px] font-bold block mb-1 ${newMethod === 'email' ? 'text-gray-300' : 'text-gray-600'}`}>TELEFON</label>
+                    <label className={`text-[10px] font-bold block mb-1 ${newMethod === 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('phone_label')}</label>
                     <div className={newMethod === 'email' ? 'opacity-50 pointer-events-none' : ''}>
                         <PhoneInput
-                            country={defaultCountry} // Tarayıcıdan gelen varsayılan ülke
+                            country={defaultCountry}
                             value={newPhone}
                             onChange={phone => setNewPhone(phone)}
                             inputStyle={{
                                 width: '100%',
                                 height: '38px',
                                 fontSize: '14px',
-                                borderColor: '#e5e7eb', // Tailwind gray-200
-                                borderRadius: '0.375rem', // Tailwind rounded
+                                borderColor: '#e5e7eb',
+                                borderRadius: '0.375rem',
                                 backgroundColor: newMethod === 'email' ? '#f3f4f6' : 'white'
                             }}
                             buttonStyle={{
@@ -214,7 +219,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
 
                 {/* Email (Koşullu) */}
                 <div className="md:col-span-3">
-                    <label className={`text-[10px] font-bold block mb-1 ${newMethod !== 'email' ? 'text-gray-300' : 'text-gray-600'}`}>E-POSTA</label>
+                    <label className={`text-[10px] font-bold block mb-1 ${newMethod !== 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('email_label')}</label>
                     <input 
                         type="email" 
                         value={newEmail} 
@@ -290,7 +295,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                     ))}
                     {guests.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="text-center py-8 text-gray-400 italic">Listeniz boş. Yukarıdan eklemeye başlayın.</td>
+                            <td colSpan={5} className="text-center py-8 text-gray-400 italic">{t('list_empty')}</td>
                         </tr>
                     )}
                 </tbody>
