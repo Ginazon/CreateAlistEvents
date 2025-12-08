@@ -62,6 +62,17 @@ function CreateEventContent() {
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select'; options?: string; required: boolean; }
   const [formFields, setFormFields] = useState<FormField[]>([])
 
+  // --- YENİ: DETAY BLOKLARI (Akış, Not, Link) ---
+  interface DetailBlock {
+      id: string;
+      type: 'timeline' | 'note' | 'link';
+      title?: string;
+      content?: string; 
+      subContent?: string;
+      imageUrl?: string;
+  }
+  const [detailBlocks, setDetailBlocks] = useState<DetailBlock[]>([])
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.push('/'); return }
@@ -95,8 +106,30 @@ function CreateEventContent() {
               setMessageSize(data.design_settings.messageSize || 1)
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
+          // YENİ: Blokları Yükle
+          if(data.event_details) setDetailBlocks(data.event_details)
       }
       setLoadingData(false)
+  }
+
+  // --- BLOK YÖNETİMİ ---
+  const addBlock = (type: 'timeline' | 'note' | 'link') => {
+      setDetailBlocks([...detailBlocks, { id: Date.now().toString(), type, title: '', content: '' }])
+  }
+  const removeBlock = (index: number) => { const newB = [...detailBlocks]; newB.splice(index, 1); setDetailBlocks(newB) }
+  const updateBlock = (index: number, key: keyof DetailBlock, value: any) => { const newB = [...detailBlocks]; newB[index] = { ...newB[index], [key]: value }; setDetailBlocks(newB) }
+  
+  // Blok Resmi Yükleme
+  const handleBlockImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if(file && session) {
+          const fileName = `block-${Math.random()}.${file.name.split('.').pop()}`
+          const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, file)
+          if(!error) {
+              const url = supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`).data.publicUrl
+              updateBlock(index, 'imageUrl', url)
+          }
+      }
   }
 
   const addField = () => setFormFields([...formFields, { id: Date.now().toString(), label: '', type: 'text', required: false, options: '' }])
@@ -131,7 +164,8 @@ function CreateEventContent() {
         title, event_date: eventDate, location_name: locationName, location_url: locationUrl, message, 
         image_url: finalCoverUrl, main_image_url: finalMainUrl,
         design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
-        custom_form_schema: formFields 
+        custom_form_schema: formFields,
+        event_details: detailBlocks // YENİ: Blokları Kaydet
     }
 
     if (editId) {
@@ -167,7 +201,7 @@ function CreateEventContent() {
         <div className="p-8 overflow-y-auto h-[calc(100vh-80px)] bg-white border-r">
             <div className="max-w-md mx-auto space-y-8">
                 
-                {/* 1. GÖRSELLER - ÖZEL UPLOAD BUTONLARI İLE */}
+                {/* 1. GÖRSELLER */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_images')}</h3>
                     <div className="space-y-4">
@@ -177,13 +211,7 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>}
                                 </div>
-                                <div>
-                                    <label className="cursor-pointer bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-indigo-100 transition inline-block">
-                                        {t('file_btn_label')}
-                                        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
-                                    </label>
-                                    <p className="text-[10px] text-gray-400 mt-1">{coverFile ? coverFile.name : t('file_no_file')}</p>
-                                </div>
+                                <div><label className="cursor-pointer bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-indigo-100 transition inline-block">{t('file_btn_label')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" /></label></div>
                             </div>
                         </div>
                         <div>
@@ -192,13 +220,7 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {mainPreview ? <img src={mainPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">🖼️</div>}
                                 </div>
-                                <div>
-                                    <label className="cursor-pointer bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-100 transition inline-block">
-                                        {t('file_btn_label')}
-                                        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
-                                    </label>
-                                    <p className="text-[10px] text-gray-400 mt-1">{mainFile ? mainFile.name : t('file_no_file')}</p>
-                                </div>
+                                <div><label className="cursor-pointer bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-100 transition inline-block">{t('file_btn_label')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" /></label></div>
                             </div>
                         </div>
                     </div>
@@ -224,10 +246,8 @@ function CreateEventContent() {
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_details')}</h3>
                     <label className="text-[10px] text-gray-500 font-bold">{t('label_date')}</label>
                     <input type="datetime-local" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border p-3 rounded-lg mb-3"/>
-                    
                     <label className="text-[10px] text-gray-500 font-bold">{t('label_location_name')}</label>
                     <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} className="w-full border p-3 rounded-lg mb-2"/>
-                    
                     <label className="text-[10px] text-gray-500 font-bold">{t('label_location_url')}</label>
                     <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} className="w-full border p-3 rounded-lg"/>
                 </section>
@@ -240,18 +260,9 @@ function CreateEventContent() {
 
                 {/* 5. FORM BUILDER */}
                 <section className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-200 pb-2 flex justify-between items-center">
-                        {t('section_form')}
-                        <button onClick={addField} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">{t('add_question_btn')}</button>
-                    </h3>
+                    <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-200 pb-2 flex justify-between items-center">{t('section_form')}<button onClick={addField} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">{t('add_question_btn')}</button></h3>
                     <div className="space-y-4">
-                        <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none">
-                            <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">{t('locked_fields')}</p>
-                            <div className="space-y-2 text-xs text-gray-400">
-                                <div>{t('preview_ph_name')}</div><div>{t('preview_ph_email')}</div><div>{t('preview_ph_status')}</div>
-                            </div>
-                        </div>
-
+                        <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none"><p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">{t('locked_fields')}</p><div className="space-y-2 text-xs text-gray-400"><div>{t('preview_ph_name')}</div><div>{t('preview_ph_email')}</div><div>{t('preview_ph_status')}</div></div></div>
                         {formFields.map((field, index) => (
                             <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group animate-fadeIn">
                                 <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
@@ -265,38 +276,89 @@ function CreateEventContent() {
                         ))}
                     </div>
                 </section>
+
+                {/* 6. DETAYLAR VE AKIŞ (YENİ MODÜL) */}
+                <section className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                    <h3 className="text-sm font-black text-yellow-900 uppercase tracking-wider mb-4 border-b border-yellow-200 pb-2 flex justify-between items-center">
+                        {t('section_extra')}
+                    </h3>
+                    <div className="flex gap-2 mb-4 overflow-x-auto">
+                        <button onClick={() => addBlock('timeline')} className="text-xs bg-gray-800 text-white px-3 py-2 rounded shadow hover:bg-black whitespace-nowrap">{t('add_timeline_btn')}</button>
+                        <button onClick={() => addBlock('note')} className="text-xs bg-gray-800 text-white px-3 py-2 rounded shadow hover:bg-black whitespace-nowrap">{t('add_note_btn')}</button>
+                        <button onClick={() => addBlock('link')} className="text-xs bg-gray-800 text-white px-3 py-2 rounded shadow hover:bg-black whitespace-nowrap">{t('add_link_btn')}</button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {detailBlocks.length === 0 && <p className="text-xs text-gray-400 italic text-center">Henüz detay eklenmedi.</p>}
+                        
+                        {detailBlocks.map((block, index) => (
+                            <div key={block.id} className="bg-white p-4 rounded shadow-sm border relative group animate-fadeIn">
+                                <button onClick={() => removeBlock(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold">&times;</button>
+                                
+                                {block.type === 'timeline' && (
+                                    <div className="flex gap-2 items-center">
+                                        <div className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold">AKIŞ</div>
+                                        <input type="text" value={block.content} onChange={(e) => updateBlock(index, 'content', e.target.value)} placeholder={t('timeline_time_ph')} className="w-1/3 text-sm border p-1 rounded font-mono"/>
+                                        <input type="text" value={block.subContent} onChange={(e) => updateBlock(index, 'subContent', e.target.value)} placeholder={t('timeline_title_ph')} className="w-2/3 text-sm border p-1 rounded font-bold"/>
+                                    </div>
+                                )}
+
+                                {block.type === 'note' && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <div className="bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded font-bold">NOT</div>
+                                            <label className="text-[10px] cursor-pointer text-indigo-600 hover:underline flex items-center gap-1">
+                                                {block.imageUrl ? 'Resim Değiştir' : t('image_upload_btn')}
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleBlockImageUpload(index, e)}/>
+                                            </label>
+                                        </div>
+                                        <input type="text" value={block.title} onChange={(e) => updateBlock(index, 'title', e.target.value)} placeholder={t('note_title_ph')} className="w-full text-sm border p-1 rounded font-bold"/>
+                                        <textarea value={block.content} onChange={(e) => updateBlock(index, 'content', e.target.value)} placeholder={t('note_desc_ph')} className="w-full text-xs border p-1 rounded h-16"/>
+                                        {block.imageUrl && <div className="h-16 w-16 bg-gray-100 rounded overflow-hidden relative"><img src={block.imageUrl} className="object-cover w-full h-full"/><button onClick={() => updateBlock(index, 'imageUrl', '')} className="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-1">&times;</button></div>}
+                                    </div>
+                                )}
+
+                                {block.type === 'link' && (
+                                    <div className="space-y-2">
+                                        <div className="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded font-bold w-fit">LİNK / BUTON</div>
+                                        <input type="text" value={block.title} onChange={(e) => updateBlock(index, 'title', e.target.value)} placeholder={t('link_title_ph')} className="w-full text-sm border p-1 rounded font-bold"/>
+                                        <input type="text" value={block.content} onChange={(e) => updateBlock(index, 'content', e.target.value)} placeholder={t('link_url_ph')} className="w-full text-xs border p-1 rounded text-blue-600"/>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
             </div>
         </div>
 
-        {/* SAĞ: ÖNİZLEME - TÜM TEXTLER DİNAMİK */}
+        {/* SAĞ: ÖNİZLEME */}
         <div className="bg-gray-100 flex items-center justify-center p-8 h-[calc(100vh-80px)] overflow-hidden">
             <div className="w-[375px] h-[700px] bg-white rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative flex flex-col scrollbar-hide">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                 <div className="flex-1 overflow-y-auto pb-8 font-sans">
-                     {/* GÖRSEL (KAPAK - KÜÇÜLTÜLDÜ: h-36) */}
+                     
+                    {/* GÖRSELLER */}
                     <div className="w-full h-36 bg-gray-200 relative">
                         {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">{t('preview_cover_placeholder')}</div>}
                         <div className="absolute inset-0 opacity-10" style={{ backgroundColor: themeColor }}></div>
                     </div>
                     
-                    {/* İçerik */}
                     <div className="px-5 -mt-6 relative z-10">
                          <div className="bg-white rounded-xl shadow p-4 border-t-4" style={{ borderColor: themeColor }}>
+                            
+                            {/* BAŞLIK & ANA GÖRSEL */}
                             <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{title || t('preview_title_placeholder')}</h1>
-                            
-                            {/* ANA GÖRSEL (BÜYÜTÜLDÜ: h-80) */}
-                            {mainPreview ? (
-                                <img src={mainPreview} className="w-full h-80 object-cover rounded mb-4"/>
-                            ) : (
-                                <div className="w-full h-80 bg-gray-100 rounded mb-4 flex items-center justify-center text-xs text-gray-400">{t('preview_main_placeholder')}</div>
-                            )}
-                            
+                            {mainPreview ? <img src={mainPreview} className="w-full h-80 object-cover rounded mb-4"/> : <div className="w-full h-80 bg-gray-100 rounded mb-4 flex items-center justify-center text-xs text-gray-400">{t('preview_main_placeholder')}</div>}
                             <p className="text-center text-sm text-gray-600 whitespace-pre-line" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>{message}</p>
                             
                             {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
 
                             <hr className="my-4"/>
-                            <div className="text-center text-xs space-y-2">
+                            
+                            {/* TARİH & KONUM */}
+                            <div className="text-center text-xs space-y-2 mb-6">
                                 <div className="p-2 bg-gray-50 rounded">
                                     <p className="font-bold">📍 {locationName || t('preview_location_placeholder')}</p>
                                 </div>
@@ -305,8 +367,43 @@ function CreateEventContent() {
                                     <p className="text-gray-500">{formattedDate}</p>
                                 </div>
                             </div>
+
+                            {/* --- YENİ: DETAY BLOKLARI ÖNİZLEME --- */}
+                            <div className="space-y-4 mb-6">
+                                {detailBlocks.map((block) => (
+                                    <div key={block.id}>
+                                        
+                                        {/* AKIŞ ÖNİZLEME */}
+                                        {block.type === 'timeline' && (
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 text-right text-xs font-bold text-gray-500">{block.content}</div>
+                                                <div className="w-2 h-2 rounded-full" style={{backgroundColor:themeColor}}></div>
+                                                <div className="flex-1 text-xs font-bold text-gray-800">{block.subContent}</div>
+                                            </div>
+                                        )}
+
+                                        {/* NOT ÖNİZLEME */}
+                                        {block.type === 'note' && (
+                                            <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
+                                                {block.imageUrl && <img src={block.imageUrl} className="w-full h-32 object-cover rounded mb-2"/>}
+                                                <h4 className="font-bold text-sm mb-1" style={{color:themeColor}}>{block.title}</h4>
+                                                <p className="text-xs text-gray-600">{block.content}</p>
+                                            </div>
+                                        )}
+
+                                        {/* LİNK ÖNİZLEME */}
+                                        {block.type === 'link' && (
+                                            <div className="text-center">
+                                                <button className="w-full py-3 rounded-lg font-bold text-white text-sm shadow-sm opacity-80" style={{backgroundColor: themeColor}}>
+                                                    {block.title} ↗
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                             
-                            {/* FORM ÖNİZLEMESİ (FULL ÇEVİRİ) */}
+                            {/* FORM ÖNİZLEMESİ */}
                             <div className="mt-6 pt-4 border-t border-dashed">
                                 <p className="text-center font-bold text-xs mb-3 text-gray-400">{t('preview_rsvp_title')}</p>
                                 <div className="space-y-2 pointer-events-none">
