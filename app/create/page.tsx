@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabaseClient'
 import Link from 'next/link'
 import Countdown from '../components/Countdown'
-// TEK DOSYA İMPORT
 import { useTranslation } from '../i18n'
 
 const THEME_COLORS = [
@@ -33,8 +32,6 @@ function CreateEventContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
-
-  // HOOK KULLANIMI
   const { t } = useTranslation()
 
   const [session, setSession] = useState<any>(null)
@@ -42,13 +39,11 @@ function CreateEventContent() {
   const [uploading, setUploading] = useState(false)
   const [loadingData, setLoadingData] = useState(false)
 
-  // TEMEL BİLGİLER
   const [title, setTitle] = useState('')
   const [eventDate, setEventDate] = useState('')
   const [locationName, setLocationName] = useState('')
   const [locationUrl, setLocationUrl] = useState('')
   
-  // GÖRSELLER
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [existingCoverUrl, setExistingCoverUrl] = useState<string | null>(null)
@@ -57,7 +52,6 @@ function CreateEventContent() {
   const [mainPreview, setMainPreview] = useState<string | null>(null)
   const [existingMainUrl, setExistingMainUrl] = useState<string | null>(null)
 
-  // TASARIM
   const [message, setMessage] = useState('')
   const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
   const [titleFont, setTitleFont] = useState(FONT_OPTIONS[0].value)
@@ -65,10 +59,7 @@ function CreateEventContent() {
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
   const [messageSize, setMessageSize] = useState(1)
 
-  // FORM ALANLARI
-  interface FormField {
-      id: string; label: string; type: 'text' | 'textarea' | 'select'; options?: string; required: boolean;
-  }
+  interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select'; options?: string; required: boolean; }
   const [formFields, setFormFields] = useState<FormField[]>([])
 
   useEffect(() => {
@@ -176,7 +167,7 @@ function CreateEventContent() {
         <div className="p-8 overflow-y-auto h-[calc(100vh-80px)] bg-white border-r">
             <div className="max-w-md mx-auto space-y-8">
                 
-                {/* 1. GÖRSELLER */}
+                {/* 1. GÖRSELLER - ÖZEL UPLOAD BUTONLARI İLE */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_images')}</h3>
                     <div className="space-y-4">
@@ -186,8 +177,12 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>}
                                 </div>
-                                <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
+                                <div>
+                                    <label className="cursor-pointer bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-indigo-100 transition inline-block">
+                                        {t('file_btn_label')}
+                                        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
+                                    </label>
+                                    <p className="text-[10px] text-gray-400 mt-1">{coverFile ? coverFile.name : t('file_no_file')}</p>
                                 </div>
                             </div>
                         </div>
@@ -197,8 +192,12 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {mainPreview ? <img src={mainPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">🖼️</div>}
                                 </div>
-                                <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer"/>
+                                <div>
+                                    <label className="cursor-pointer bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-100 transition inline-block">
+                                        {t('file_btn_label')}
+                                        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
+                                    </label>
+                                    <p className="text-[10px] text-gray-400 mt-1">{mainFile ? mainFile.name : t('file_no_file')}</p>
                                 </div>
                             </div>
                         </div>
@@ -223,9 +222,14 @@ function CreateEventContent() {
                 {/* 3. TARİH & MEKAN */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_details')}</h3>
+                    <label className="text-[10px] text-gray-500 font-bold">{t('label_date')}</label>
                     <input type="datetime-local" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border p-3 rounded-lg mb-3"/>
-                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Mekan" className="w-full border p-3 rounded-lg mb-2"/>
-                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} placeholder="URL" className="w-full border p-3 rounded-lg"/>
+                    
+                    <label className="text-[10px] text-gray-500 font-bold">{t('label_location_name')}</label>
+                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} className="w-full border p-3 rounded-lg mb-2"/>
+                    
+                    <label className="text-[10px] text-gray-500 font-bold">{t('label_location_url')}</label>
+                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} className="w-full border p-3 rounded-lg"/>
                 </section>
 
                 {/* 4. RENK */}
@@ -244,7 +248,7 @@ function CreateEventContent() {
                         <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none">
                             <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">{t('locked_fields')}</p>
                             <div className="space-y-2 text-xs text-gray-400">
-                                <div>Ad Soyad</div><div>Email</div><div>Durum</div>
+                                <div>{t('preview_ph_name')}</div><div>{t('preview_ph_email')}</div><div>{t('preview_ph_status')}</div>
                             </div>
                         </div>
 
@@ -264,22 +268,23 @@ function CreateEventContent() {
             </div>
         </div>
 
-        {/* SAĞ: ÖNİZLEME */}
+        {/* SAĞ: ÖNİZLEME - TÜM TEXTLER DİNAMİK */}
         <div className="bg-gray-100 flex items-center justify-center p-8 h-[calc(100vh-80px)] overflow-hidden">
             <div className="w-[375px] h-[700px] bg-white rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative flex flex-col scrollbar-hide">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                 <div className="flex-1 overflow-y-auto pb-8 font-sans">
                      {/* Görsel */}
                     <div className="w-full h-48 bg-gray-200 relative">
-                        {coverPreview && <img src={coverPreview} className="w-full h-full object-cover"/>}
+                        {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">{t('preview_cover_placeholder')}</div>}
                         <div className="absolute inset-0 opacity-10" style={{ backgroundColor: themeColor }}></div>
                     </div>
                     
                     {/* İçerik */}
                     <div className="px-5 -mt-6 relative z-10">
                          <div className="bg-white rounded-xl shadow p-4 border-t-4" style={{ borderColor: themeColor }}>
-                            <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{title || 'Başlık'}</h1>
-                            {mainPreview && <img src={mainPreview} className="w-full h-32 object-cover rounded mb-4"/>}
+                            <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{title || t('preview_title_placeholder')}</h1>
+                            {mainPreview ? <img src={mainPreview} className="w-full h-32 object-cover rounded mb-4"/> : <div className="w-full h-20 bg-gray-100 rounded mb-4 flex items-center justify-center text-xs text-gray-400">{t('preview_main_placeholder')}</div>}
+                            
                             <p className="text-center text-sm text-gray-600 whitespace-pre-line" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>{message}</p>
                             
                             {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
@@ -287,30 +292,30 @@ function CreateEventContent() {
                             <hr className="my-4"/>
                             <div className="text-center text-xs space-y-2">
                                 <div className="p-2 bg-gray-50 rounded">
-                                    <p className="font-bold">📍 {locationName || 'Konum'}</p>
+                                    <p className="font-bold">📍 {locationName || t('preview_location_placeholder')}</p>
                                 </div>
-                                {locationUrl && <div className="text-white text-[10px] py-1 px-2 rounded inline-block" style={{backgroundColor: themeColor}}>Harita</div>}
+                                {locationUrl && <div className="text-white text-[10px] py-1 px-2 rounded inline-block" style={{backgroundColor: themeColor}}>{t('preview_map_btn')}</div>}
                                 <div className="p-2 bg-gray-50 rounded">
                                     <p className="text-gray-500">{formattedDate}</p>
                                 </div>
                             </div>
                             
-                            {/* FORM ÖNİZLEMESİ (FULL) */}
+                            {/* FORM ÖNİZLEMESİ (FULL ÇEVİRİ) */}
                             <div className="mt-6 pt-4 border-t border-dashed">
-                                <p className="text-center font-bold text-xs mb-3 text-gray-400">LCV Formu Önizleme</p>
+                                <p className="text-center font-bold text-xs mb-3 text-gray-400">{t('preview_rsvp_title')}</p>
                                 <div className="space-y-2 pointer-events-none">
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="Ad Soyad"/>
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="E-Posta"/>
-                                    <select className="w-full border p-2 rounded text-xs bg-gray-50"><option>Katılıyor</option></select>
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="+ Kişi Sayısı"/>
+                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder={t('preview_ph_name')}/>
+                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder={t('preview_ph_email')}/>
+                                    <select className="w-full border p-2 rounded text-xs bg-gray-50"><option>{t('preview_ph_status')}</option></select>
+                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder={t('preview_ph_count')}/>
                                     
                                     {formFields.map(f => (
                                         f.type === 'select' 
                                         ? <select key={f.id} className="w-full border p-2 rounded text-xs"><option>{f.label}</option></select>
                                         : <input key={f.id} className="w-full border p-2 rounded text-xs" placeholder={f.label}/>
                                     ))}
-                                    <textarea className="w-full border p-2 rounded text-xs h-12" placeholder="Notunuz..."/>
-                                    <button className="w-full py-2 rounded text-xs text-white" style={{backgroundColor: themeColor}}>Gönder</button>
+                                    <textarea className="w-full border p-2 rounded text-xs h-12" placeholder={t('preview_ph_note')}/>
+                                    <button className="w-full py-2 rounded text-xs text-white" style={{backgroundColor: themeColor}}>{t('preview_submit_btn')}</button>
                                 </div>
                             </div>
 
@@ -326,7 +331,7 @@ function CreateEventContent() {
 
 export default function CreateEventPage() {
     return (
-        <Suspense fallback={<div>Yükleniyor...</div>}>
+        <Suspense fallback={<div>Loading...</div>}>
             <CreateEventContent />
         </Suspense>
     )
