@@ -10,11 +10,6 @@ export default function Dashboard() {
   const router = useRouter()
   const [session, setSession] = useState<any>(null)
   
-  // LOGIN STATE
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [loginLoading, setLoginLoading] = useState(false)
-  
   // DATA/LISTE STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
@@ -27,6 +22,17 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [origin, setOrigin] = useState('')
+
+  // --- YENİ: DÜZENLEME (EDIT) STATE'LERİ ---
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  
+  const [editTitle, setEditTitle] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [editLocName, setEditLocName] = useState('')
+  const [editLocUrl, setEditLocUrl] = useState('')
+  const [editMessage, setEditMessage] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -45,17 +51,6 @@ export default function Dashboard() {
   }, [router])
 
   // --- FONKSİYONLAR ---
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginLoading(true)
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-    if (!signInError) { window.location.reload(); return }
-    
-    const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
-    if (signUpError) alert('Hata: ' + signUpError.message);
-    else { alert('Hesap oluşturuldu!'); window.location.reload(); }
-    setLoginLoading(false)
-  }
 
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
@@ -89,7 +84,53 @@ export default function Dashboard() {
         const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${slug}-qr.png`; link.click();
     }
   }
-  // --- SON FONKSİYONLAR ---
+
+  // --- YENİ: DÜZENLEME FONKSİYONLARI ---
+  
+  const openEditModal = (event: any) => {
+    setEditingEventId(event.id)
+    setEditTitle(event.title)
+    // Tarih formatını input'a uygun hale getir (YYYY-MM-DDTHH:MM)
+    const dateStr = event.event_date ? new Date(event.event_date).toISOString().slice(0, 16) : ''
+    setEditDate(dateStr)
+    setEditLocName(event.location_name || '')
+    setEditLocUrl(event.location_url || '')
+    setEditMessage(event.message || '')
+    setShowEditModal(true)
+  }
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsUpdating(true)
+
+    const { error } = await supabase.from('events').update({
+        title: editTitle,
+        event_date: editDate,
+        location_name: editLocName,
+        location_url: editLocUrl,
+        message: editMessage
+    }).eq('id', editingEventId)
+
+    if (error) {
+        alert('Hata: ' + error.message)
+    } else {
+        // Listeyi Yerel Olarak Güncelle (Tekrar fetch yapmaya gerek yok)
+        setMyEvents(myEvents.map(ev => ev.id === editingEventId ? {
+            ...ev, 
+            title: editTitle, 
+            event_date: editDate, 
+            location_name: editLocName, 
+            location_url: editLocUrl, 
+            message: editMessage 
+        } : ev))
+        
+        setShowEditModal(false)
+        alert('Etkinlik güncellendi! ✅')
+    }
+    setIsUpdating(false)
+  }
+
+  // --- RENDER ---
 
   if (!session) {
     return <div className="h-screen flex items-center justify-center text-xl text-gray-500">Yönlendiriliyor...</div>
@@ -99,20 +140,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
         
-        {/* 1. ÜST BAŞLIK BÖLÜMÜ (SADE) */}
+        {/* 1. ÜST BAŞLIK */}
         <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">Cereget Dashboard</h1>
                 <p className="text-gray-500 text-sm">Etkinliklerini buradan yönet.</p>
             </div>
-            {/* ÇIKIŞ BUTONU */}
             <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline shrink-0">Çıkış</button>
         </div>
         
-        {/* 2. AKSİYON BAR VE KREDİ BÖLÜMÜ (MOBİL DOSTU) */}
+        {/* 2. AKSİYON BAR (Mobil Uyumlu) */}
         <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
-            
-            {/* KREDİ KUTUSU (SOL) */}
             <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
                 <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
                 <div>
@@ -120,8 +158,6 @@ export default function Dashboard() {
                   <p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p>
                 </div>
             </div>
-
-            {/* YENİ OLUŞTUR BUTONU (SAĞ) */}
             <div className="order-1 md:order-2 w-full md:w-auto">
                 <Link href="/create" className="w-full">
                     <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full">
@@ -137,12 +173,17 @@ export default function Dashboard() {
             
             {myEvents.map(event => (
                 <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                    {/* ... (Liste İçeriği Aynı Kalır) ... */}
                     <div className="flex justify-between items-center flex-wrap gap-4">
                         <div className="flex items-center gap-4">
                              <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
                              <div>
-                                <h3 className="font-bold text-lg">{event.title}</h3>
+                                <h3 className="font-bold text-lg flex items-center gap-2">
+                                    {event.title}
+                                    {/* YENİ: Düzenle Butonu (Kalem İkonu) */}
+                                    <button onClick={() => openEditModal(event)} className="text-gray-400 hover:text-indigo-600 transition" title="Düzenle">
+                                        ✏️
+                                    </button>
+                                </h3>
                                 <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">
                                     {origin}/{event.slug} ↗
                                 </a>
@@ -162,7 +203,7 @@ export default function Dashboard() {
                         </div>
                     )}
 
-                    {/* YÖNETİM PANELİ */}
+                    {/* YÖNETİM PANELİ (Davetliler & Fotoğraflar) */}
                     {selectedEventId === event.id && (
                         <div className="mt-6 border-t pt-6">
                             <div className="flex gap-6 border-b border-gray-100 mb-4 pb-1">
@@ -208,6 +249,53 @@ export default function Dashboard() {
         </div>
         <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
       </footer>
+
+      {/* --- YENİ: DÜZENLEME MODALI --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+                <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800">Etkinliği Düzenle ✏️</h3>
+                    <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-black text-2xl">&times;</button>
+                </div>
+                
+                <form onSubmit={handleUpdateEvent} className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">BAŞLIK</label>
+                        <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full border p-2 rounded outline-none focus:border-indigo-500"/>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">DAVET MESAJI</label>
+                        <textarea value={editMessage} onChange={e => setEditMessage(e.target.value)} className="w-full border p-2 rounded outline-none focus:border-indigo-500 h-20 text-sm"/>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                             <label className="block text-xs font-bold text-gray-500 mb-1">TARİH</label>
+                             <input type="datetime-local" value={editDate} onChange={e => setEditDate(e.target.value)} className="w-full border p-2 rounded outline-none focus:border-indigo-500"/>
+                        </div>
+                        <div>
+                             <label className="block text-xs font-bold text-gray-500 mb-1">MEKAN ADI</label>
+                             <input type="text" value={editLocName} onChange={e => setEditLocName(e.target.value)} className="w-full border p-2 rounded outline-none focus:border-indigo-500"/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">HARİTA LİNKİ (URL)</label>
+                        <input type="text" value={editLocUrl} onChange={e => setEditLocUrl(e.target.value)} className="w-full border p-2 rounded outline-none focus:border-indigo-500 text-sm"/>
+                    </div>
+
+                    <div className="pt-2">
+                        <button type="submit" disabled={isUpdating} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition disabled:opacity-50">
+                            {isUpdating ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+      )}
+
     </div>
   )
 }
