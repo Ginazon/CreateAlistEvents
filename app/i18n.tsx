@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// --- 1. SÖZLÜK (TÜM ÇEVİRİLER BURADA) ---
+// 1. SÖZLÜK (Şimdilik Sadece TR ve EN - Hata Çıkarmaması İçin)
 export const dictionary = {
   tr: {
     dashboard_title: 'Cereget Yönetim Paneli',
@@ -19,7 +19,6 @@ export const dictionary = {
     delete: 'Sil',
     loading: 'Yükleniyor...',
     confirm_delete: 'Silmek istediğine emin misin?',
-    // Guest Manager
     guest_status: 'Davetli Durumu',
     total: 'Toplam',
     invite_message: 'Davet Mesajı',
@@ -48,7 +47,6 @@ export const dictionary = {
     delete: 'Delete',
     loading: 'Loading...',
     confirm_delete: 'Are you sure?',
-    // Guest Manager
     guest_status: 'Guest Status',
     total: 'Total',
     invite_message: 'Invite Message',
@@ -61,41 +59,11 @@ export const dictionary = {
     email_label: 'EMAIL',
     add_btn: 'Add',
     list_empty: 'List is empty.'
-  },
-  de: {
-    dashboard_title: 'Dashboard',
-    dashboard_subtitle: 'Verwalten Sie Ihre Events.',
-    my_credits: 'Credits',
-    create_new_event: '+ Neu',
-    no_events: 'Keine Events.',
-    manage: 'Verwalten',
-    download: 'Laden',
-    guests_tab: '📋 Gäste',
-    photos_tab: '📸 Galerie',
-    logout: 'Abmelden',
-    edit: 'Bearbeiten',
-    delete: 'Löschen',
-    loading: 'Laden...',
-    confirm_delete: 'Löschen?',
-    guest_status: 'Status',
-    total: 'Gesamt',
-    invite_message: 'Nachricht',
-    save_template: 'Speichern',
-    edit_template: 'Bearbeiten',
-    add_guest_title: 'Gast hinzufügen',
-    name_label: 'NAME',
-    method_label: 'METHODE',
-    phone_label: 'FON',
-    email_label: 'MAIL',
-    add_btn: 'Hinzufügen',
-    list_empty: 'Leer.'
   }
-  // İstersen buraya FR, ES, RU ekleyebilirsin...
 };
 
-// --- 2. AYARLAR ---
-export type LangType = keyof typeof dictionary;
-const DEFAULT_LANG: LangType = 'tr';
+// 2. TİP TANIMLAMASI (Sadece TR ve EN)
+export type LangType = 'tr' | 'en'; 
 
 interface I18nContextType {
   language: LangType;
@@ -105,22 +73,18 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-// --- 3. PROVIDER (VERCEL DOSTU) ---
+// 3. PROVIDER
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguageState] = useState<LangType>(DEFAULT_LANG);
+  const [language, setLanguageState] = useState<LangType>('tr');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true); // İstemci tarafında yüklendiğini işaretle
-    
-    // Sadece tarayıcıda çalış (Build hatasını önler)
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('cereget-lang') as LangType;
-      if (saved && dictionary[saved]) {
+      // Güvenli kontrol: Kayıtlı dil bizim sözlükte var mı?
+      if (saved && (saved === 'tr' || saved === 'en')) {
         setLanguageState(saved);
-      } else {
-        const browser = navigator.language.split('-')[0] as LangType;
-        if (dictionary[browser]) setLanguageState(browser);
       }
     }
   }, []);
@@ -136,10 +100,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     return dictionary[language][key] || key;
   };
 
-  // KRİTİK NOKTA: Server-side render sırasında children'ı gösterme (Mismatch hatasını önler)
-  if (!mounted) {
-    return <div className="min-h-screen bg-gray-50"/>; 
-  }
+  if (!mounted) return <div className="min-h-screen bg-white"/>; 
 
   return (
     <I18nContext.Provider value={{ language, setLanguage, t }}>
@@ -148,11 +109,8 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// --- 4. HOOK ---
 export const useTranslation = () => {
   const context = useContext(I18nContext);
-  if (!context) {
-    throw new Error('useTranslation must be used within I18nProvider');
-  }
+  if (!context) throw new Error('useTranslation error');
   return context;
 };
