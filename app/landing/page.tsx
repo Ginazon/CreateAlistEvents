@@ -27,14 +27,35 @@ export default function LandingPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoginLoading(true)
+        
+        // 1. Önce Giriş Yapmayı Dene
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
         if (!signInError) { 
-            alert('Giriş Başarılı!'); router.push('/'); return
+            // Giriş Başarılı
+            router.push('/')
+            return
         }
+
+        // 2. Giriş Başarısızsa (Kullanıcı yoksa), Kayıt Olmayı Dene
         console.log("Giriş başarısız, kayıt deneniyor...")
-        const { error: signUpError } = await supabase.auth.signUp({ email: loginEmail, password: loginPassword })
-        if (signUpError) alert('Hata!') 
-        else { alert('Giriş yapıldı!'); router.push('/'); }
+        const { error: signUpError } = await supabase.auth.signUp({ 
+            email: loginEmail, 
+            password: loginPassword,
+            options: {
+                data: {
+                    full_name: loginEmail.split('@')[0] // İsim olarak mailin başını kaydet
+                }
+            }
+        })
+
+        if (signUpError) {
+            // GERÇEK HATAYI GÖSTER
+            alert('Hata: ' + signUpError.message) 
+        } else { 
+            // Kayıt başarılı, otomatik giriş
+            alert('Hesap oluşturuldu! Yönlendiriliyorsunuz...')
+            router.push('/') 
+        }
         setLoginLoading(false)
     }
 
