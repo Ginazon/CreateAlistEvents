@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+// YENİ: Çeviri motorunu çağır
+import { useTranslation } from '../i18n'
 
 export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { eventId: string, themeColor: string, onLoginSuccess: (email: string) => void }) {
+  // HOOK KULLANIMI: Çeviri fonksiyonunu çek
+  const { t } = useTranslation()
+
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('katiliyor')
@@ -12,7 +17,6 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   
-  // DİNAMİK FORM STATE
   const [customSchema, setCustomSchema] = useState<any[]>([])
   const [formResponses, setFormResponses] = useState<Record<string, any>>({})
 
@@ -64,60 +68,60 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
     setLoading(false)
   }
 
+  // iPhone Dark Mode Fix (Yazıları siyah, zemini beyaz zorla)
+  const inputStyle = { colorScheme: 'light' }
+
   if (success) {
     return (
       <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 animate-fadeIn">
         <div className="text-4xl mb-2">✅</div>
-        <h3 className="text-green-800 font-bold text-lg">Kaydınız Alındı!</h3>
-        <p className="text-green-600 text-sm mt-1">Teşekkürler {name}, yanıtın bize ulaştı.</p>
-        <p className="text-xs text-gray-400 mt-4">Aşağıdaki galeriye fotoğraf yükleyebilirsin.</p>
+        <h3 className="text-green-800 font-bold text-lg">{t('rsvp_success_title')}</h3>
+        <p className="text-green-600 text-sm mt-1">{t('rsvp_success_msg')}</p>
+        <p className="text-xs text-gray-400 mt-4">{t('rsvp_success_hint')}</p>
       </div>
     )
   }
 
-  // --- STİL AYARI: iOS Dark Mode Fix ---
-  const inputStyle = { colorScheme: 'light' } // Bu satır iPhone'da siyah yazı/beyaz arkaplanı zorlar.
-
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left bg-gray-50 p-6 rounded-xl border border-gray-100">
-      <h3 className="font-bold text-center text-gray-800 mb-4">LCV Formu</h3>
+      <h3 className="font-bold text-center text-gray-800 mb-4">{t('rsvp_title')}</h3>
       
-      {/* STANDART ALANLAR */}
+      {/* STANDART ALANLAR (Çevirili) */}
       <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">Ad Soyad *</label>
+        <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_name_label')} *</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} 
                className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white appearance-none"
                style={inputStyle} 
-               placeholder="İsminiz"/>
+               placeholder={t('rsvp_name_ph')}/>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">E-Posta * (Galeriye giriş için)</label>
+        <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_email_label')} *</label>
         <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
                className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-black/10 text-gray-900 bg-white appearance-none"
                style={inputStyle}
-               placeholder="ornek@email.com"/>
+               placeholder={t('rsvp_email_ph')}/>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">Durum</label>
+            <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_status_label')}</label>
             <select value={status} onChange={e => setStatus(e.target.value)} 
                     className="w-full border p-3 rounded-lg bg-white text-gray-900 appearance-none"
                     style={inputStyle}>
-                <option value="katiliyor">Katılıyorum 🥳</option>
-                <option value="katilmiyor">Katılamıyorum 😔</option>
+                <option value="katiliyor">{t('rsvp_option_yes')}</option>
+                <option value="katilmiyor">{t('rsvp_option_no')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">+ Kişi Sayısı</label>
+            <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_count_label')}</label>
             <input type="number" min="0" max="10" value={plusOne} onChange={e => setPlusOne(Number(e.target.value))} 
                    className="w-full border p-3 rounded-lg text-gray-900 bg-white appearance-none"
                    style={inputStyle}/>
           </div>
       </div>
 
-      {/* --- DİNAMİK ALANLAR --- */}
+      {/* --- DİNAMİK ALANLAR (Kullanıcı eklediyse görünür) --- */}
       {customSchema.length > 0 && (
           <div className="border-t border-dashed pt-4 mt-4 space-y-4">
               {customSchema.map((field) => (
@@ -160,17 +164,17 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
           </div>
       )}
 
-      {/* NOT ALANI */}
+      {/* NOT ALANI (Çevirili) */}
       <div>
-        <label className="block text-xs font-bold text-gray-500 mb-1">Notunuz (Opsiyonel)</label>
+        <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_note_label')}</label>
         <textarea value={note} onChange={e => setNote(e.target.value)} 
                   className="w-full border p-3 rounded-lg h-20 outline-none text-gray-900 bg-white appearance-none"
                   style={inputStyle}
-                  placeholder="İletmek istediğiniz bir mesaj..."/>
+                  placeholder={t('rsvp_note_ph')}/>
       </div>
 
       <button type="submit" disabled={loading} className="w-full text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-90 transition disabled:opacity-50" style={{ backgroundColor: themeColor }}>
-        {loading ? 'Gönderiliyor...' : 'Cevabı Gönder'}
+        {loading ? t('rsvp_btn_sending') : t('rsvp_btn_send')}
       </button>
     </form>
   )
