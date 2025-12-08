@@ -31,8 +31,13 @@ export const dictionary = {
     public_date_label: '📅 Tarih', public_location_label: '📍 Konum', public_directions_btn: 'Yol Tarifi Al 🗺️', public_details_title: 'Etkinlik Detayları', public_memory_wall: '📸 Anı Duvarı', public_gallery_locked: 'Galeri Kilitli', public_gallery_hint: 'Görmek için yukarıdan giriş yapın.', public_back_dashboard: "← Dashboard'a Dön", public_create_own: "Cereget ile kendi davetiyeni oluştur", public_not_found: "Bulunamadı",
     
     // RSVP FORM
-    rsvp_title: 'LCV Formu', rsvp_name_label: 'Ad Soyad', rsvp_name_ph: 'İsminiz', rsvp_email_label: 'E-Posta', rsvp_email_ph: 'ornek@email.com', rsvp_status_label: 'Durum', rsvp_option_yes: 'Katılıyorum 🥳', rsvp_option_no: 'Katılamıyorum 😔', rsvp_count_label: '+ Kişi Sayısı', rsvp_note_label: 'Notunuz (Opsiyonel)', rsvp_note_ph: 'Mesajınız...', rsvp_btn_send: 'Cevabı Gönder', rsvp_btn_sending: 'Gönderiliyor...', rsvp_success_title: 'Kaydınız Alındı!', rsvp_success_msg: 'Teşekkürler, yanıtın bize ulaştı.', rsvp_success_hint: 'Aşağıdaki galeriye fotoğraf yükleyebilirsin.'
-  },
+    rsvp_title: 'LCV Formu', rsvp_name_label: 'Ad Soyad', rsvp_name_ph: 'İsminiz', rsvp_email_label: 'E-Posta', rsvp_email_ph: 'ornek@email.com', rsvp_status_label: 'Durum', rsvp_option_yes: 'Katılıyorum 🥳', rsvp_option_no: 'Katılamıyorum 😔', rsvp_count_label: '+ Kişi Sayısı', rsvp_note_label: 'Notunuz (Opsiyonel)', rsvp_note_ph: 'Mesajınız...', rsvp_btn_send: 'Cevabı Gönder', rsvp_btn_sending: 'Gönderiliyor...', rsvp_success_title: 'Kaydınız Alındı!', rsvp_success_msg: 'Teşekkürler, yanıtın bize ulaştı.', rsvp_success_hint: 'Aşağıdaki galeriye fotoğraf yükleyebilirsin.',
+  // --- YENİ: MİSAFİR DETAY PENCERESİ ---
+  modal_details_title: 'Misafir Cevapları',
+  modal_no_response: 'Bu misafir özel sorulara cevap vermemiş.',
+  modal_close_btn: 'Kapat',
+  view_details_btn: 'Cevapları Gör',
+},
   en: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', edit: 'Edit', delete: 'Delete', logout: 'Log Out', confirm_delete: 'Are you sure?',
     dashboard_title: 'Cereget Dashboard', dashboard_subtitle: 'Manage your events here.', my_credits: 'My Credits', create_new_event: '+ New Event', no_events: 'No events yet.', manage: 'Manage', download: 'Download', guests_tab: '📋 Guest List', photos_tab: '📸 Gallery',
@@ -44,8 +49,13 @@ export const dictionary = {
     section_extra: '6. Details & Timeline', add_timeline_btn: '+ Timeline', add_note_btn: '+ Note', add_link_btn: '+ Link', timeline_time_ph: 'Time', timeline_title_ph: 'Event', note_title_ph: 'Title', note_desc_ph: 'Description...', link_title_ph: 'Button Text', link_url_ph: 'https://...', image_upload_btn: 'Add Image',
     preview_cover_placeholder: 'Cover', preview_main_placeholder: 'Image', preview_title_placeholder: 'Title', preview_location_placeholder: 'Location', preview_map_btn: 'Get Directions', preview_rsvp_title: 'RSVP Form Preview', preview_ph_name: 'Full Name', preview_ph_email: 'Email', preview_ph_status: 'Attendance Status', preview_ph_count: '+ Guest Count', preview_ph_note: 'Your Note...', preview_submit_btn: 'Submit',
     public_date_label: '📅 Date', public_location_label: '📍 Location', public_directions_btn: 'Get Directions 🗺️', public_details_title: 'Event Details', public_memory_wall: '📸 Memory Wall', public_gallery_locked: 'Gallery Locked', public_gallery_hint: 'Login above to view.', public_back_dashboard: "← Back to Dashboard", public_create_own: "Create your own with Cereget", public_not_found: "Not Found",
-    rsvp_title: 'RSVP Form', rsvp_name_label: 'Full Name', rsvp_name_ph: 'Your Name', rsvp_email_label: 'Email', rsvp_email_ph: 'email@example.com', rsvp_status_label: 'Status', rsvp_option_yes: 'Attending 🥳', rsvp_option_no: 'Not Attending 😔', rsvp_count_label: '+ Guest Count', rsvp_note_label: 'Note (Optional)', rsvp_note_ph: 'Your message...', rsvp_btn_send: 'Send Response', rsvp_btn_sending: 'Sending...', rsvp_success_title: 'Registered!', rsvp_success_msg: 'Response received.', rsvp_success_hint: 'You can use the gallery below.'
-  },
+    rsvp_title: 'RSVP Form', rsvp_name_label: 'Full Name', rsvp_name_ph: 'Your Name', rsvp_email_label: 'Email', rsvp_email_ph: 'email@example.com', rsvp_status_label: 'Status', rsvp_option_yes: 'Attending 🥳', rsvp_option_no: 'Not Attending 😔', rsvp_count_label: '+ Guest Count', rsvp_note_label: 'Note (Optional)', rsvp_note_ph: 'Your message...', rsvp_btn_send: 'Send Response', rsvp_btn_sending: 'Sending...', rsvp_success_title: 'Registered!', rsvp_success_msg: 'Response received.', rsvp_success_hint: 'You can use the gallery below.',
+  // --- NEW: GUEST DETAILS MODAL ---
+  modal_details_title: 'Guest Responses',
+  modal_no_response: 'No custom responses from this guest.',
+  modal_close_btn: 'Close',
+  view_details_btn: 'View Answers',
+},
   de: {
     loading: 'Laden...', save: 'Speichern', cancel: 'Abbrechen', edit: 'Bearbeiten', delete: 'Löschen', logout: 'Abmelden', confirm_delete: 'Löschen?',
     dashboard_title: 'Dashboard', dashboard_subtitle: 'Verwalten Sie Ihre Events.', my_credits: 'Credits', create_new_event: '+ Neu', no_events: 'Keine Events.', manage: 'Verwalten', download: 'Laden', guests_tab: '📋 Gäste', photos_tab: '📸 Galerie',

@@ -21,11 +21,17 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   const [stats, setStats] = useState({ total: 0, email: 0, phone: 0 })
   const [inviteTemplate, setInviteTemplate] = useState(`Merhaba [Ad], seni ${eventTitle} etkinliğimize bekliyoruz! 🥂\nDetaylar ve LCV için: [Link]`)
   const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+  
+  // YENİ GİRİŞ STATE'LERİ
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [newMethod, setNewMethod] = useState('whatsapp')
   const [defaultCountry, setDefaultCountry] = useState('tr')
+  
+  // YENİ: DETAY MODALI İÇİN STATE
+  const [selectedGuest, setSelectedGuest] = useState<any>(null)
+
   const eventLink = typeof window !== 'undefined' ? `${window.location.origin}/${eventSlug}` : `/${eventSlug}`
 
   useEffect(() => {
@@ -72,22 +78,23 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
       fetchGuests()
   }
   
+  // EXCEL İNDİRME
   const downloadExcel = () => {
       const dataToExport = guests.map(g => ({
-          "Name": g.name,
-          "Status": g.status,
-          "+Guest": g.plus_one,
-          "Method": g.invite_method,
-          "Phone": g.phone,
+          "İsim": g.name,
+          "Durum": g.status,
+          "+Kişi": g.plus_one,
+          "Yöntem": g.invite_method,
+          "Telefon": g.phone,
           "Email": g.email,
-          "Note": g.note,
-          ...(g.form_responses || {}), 
-          "Date": new Date(g.created_at).toLocaleDateString()
+          "Not": g.note,
+          ...(g.form_responses || {}), // ÖZEL CEVAPLARI SÜTUN OLARAK EKLE
+          "Kayıt": new Date(g.created_at).toLocaleDateString()
       }))
       const worksheet = XLSX.utils.json_to_sheet(dataToExport)
       const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Guests")
-      XLSX.writeFile(workbook, `Guests_${eventSlug}.xlsx`)
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Davetliler")
+      XLSX.writeFile(workbook, `Davetli_Listesi_${eventSlug}.xlsx`)
   }
 
   const generateMessage = (guestName: string) => inviteTemplate.replace('[Ad]', guestName).replace('[Link]', eventLink)
@@ -95,16 +102,73 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
   const sendEmail = (email: string, name: string) => window.open(`mailto:${email}?subject=${encodeURIComponent(`Davet: ${eventTitle}`)}&body=${encodeURIComponent(generateMessage(name))}`, '_blank')
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn relative">
+        
+        {/* MODAL PENCERESİ (DETAYLAR) */}
+        {selectedGuest && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedGuest(null)}>
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                        <h3 className="font-bold">{t('modal_details_title')}</h3>
+                        <button onClick={() => setSelectedGuest(null)} className="text-white hover:bg-indigo-700 w-8 h-8 rounded-full">✕</button>
+                    </div>
+                    <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                        <div className="flex items-center gap-3 border-b pb-4">
+                            <div className="bg-indigo-100 text-indigo-700 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl">
+                                {selectedGuest.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-800">{selectedGuest.name}</h4>
+                                <p className="text-xs text-gray-500">{selectedGuest.email || selectedGuest.phone}</p>
+                            </div>
+                        </div>
+
+                        {/* ÖZEL CEVAPLAR */}
+                        <div className="space-y-3">
+                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Form Cevapları</h5>
+                            {selectedGuest.form_responses && Object.keys(selectedGuest.form_responses).length > 0 ? (
+                                Object.entries(selectedGuest.form_responses).map(([key, value]: [string, any]) => (
+                                    <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <p className="text-xs font-bold text-indigo-600 mb-1">{key}</p>
+                                        <p className="text-sm text-gray-800 font-medium">{value}</p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-400 italic">{t('modal_no_response')}</p>
+                            )}
+                        </div>
+
+                        {/* NOT */}
+                        {selectedGuest.note && (
+                            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                                <p className="text-xs font-bold text-yellow-700 mb-1">Not:</p>
+                                <p className="text-sm text-gray-700 italic">"{selectedGuest.note}"</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-4 bg-gray-50 text-right">
+                        <button onClick={() => setSelectedGuest(null)} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-300">
+                            {t('modal_close_btn')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* 1. İSTATİSTİK & MESAJ PANELİ */}
         <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 grid md:grid-cols-2 gap-6">
             <div>
                 <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-indigo-900 text-sm uppercase">{t('guest_status')}</h3>
-                    {guests.length > 0 && (
-                        <button onClick={downloadExcel} className="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700 transition flex items-center gap-1 font-bold">
-                            {t('export_btn')}
-                        </button>
-                    )}
+                    
+                    {/* EXCEL BUTONU (HER ZAMAN GÖRÜNÜR) */}
+                    <button 
+                        onClick={downloadExcel} 
+                        disabled={guests.length === 0}
+                        className="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700 transition flex items-center gap-1 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {t('export_btn')}
+                    </button>
                 </div>
                 <div className="flex gap-4">
                     <div className="bg-white p-3 rounded shadow-sm flex-1 text-center"><div className="text-2xl font-bold text-gray-800">{stats.total}</div><div className="text-xs text-gray-500">{t('total')}</div></div>
@@ -118,10 +182,10 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                     <button onClick={() => isEditingTemplate ? saveTemplate() : setIsEditingTemplate(true)} className="text-xs font-bold text-indigo-600 hover:underline">{isEditingTemplate ? '💾 ' + t('save_template') : '✏️ ' + t('edit_template')}</button>
                 </div>
                 {isEditingTemplate ? <textarea value={inviteTemplate} onChange={e => setInviteTemplate(e.target.value)} className="w-full h-20 text-xs p-2 border rounded resize-none"/> : <div className="bg-white p-2 rounded border text-xs text-gray-600 h-20 overflow-y-auto whitespace-pre-line italic">"{inviteTemplate}"</div>}
-                <p className="text-[10px] text-gray-400 mt-1">* [Ad] / [Link] auto.</p>
             </div>
         </div>
 
+        {/* 2. GİRİŞ SATIRI */}
         <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-indigo-100">
             <h3 className="font-bold text-gray-800 mb-3 text-sm">{t('add_guest_title')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
@@ -133,6 +197,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
             </div>
         </div>
 
+        {/* 3. LİSTE */}
         <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
             <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
@@ -140,52 +205,43 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                         <th className="px-4 py-3">{t('col_name')}</th>
                         <th className="px-4 py-3">{t('col_contact')}</th>
                         <th className="px-4 py-3">{t('col_status')}</th>
-                        <th className="px-4 py-3">{t('col_count')}</th>
-                        <th className="px-4 py-3">{t('col_note')}</th>
+                        <th className="px-4 py-3 text-center">{t('col_count')}</th>
                         <th className="px-4 py-3 text-center">{t('col_invite')}</th>
                         <th className="px-4 py-3 text-right">{t('col_action')}</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {guests.map(g => (
-                        <tr key={g.id} className="hover:bg-gray-50 transition">
-                            <td className="px-4 py-3 font-bold text-gray-800">{g.name}</td>
+                        <tr key={g.id} className="hover:bg-gray-50 transition cursor-pointer" onClick={() => setSelectedGuest(g)}>
+                            <td className="px-4 py-3 font-bold text-gray-800 flex items-center gap-2">
+                                {g.name}
+                                {/* DETAY İKONU (GÖZ) */}
+                                {g.form_responses && Object.keys(g.form_responses).length > 0 && (
+                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title={t('view_details_btn')}>👁️</span>
+                                )}
+                            </td>
                             <td className="px-4 py-3 text-gray-500 font-mono text-xs">
                                 {g.phone && <div className="flex items-center gap-1">📱 +{g.phone}</div>}
                                 {g.email && <div className="flex items-center gap-1">📧 {g.email}</div>}
                             </td>
-                            {/* DURUM ROZETLERİ */}
                             <td className="px-4 py-3">
                                 {g.status === 'katiliyor' ? <span className="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded font-bold uppercase">✔ {t('rsvp_option_yes')}</span> :
                                  g.status === 'katilmiyor' ? <span className="bg-red-100 text-red-800 text-[10px] px-2 py-1 rounded font-bold uppercase">✖ {t('rsvp_option_no')}</span> :
                                  <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold uppercase">⏳ Bekleniyor</span>}
                             </td>
                             <td className="px-4 py-3 font-bold text-center text-gray-600">{g.plus_one > 0 ? `+${g.plus_one}` : '-'}</td>
-                            <td className="px-4 py-3 text-xs text-gray-500 italic max-w-[150px] truncate" title={g.note}>{g.note || '-'}</td>
                             
-                            <td className="px-4 py-3 text-center">
-                                {g.invite_method === 'whatsapp' && (
-                                    <button onClick={() => sendWhatsapp(g.phone, g.name)} className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-green-600 shadow-sm transition transform active:scale-95">
-                                        WhatsApp ↗
-                                    </button>
-                                )}
-                                {g.invite_method === 'sms' && (
-                                    <a href={`sms:+${g.phone}?body=${encodeURIComponent(generateMessage(g.name))}`} className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-black shadow-sm inline-block">
-                                        SMS ↗
-                                    </a>
-                                )}
-                                {g.invite_method === 'email' && (
-                                    <button onClick={() => sendEmail(g.email, g.name)} className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-600 shadow-sm transition transform active:scale-95">
-                                        Mail ↗
-                                    </button>
-                                )}
+                            <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                                {g.invite_method === 'whatsapp' && <button onClick={() => sendWhatsapp(g.phone, g.name)} className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-green-600 shadow-sm">WhatsApp ↗</button>}
+                                {g.invite_method === 'sms' && <a href={`sms:+${g.phone}?body=${encodeURIComponent(generateMessage(g.name))}`} className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm inline-block">SMS ↗</a>}
+                                {g.invite_method === 'email' && <button onClick={() => sendEmail(g.email, g.name)} className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-600 shadow-sm">Mail ↗</button>}
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                                 <button onClick={() => deleteGuest(g.id)} className="text-red-400 hover:text-red-600 font-bold">&times;</button>
                             </td>
                         </tr>
                     ))}
-                    {guests.length === 0 && <tr><td colSpan={7} className="text-center py-8 text-gray-400 italic">{t('list_empty')}</td></tr>}
+                    {guests.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-400 italic">{t('list_empty')}</td></tr>}
                 </tbody>
             </table>
         </div>
