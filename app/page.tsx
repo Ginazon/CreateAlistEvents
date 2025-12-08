@@ -1,27 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabaseClient' // Dosya yapına göre ./lib doğru
+import { supabase } from './lib/supabaseClient' 
 import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GuestManager from './components/GuestManager'
 import Countdown from './components/Countdown'
-// TEK DOSYA DİL MOTORU (Yanındaki dosyadan çekiyoruz)
 import { useTranslation, LangType } from './i18n' 
 
 export default function Dashboard() {
   const router = useRouter()
-  // HOOK: Dil verilerini ve fonksiyonlarını çek
   const { t, language, setLanguage } = useTranslation() 
   
   const [session, setSession] = useState<any>(null)
   
-  // DATA/LISTE STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
   
-  // UI STATE
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
   const [guests, setGuests] = useState<any[]>([])
@@ -45,7 +41,16 @@ export default function Dashboard() {
     })
   }, [router])
 
-  // --- FONKSİYONLAR ---
+  // --- YENİ: GÜVENLİ ÇIKIŞ FONKSİYONU ---
+  const handleLogout = async () => {
+      // 1. Supabase'den çıkış yap ve bekle
+      await supabase.auth.signOut()
+      // 2. State'i temizle (Opsiyonel ama temizlik için iyi)
+      setSession(null)
+      // 3. Kullanıcıyı kesin olarak Landing sayfasına at
+      router.push('/landing')
+      router.refresh() // Router önbelleğini temizle
+  }
 
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
@@ -89,13 +94,12 @@ export default function Dashboard() {
         {/* HEADER */}
         <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
             <div>
-                {/* DİNAMİK BAŞLIKLAR (Çeviri) */}
                 <h1 className="text-2xl font-bold text-gray-800">{t('dashboard_title')}</h1>
                 <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
             </div>
             <div className="flex items-center gap-3">
                 
-                {/* DİL SEÇİM MENÜSÜ (DROPDOWN) */}
+                {/* DİL SEÇİMİ */}
                 <div className="relative group">
                     <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
                     <select 
@@ -114,7 +118,10 @@ export default function Dashboard() {
                     </select>
                 </div>
 
-                <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">{t('logout')}</button>
+                {/* LOGOUT BUTONU (GÜNCELLENDİ) */}
+                <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
+                    {t('logout')}
+                </button>
             </div>
         </div>
         
@@ -150,7 +157,6 @@ export default function Dashboard() {
                         <div className="flex gap-2 flex-wrap">
                             <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
                             
-                            {/* DÜZENLEME BUTONU */}
                             <Link href={`/create?edit=${event.id}`}>
                                 <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
                             </Link>
@@ -159,7 +165,6 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    {/* QR PENCERESİ */}
                     {showQrId === event.id && (
                         <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
                             <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
@@ -167,7 +172,6 @@ export default function Dashboard() {
                         </div>
                     )}
 
-                    {/* YÖNETİM PANELİ */}
                     {selectedEventId === event.id && (
                         <div className="mt-6 border-t pt-6">
                             <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
@@ -181,8 +185,6 @@ export default function Dashboard() {
 
                             {loadingDetails ? <p className="text-gray-400 text-sm">{t('loading')}</p> : (
                                 activeTab === 'guests' ? (
-                                    /* GUEST MANAGER ÇAĞIRIMI */
-                                    /* Artık 'currentLang' prop'una gerek yok, kendi içinden çekiyor */
                                     <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -206,7 +208,7 @@ export default function Dashboard() {
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
           <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
           <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
-          <button onClick={() => supabase.auth.signOut()} className="hover:text-black">{t('logout')}</button>
+          <button onClick={handleLogout} className="hover:text-black">{t('logout')}</button>
         </div>
         <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
       </footer>
