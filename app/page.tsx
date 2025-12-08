@@ -5,6 +5,7 @@ import { supabase } from './lib/supabaseClient'
 import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link' // Link önemli
 import { useRouter } from 'next/navigation' 
+import GuestManager from './components/GuestManager' // <-- Eklenecek
 
 export default function Dashboard() {
   const router = useRouter()
@@ -131,25 +132,32 @@ export default function Dashboard() {
                     )}
 
                     {/* YÖNETİM PANELİ */}
+                    {/* YÖNETİM PANELİ */}
                     {selectedEventId === event.id && (
                         <div className="mt-6 border-t pt-6">
-                            <div className="flex gap-6 border-b border-gray-100 mb-4 pb-1">
-                                <button onClick={() => setActiveTab('guests')} className={`pb-2 px-1 text-sm font-bold transition ${activeTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Davetliler ({guests.length})</button>
-                                <button onClick={() => setActiveTab('photos')} className={`pb-2 px-1 text-sm font-bold transition ${activeTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'}`}>Fotoğraflar ({photos.length})</button>
+                            <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
+                                <button onClick={() => setActiveTab('guests')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    📋 Davetli Listesi & Gönderim
+                                </button>
+                                <button onClick={() => setActiveTab('photos')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    📸 Galeri ({photos.length})
+                                </button>
                             </div>
+
                             {loadingDetails ? <p className="text-gray-400 text-sm">Yükleniyor...</p> : (
                                 activeTab === 'guests' ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-gray-100 text-gray-500 uppercase text-xs"><tr><th className="px-4 py-2">İsim</th><th className="px-4 py-2">Email</th><th className="px-4 py-2">Durum</th><th className="px-4 py-2">Kişi</th></tr></thead>
-                                            <tbody className="divide-y divide-gray-100">
-                                                {guests.map(g => (<tr key={g.id}><td className="px-4 py-3 font-medium">{g.name}</td><td className="px-4 py-3 text-gray-500">{g.email}</td><td className="px-4 py-3"><span className={`px-2 py-1 rounded text-xs ${g.status==='katiliyor'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>{g.status}</span></td><td className="px-4 py-3">+{g.plus_one}</td></tr>))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    /* YENİ MODÜL BURAYA GELDİ */
+                                    <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
                                 ) : (
+                                    /* FOTOĞRAFLAR KISMI AYNI KALIYOR */
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {photos.map(p => (<div key={p.id} className="relative group"><img src={p.image_url} className="h-24 w-full object-cover rounded"/><button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow">Sil</button></div>))}
+                                        {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">Henüz fotoğraf yüklenmemiş.</p>}
+                                        {photos.map(p => (
+                                            <div key={p.id} className="relative group">
+                                                <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
+                                                <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700">Sil</button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )
                             )}
