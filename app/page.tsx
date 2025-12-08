@@ -1,340 +1,180 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '../lib/supabaseClient'
-import Link from 'next/link'
-import Countdown from '../components/Countdown'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabaseClient'
+import { QRCodeCanvas } from 'qrcode.react'
+import Link from 'next/link' // Link önemli
+import { useRouter } from 'next/navigation' 
+import GuestManager from './components/GuestManager' // <-- Eklenecek
 
-const THEME_COLORS = [
-  { name: 'Klasik Mavi', hex: '#4F46E5' },
-  { name: 'Gold (Altın)', hex: '#D97706' },
-  { name: 'Rose (Gül)', hex: '#E11D48' },
-  { name: 'Zümrüt Yeşil', hex: '#059669' },
-  { name: 'Simsiyah', hex: '#111827' },
-]
-
-const FONT_OPTIONS = [
-  { name: 'Modern (Inter)', value: "'Inter', sans-serif" },
-  { name: 'Şık (Playfair Display)', value: "'Playfair Display', serif" },
-  { name: 'El Yazısı (Dancing Script)', value: "'Dancing Script', cursive" },
-  { name: 'Okunaklı (Merriweather)', value: "'Merriweather', serif" },
-  { name: 'Güçlü (Montserrat)', value: "'Montserrat', sans-serif" },
-]
-
-const turkishSlugify = (text: string) => {
-  const trMap: { [key: string]: string } = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u', 'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U' };
-  return text.replace(/[çğıöşüÇĞİÖŞÜ]/g, (m) => trMap[m] || m).toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
-}
-
-function CreateEventContent() {
+export default function Dashboard() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const editId = searchParams.get('edit')
-
   const [session, setSession] = useState<any>(null)
+  
+  // DATA STATE
   const [credits, setCredits] = useState<number | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [loadingData, setLoadingData] = useState(false)
-
-  // TEMEL BİLGİLER
-  const [title, setTitle] = useState('')
-  const [eventDate, setEventDate] = useState('')
-  const [locationName, setLocationName] = useState('')
-  const [locationUrl, setLocationUrl] = useState('')
+  const [myEvents, setMyEvents] = useState<any[]>([])
   
-  // GÖRSELLER
-  const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [coverPreview, setCoverPreview] = useState<string | null>(null)
-  const [existingCoverUrl, setExistingCoverUrl] = useState<string | null>(null)
-  
-  const [mainFile, setMainFile] = useState<File | null>(null)
-  const [mainPreview, setMainPreview] = useState<string | null>(null)
-  const [existingMainUrl, setExistingMainUrl] = useState<string | null>(null)
-
-  // TASARIM
-  const [message, setMessage] = useState('Bu özel günümüzde sizleri de aramızda görmekten mutluluk duyarız.')
-  const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
-  const [titleFont, setTitleFont] = useState(FONT_OPTIONS[2].value)
-  const [titleSize, setTitleSize] = useState(2.5)
-  const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
-  const [messageSize, setMessageSize] = useState(1)
-
-  // FORM ALANLARI
-  interface FormField {
-      id: string; label: string; type: 'text' | 'textarea' | 'select'; options?: string; required: boolean;
-  }
-  const [formFields, setFormFields] = useState<FormField[]>([])
+  // UI STATE
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [showQrId, setShowQrId] = useState<string | null>(null)
+  const [guests, setGuests] = useState<any[]>([])
+  const [photos, setPhotos] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [origin, setOrigin] = useState('')
 
   useEffect(() => {
+    if (typeof window !== 'undefined') setOrigin(window.location.origin)
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.push('/'); return }
       setSession(session)
-      fetchCredits(session.user.id)
-      if (editId) fetchEventData(editId, session.user.id)
+      if (session) {
+        fetchMyEvents(session.user.id)
+        fetchCredits(session.user.id)
+      } else {
+        router.push('/landing')
+      }
     })
-  }, [router, editId])
+  }, [router])
+
+  const fetchMyEvents = async (userId: string) => {
+    const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    if (data) setMyEvents(data)
+  }
 
   const fetchCredits = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
     if (data) setCredits(data.credits)
   }
 
-  const fetchEventData = async (id: string, userId: string) => {
-      setLoadingData(true)
-      const { data } = await supabase.from('events').select('*').eq('id', id).eq('user_id', userId).single()
-      if (data) {
-          setTitle(data.title)
-          if(data.event_date) setEventDate(new Date(data.event_date).toISOString().slice(0, 16))
-          setLocationName(data.location_name || '')
-          setLocationUrl(data.location_url || '')
-          setMessage(data.message || '')
-          if(data.image_url) { setCoverPreview(data.image_url); setExistingCoverUrl(data.image_url); }
-          if(data.main_image_url) { setMainPreview(data.main_image_url); setExistingMainUrl(data.main_image_url); }
-          if(data.design_settings) {
-              setThemeColor(data.design_settings.theme || THEME_COLORS[0].hex)
-              setTitleFont(data.design_settings.titleFont || FONT_OPTIONS[2].value)
-              setTitleSize(data.design_settings.titleSize || 2.5)
-              setMessageFont(data.design_settings.messageFont || FONT_OPTIONS[0].value)
-              setMessageSize(data.design_settings.messageSize || 1)
-          }
-          if(data.custom_form_schema) setFormFields(data.custom_form_schema)
-      }
-      setLoadingData(false)
+  const fetchEventDetails = async (eventId: string) => {
+    setSelectedEventId(eventId)
+    setLoadingDetails(true)
+    const { data: g } = await supabase.from('guests').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
+    if (g) setGuests(g)
+    const { data: p } = await supabase.from('photos').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
+    if (p) setPhotos(p)
+    setLoadingDetails(false)
   }
 
-  const addField = () => setFormFields([...formFields, { id: Date.now().toString(), label: 'Yeni Soru', type: 'text', required: false, options: '' }])
-  const removeField = (index: number) => { const newFields = [...formFields]; newFields.splice(index, 1); setFormFields(newFields) }
-  const updateField = (index: number, key: keyof FormField, value: any) => { const newFields = [...formFields]; newFields[index] = { ...newFields[index], [key]: value }; setFormFields(newFields) }
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'main') => {
-      const file = e.target.files?.[0]; if (!file) return;
-      if (type === 'cover') { setCoverFile(file); setCoverPreview(URL.createObjectURL(file)) }
-      else { setMainFile(file); setMainPreview(URL.createObjectURL(file)) }
+  const deletePhoto = async (id: string) => {
+    if (!confirm('Silmek istediğine emin misin?')) return
+    await supabase.from('photos').delete().eq('id', id)
+    setPhotos(photos.filter(p => p.id !== id))
   }
 
-  const handleSave = async () => {
-    if (!title || !eventDate) return alert('Başlık ve Tarih zorunludur')
-    if (!editId && credits !== null && credits < 1) return alert('Yetersiz Kredi!')
-    setUploading(true)
-    
-    let finalCoverUrl = existingCoverUrl
-    if (coverFile && session) {
-      const fileName = `cover-${Math.random()}.${coverFile.name.split('.').pop()}`
-      const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
-      if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
+  const downloadQRCode = (slug: string) => {
+    const canvas = document.getElementById(`qr-${slug}`) as HTMLCanvasElement
+    if (canvas) {
+        const link = document.createElement("a"); link.href = canvas.toDataURL("image/png"); link.download = `${slug}-qr.png`; link.click();
     }
-    let finalMainUrl = existingMainUrl
-    if (mainFile && session) {
-      const fileName = `main-${Math.random()}.${mainFile.name.split('.').pop()}`
-      const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
-      if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
-    }
-
-    const eventData = {
-        title, event_date: eventDate, location_name: locationName, location_url: locationUrl, message, 
-        image_url: finalCoverUrl, main_image_url: finalMainUrl,
-        design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
-        custom_form_schema: formFields 
-    }
-
-    if (editId) {
-        await supabase.from('events').update(eventData).eq('id', editId)
-        alert('Güncellendi! ✅'); router.push('/')
-    } else {
-        const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
-        await supabase.from('events').insert([{ ...eventData, slug: autoSlug, user_id: session?.user.id }])
-        const newCredit = (credits || 0) - 1
-        await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-        alert('Oluşturuldu! 🎉'); router.push('/')
-    }
-    setUploading(false)
   }
 
-  if(loadingData) return <div>Yükleniyor...</div>
-  const formattedDate = eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
+  if (!session) return <div className="h-screen flex items-center justify-center text-xl text-gray-500">Yönlendiriliyor...</div>
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      <div className="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800">{editId ? 'Düzenle' : 'Tasarla'}</h1>
-        <div className="flex items-center gap-4">
-             {!editId && <span className="text-xs font-bold text-yellow-700 bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">💰 {credits ?? '...'}</span>}
-             <Link href="/" className="text-gray-500 text-sm">İptal</Link>
-             <button onClick={handleSave} disabled={uploading} className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition">
-                {uploading ? '...' : 'Kaydet'}
-             </button>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+      <div className="max-w-5xl mx-auto">
+        
+        {/* HEADER */}
+        <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-800">Cereget Dashboard</h1>
+                <p className="text-gray-500 text-sm">Etkinliklerini buradan yönet.</p>
+            </div>
+            <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline shrink-0">Çıkış</button>
         </div>
-      </div>
-
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
-        <div className="p-8 overflow-y-auto h-[calc(100vh-80px)] bg-white border-r">
-            <div className="max-w-md mx-auto space-y-8">
-                
-                {/* 1. GÖRSELLER (DÜZELTİLDİ: Kutucuklu Yapı) */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">1. Görseller</h3>
-                    <div className="space-y-4">
-                        {/* Kapak Yükleme */}
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">Kapak Görseli (En Üst)</label>
-                            <div className="flex items-center gap-4">
-                                <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
-                                    {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>}
-                                </div>
-                                <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} 
-                                        className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
-                                    <p className="text-[10px] text-gray-400 mt-1">Önerilen: Yatay format</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Ana Görsel Yükleme */}
-                        <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">Ana Görsel (İçerik)</label>
-                            <div className="flex items-center gap-4">
-                                <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
-                                    {mainPreview ? <img src={mainPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">🖼️</div>}
-                                </div>
-                                <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} 
-                                        className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer"/>
-                                    <p className="text-[10px] text-gray-400 mt-1">Opsiyonel</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 2. İçerik */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">2. İçerik</h3>
-                    <div className="bg-gray-50 p-4 rounded-xl border mb-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Başlık</label>
-                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2"/>
-                         <div className="flex gap-2"><select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="1.5" max="5" step="0.1" value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-xl border">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Mesaj</label>
-                        <textarea value={message} onChange={e => setMessage(e.target.value)} className="w-full border p-2 rounded mb-2 h-20 text-sm"/>
-                        <div className="flex gap-2"><select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="0.8" max="2" step="0.1" value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
-                    </div>
-                </section>
-
-                {/* 3. Tarih & Mekan */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">3. Detaylar</h3>
-                    <input type="datetime-local" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border p-3 rounded-lg mb-3"/>
-                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Mekan Adı" className="w-full border p-3 rounded-lg mb-2"/>
-                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} placeholder="Harita Linki" className="w-full border p-3 rounded-lg"/>
-                </section>
-
-                {/* 4. Renk */}
-                <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">4. Tema Rengi</h3>
-                    <div className="flex gap-3">{THEME_COLORS.map(c => (<button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-8 h-8 rounded-full border-4 ${themeColor === c.hex ? 'border-gray-400 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c.hex }}/>))}</div>
-                </section>
-
-                {/* 5. FORM BUILDER (DÜZELTİLDİ: Sabit Alanlar Görünüyor) */}
-                <section className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-200 pb-2 flex justify-between items-center">
-                        5. Kayıt Formu Soruları
-                        <button onClick={addField} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">+ Soru Ekle</button>
-                    </h3>
-                    <div className="space-y-4">
-                        {/* Standart Alanlar */}
-                        <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none">
-                            <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">🔒 Standart Alanlar (Otomatik)</p>
-                            <div className="space-y-2">
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Ad Soyad</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>E-Posta</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Katılım Durumu</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>+ Kişi Sayısı</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Notunuz</span></div>
-                            </div>
-                        </div>
-
-                        {formFields.map((field, index) => (
-                            <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group animate-fadeIn">
-                                <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
-                                <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder="Soru?"/>
-                                <div className="flex gap-2 mb-2">
-                                    <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900"><option value="text">Kısa Metin</option><option value="textarea">Uzun Metin</option><option value="select">Açılır Liste</option></select>
-                                    <label className="flex items-center gap-1 text-xs text-gray-600"><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)}/> Zorunlu</label>
-                                </div>
-                                {field.type === 'select' && <input type="text" value={field.options} onChange={(e) => updateField(index, 'options', e.target.value)} placeholder="Seçenekler (Virgülle ayır)" className="w-full text-xs border p-2 rounded bg-yellow-50 text-gray-900"/>}
-                            </div>
-                        ))}
-                    </div>
-                </section>
+        
+        {/* AKSİYON BAR */}
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
+            <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
+                <div><p className="text-xs uppercase font-bold">Kredilerim</p><p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p></div>
+            </div>
+            <div className="order-1 md:order-2 w-full md:w-auto">
+                <Link href="/create" className="w-full">
+                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full">+ Yeni Etkinlik Oluştur</button>
+                </Link>
             </div>
         </div>
 
-        {/* SAĞ: ÖNİZLEME */}
-        <div className="bg-gray-100 flex items-center justify-center p-8 h-[calc(100vh-80px)] overflow-hidden">
-            <div className="w-[375px] h-[700px] bg-white rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative flex flex-col scrollbar-hide">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
-                <div className="flex-1 overflow-y-auto pb-8 font-sans">
-                     {/* Görsel */}
-                    <div className="w-full h-48 bg-gray-200 relative">
-                        {coverPreview && <img src={coverPreview} className="w-full h-full object-cover"/>}
-                        <div className="absolute inset-0 opacity-10" style={{ backgroundColor: themeColor }}></div>
-                    </div>
-                    
-                    {/* İçerik */}
-                    <div className="px-5 -mt-6 relative z-10">
-                         <div className="bg-white rounded-xl shadow p-4 border-t-4" style={{ borderColor: themeColor }}>
-                            <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{title || 'Başlık'}</h1>
-                            {mainPreview && <img src={mainPreview} className="w-full h-32 object-cover rounded mb-4"/>}
-                            <p className="text-center text-sm text-gray-600 whitespace-pre-line" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>{message}</p>
+        {/* LİSTE */}
+        <div className="space-y-4">
+            {myEvents.map(event => (
+                <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                    <div className="flex justify-between items-center flex-wrap gap-4">
+                        <div className="flex items-center gap-4">
+                             <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
+                             <div>
+                                <h3 className="font-bold text-lg">{event.title}</h3>
+                                <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">{origin}/{event.slug} ↗</a>
+                             </div>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
                             
-                            {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
+                            {/* YENİ: DÜZENLEME BUTONU -> /create sayfasına ID gönderiyor */}
+                            <Link href={`/create?edit=${event.id}`}>
+                                <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ Düzenle</button>
+                            </Link>
 
-                            <hr className="my-4"/>
-                            <div className="text-center text-xs space-y-2">
-                                <div className="p-2 bg-gray-50 rounded">
-                                    <p className="font-bold">📍 {locationName || 'Konum'}</p>
-                                </div>
-                                {locationUrl && <div className="text-white text-[10px] py-1 px-2 rounded inline-block" style={{backgroundColor: themeColor}}>Yol Tarifi Al</div>}
-                                <div className="p-2 bg-gray-50 rounded">
-                                    <p className="text-gray-500">{formattedDate}</p>
-                                </div>
-                            </div>
-                            
-                            {/* FORM ÖNİZLEMESİ (FULL) */}
-                            <div className="mt-6 pt-4 border-t border-dashed">
-                                <p className="text-center font-bold text-xs mb-3 text-gray-400">LCV Formu Önizleme</p>
-                                <div className="space-y-2 pointer-events-none">
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="Ad Soyad"/>
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="E-Posta"/>
-                                    <select className="w-full border p-2 rounded text-xs bg-gray-50"><option>Katılıyor</option></select>
-                                    <input className="w-full border p-2 rounded text-xs bg-gray-50" placeholder="+ Kişi Sayısı"/>
-                                    
-                                    {formFields.map(f => (
-                                        f.type === 'select' 
-                                        ? <select key={f.id} className="w-full border p-2 rounded text-xs"><option>{f.label}</option></select>
-                                        : <input key={f.id} className="w-full border p-2 rounded text-xs" placeholder={f.label}/>
-                                    ))}
-                                    <textarea className="w-full border p-2 rounded text-xs h-12" placeholder="Notunuz..."/>
-                                    <button className="w-full py-2 rounded text-xs text-white" style={{backgroundColor: themeColor}}>Gönder</button>
-                                </div>
+                            <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition">⚙️ Yönet</button>
+                        </div>
+                    </div>
+
+                    {/* QR PENCERESİ */}
+                    {showQrId === event.id && (
+                        <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
+                            <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
+                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 İndir</button>
+                        </div>
+                    )}
+
+                    {/* YÖNETİM PANELİ */}
+                    {/* YÖNETİM PANELİ */}
+                    {selectedEventId === event.id && (
+                        <div className="mt-6 border-t pt-6">
+                            <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
+                                <button onClick={() => setActiveTab('guests')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    📋 Davetli Listesi & Gönderim
+                                </button>
+                                <button onClick={() => setActiveTab('photos')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    📸 Galeri ({photos.length})
+                                </button>
                             </div>
 
-                         </div>
-                    </div>
+                            {loadingDetails ? <p className="text-gray-400 text-sm">Yükleniyor...</p> : (
+                                activeTab === 'guests' ? (
+                                    /* YENİ MODÜL BURAYA GELDİ */
+                                    <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
+                                ) : (
+                                    /* FOTOĞRAFLAR KISMI AYNI KALIYOR */
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">Henüz fotoğraf yüklenmemiş.</p>}
+                                        {photos.map(p => (
+                                            <div key={p.id} className="relative group">
+                                                <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
+                                                <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700">Sil</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    )}
                 </div>
-            </div>
+            ))}
         </div>
       </div>
+       <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
+        <div className="flex justify-center space-x-6 text-sm text-gray-500">
+          <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
+          <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
+          <button onClick={() => supabase.auth.signOut()} className="hover:text-black">Çıkış Yap</button>
+        </div>
+        <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
+      </footer>
     </div>
   )
-}
-
-export default function CreateEventPage() {
-    return (
-        <Suspense fallback={<div>Yükleniyor...</div>}>
-            <CreateEventContent />
-        </Suspense>
-    )
 }
