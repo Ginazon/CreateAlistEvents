@@ -5,21 +5,23 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabaseClient'
 import Link from 'next/link'
 import Countdown from '../components/Countdown'
+// TEK DOSYA İMPORT
+import { useTranslation } from '../i18n'
 
 const THEME_COLORS = [
-  { name: 'Klasik Mavi', hex: '#4F46E5' },
-  { name: 'Gold (Altın)', hex: '#D97706' },
-  { name: 'Rose (Gül)', hex: '#E11D48' },
-  { name: 'Zümrüt Yeşil', hex: '#059669' },
-  { name: 'Simsiyah', hex: '#111827' },
+  { name: 'Blue', hex: '#4F46E5' },
+  { name: 'Gold', hex: '#D97706' },
+  { name: 'Rose', hex: '#E11D48' },
+  { name: 'Green', hex: '#059669' },
+  { name: 'Black', hex: '#111827' },
 ]
 
 const FONT_OPTIONS = [
-  { name: 'Modern (Inter)', value: "'Inter', sans-serif" },
-  { name: 'Şık (Playfair Display)', value: "'Playfair Display', serif" },
-  { name: 'El Yazısı (Dancing Script)', value: "'Dancing Script', cursive" },
-  { name: 'Okunaklı (Merriweather)', value: "'Merriweather', serif" },
-  { name: 'Güçlü (Montserrat)', value: "'Montserrat', sans-serif" },
+  { name: 'Inter', value: "'Inter', sans-serif" },
+  { name: 'Playfair', value: "'Playfair Display', serif" },
+  { name: 'Dancing Script', value: "'Dancing Script', cursive" },
+  { name: 'Merriweather', value: "'Merriweather', serif" },
+  { name: 'Montserrat', value: "'Montserrat', sans-serif" },
 ]
 
 const turkishSlugify = (text: string) => {
@@ -31,6 +33,9 @@ function CreateEventContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
+
+  // HOOK KULLANIMI
+  const { t } = useTranslation()
 
   const [session, setSession] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
@@ -53,9 +58,9 @@ function CreateEventContent() {
   const [existingMainUrl, setExistingMainUrl] = useState<string | null>(null)
 
   // TASARIM
-  const [message, setMessage] = useState('Bu özel günümüzde sizleri de aramızda görmekten mutluluk duyarız.')
+  const [message, setMessage] = useState('')
   const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
-  const [titleFont, setTitleFont] = useState(FONT_OPTIONS[2].value)
+  const [titleFont, setTitleFont] = useState(FONT_OPTIONS[0].value)
   const [titleSize, setTitleSize] = useState(2.5)
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
   const [messageSize, setMessageSize] = useState(1)
@@ -93,7 +98,7 @@ function CreateEventContent() {
           if(data.main_image_url) { setMainPreview(data.main_image_url); setExistingMainUrl(data.main_image_url); }
           if(data.design_settings) {
               setThemeColor(data.design_settings.theme || THEME_COLORS[0].hex)
-              setTitleFont(data.design_settings.titleFont || FONT_OPTIONS[2].value)
+              setTitleFont(data.design_settings.titleFont || FONT_OPTIONS[0].value)
               setTitleSize(data.design_settings.titleSize || 2.5)
               setMessageFont(data.design_settings.messageFont || FONT_OPTIONS[0].value)
               setMessageSize(data.design_settings.messageSize || 1)
@@ -103,7 +108,7 @@ function CreateEventContent() {
       setLoadingData(false)
   }
 
-  const addField = () => setFormFields([...formFields, { id: Date.now().toString(), label: 'Yeni Soru', type: 'text', required: false, options: '' }])
+  const addField = () => setFormFields([...formFields, { id: Date.now().toString(), label: '', type: 'text', required: false, options: '' }])
   const removeField = (index: number) => { const newFields = [...formFields]; newFields.splice(index, 1); setFormFields(newFields) }
   const updateField = (index: number, key: keyof FormField, value: any) => { const newFields = [...formFields]; newFields[index] = { ...newFields[index], [key]: value }; setFormFields(newFields) }
   
@@ -151,18 +156,18 @@ function CreateEventContent() {
     setUploading(false)
   }
 
-  if(loadingData) return <div>Yükleniyor...</div>
+  if(loadingData) return <div>{t('loading')}</div>
   const formattedDate = eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <div className="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800">{editId ? 'Düzenle' : 'Tasarla'}</h1>
+        <h1 className="text-xl font-bold text-gray-800">{editId ? t('edit_event_title') : t('design_studio_title')}</h1>
         <div className="flex items-center gap-4">
              {!editId && <span className="text-xs font-bold text-yellow-700 bg-yellow-100 px-3 py-1 rounded-full border border-yellow-200">💰 {credits ?? '...'}</span>}
-             <Link href="/" className="text-gray-500 text-sm">İptal</Link>
+             <Link href="/" className="text-gray-500 text-sm">{t('cancel')}</Link>
              <button onClick={handleSave} disabled={uploading} className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 disabled:opacity-50 transition">
-                {uploading ? '...' : 'Kaydet'}
+                {uploading ? t('loading') : (editId ? t('save_changes_btn') : t('publish_btn'))}
              </button>
         </div>
       </div>
@@ -171,99 +176,87 @@ function CreateEventContent() {
         <div className="p-8 overflow-y-auto h-[calc(100vh-80px)] bg-white border-r">
             <div className="max-w-md mx-auto space-y-8">
                 
-                {/* 1. GÖRSELLER (DÜZELTİLDİ: Kutucuklu Yapı) */}
+                {/* 1. GÖRSELLER */}
                 <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">1. Görseller</h3>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_images')}</h3>
                     <div className="space-y-4">
-                        {/* Kapak Yükleme */}
                         <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">Kapak Görseli (En Üst)</label>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">{t('label_cover')}</label>
                             <div className="flex items-center gap-4">
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>}
                                 </div>
                                 <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} 
-                                        className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
-                                    <p className="text-[10px] text-gray-400 mt-1">Önerilen: Yatay format</p>
+                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Ana Görsel Yükleme */}
                         <div>
-                            <label className="text-xs font-bold text-gray-500 mb-1 block">Ana Görsel (İçerik)</label>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">{t('label_main')}</label>
                             <div className="flex items-center gap-4">
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {mainPreview ? <img src={mainPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">🖼️</div>}
                                 </div>
                                 <div className="flex-1">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} 
-                                        className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer"/>
-                                    <p className="text-[10px] text-gray-400 mt-1">Opsiyonel</p>
+                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer"/>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* 2. İçerik */}
+                {/* 2. İÇERİK */}
                 <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">2. İçerik</h3>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_content')}</h3>
                     <div className="bg-gray-50 p-4 rounded-xl border mb-4">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Başlık</label>
+                        <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_title')}</label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2"/>
                          <div className="flex gap-2"><select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="1.5" max="5" step="0.1" value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-xl border">
-                        <label className="block text-sm font-bold text-gray-800 mb-2">Mesaj</label>
+                        <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_message')}</label>
                         <textarea value={message} onChange={e => setMessage(e.target.value)} className="w-full border p-2 rounded mb-2 h-20 text-sm"/>
                         <div className="flex gap-2"><select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="0.8" max="2" step="0.1" value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
                     </div>
                 </section>
 
-                {/* 3. Tarih & Mekan */}
+                {/* 3. TARİH & MEKAN */}
                 <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">3. Detaylar</h3>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_details')}</h3>
                     <input type="datetime-local" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border p-3 rounded-lg mb-3"/>
-                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Mekan Adı" className="w-full border p-3 rounded-lg mb-2"/>
-                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} placeholder="Harita Linki" className="w-full border p-3 rounded-lg"/>
+                    <input type="text" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="Mekan" className="w-full border p-3 rounded-lg mb-2"/>
+                    <input type="text" value={locationUrl} onChange={e => setLocationUrl(e.target.value)} placeholder="URL" className="w-full border p-3 rounded-lg"/>
                 </section>
 
-                {/* 4. Renk */}
+                {/* 4. RENK */}
                 <section>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">4. Tema Rengi</h3>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_color')}</h3>
                     <div className="flex gap-3">{THEME_COLORS.map(c => (<button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-8 h-8 rounded-full border-4 ${themeColor === c.hex ? 'border-gray-400 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c.hex }}/>))}</div>
                 </section>
 
-                {/* 5. FORM BUILDER (DÜZELTİLDİ: Sabit Alanlar Görünüyor) */}
+                {/* 5. FORM BUILDER */}
                 <section className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                     <h3 className="text-sm font-black text-indigo-900 uppercase tracking-wider mb-4 border-b border-indigo-200 pb-2 flex justify-between items-center">
-                        5. Kayıt Formu Soruları
-                        <button onClick={addField} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">+ Soru Ekle</button>
+                        {t('section_form')}
+                        <button onClick={addField} className="text-xs bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">{t('add_question_btn')}</button>
                     </h3>
                     <div className="space-y-4">
-                        {/* Standart Alanlar */}
                         <div className="bg-gray-100 p-3 rounded border border-gray-200 opacity-70 select-none">
-                            <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">🔒 Standart Alanlar (Otomatik)</p>
-                            <div className="space-y-2">
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Ad Soyad</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>E-Posta</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Katılım Durumu</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>+ Kişi Sayısı</span></div>
-                                <div className="bg-white border p-2 rounded text-xs text-gray-400 flex justify-between"><span>Notunuz</span></div>
+                            <p className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1">{t('locked_fields')}</p>
+                            <div className="space-y-2 text-xs text-gray-400">
+                                <div>Ad Soyad</div><div>Email</div><div>Durum</div>
                             </div>
                         </div>
 
                         {formFields.map((field, index) => (
                             <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group animate-fadeIn">
                                 <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
-                                <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder="Soru?"/>
+                                <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder={t('question_placeholder')}/>
                                 <div className="flex gap-2 mb-2">
-                                    <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900"><option value="text">Kısa Metin</option><option value="textarea">Uzun Metin</option><option value="select">Açılır Liste</option></select>
-                                    <label className="flex items-center gap-1 text-xs text-gray-600"><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)}/> Zorunlu</label>
+                                    <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900"><option value="text">Text</option><option value="textarea">Long Text</option><option value="select">Dropdown</option></select>
+                                    <label className="flex items-center gap-1 text-xs text-gray-600"><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)}/> {t('required_checkbox')}</label>
                                 </div>
-                                {field.type === 'select' && <input type="text" value={field.options} onChange={(e) => updateField(index, 'options', e.target.value)} placeholder="Seçenekler (Virgülle ayır)" className="w-full text-xs border p-2 rounded bg-yellow-50 text-gray-900"/>}
+                                {field.type === 'select' && <input type="text" value={field.options} onChange={(e) => updateField(index, 'options', e.target.value)} placeholder={t('option_placeholder')} className="w-full text-xs border p-2 rounded bg-yellow-50 text-gray-900"/>}
                             </div>
                         ))}
                     </div>
@@ -296,7 +289,7 @@ function CreateEventContent() {
                                 <div className="p-2 bg-gray-50 rounded">
                                     <p className="font-bold">📍 {locationName || 'Konum'}</p>
                                 </div>
-                                {locationUrl && <div className="text-white text-[10px] py-1 px-2 rounded inline-block" style={{backgroundColor: themeColor}}>Yol Tarifi Al</div>}
+                                {locationUrl && <div className="text-white text-[10px] py-1 px-2 rounded inline-block" style={{backgroundColor: themeColor}}>Harita</div>}
                                 <div className="p-2 bg-gray-50 rounded">
                                     <p className="text-gray-500">{formattedDate}</p>
                                 </div>

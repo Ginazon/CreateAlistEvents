@@ -1,23 +1,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabaseClient'
+import { supabase } from './lib/supabaseClient' // Dosya yapına göre ./lib doğru
 import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GuestManager from './components/GuestManager'
 import Countdown from './components/Countdown'
-// YENİ MOTORU ÇAĞIR
+// TEK DOSYA DİL MOTORU (Yanındaki dosyadan çekiyoruz)
 import { useTranslation, LangType } from './i18n' 
 
 export default function Dashboard() {
   const router = useRouter()
-  // HOOK KULLANIMI
+  // HOOK: Dil verilerini ve fonksiyonlarını çek
   const { t, language, setLanguage } = useTranslation() 
   
   const [session, setSession] = useState<any>(null)
+  
+  // DATA/LISTE STATE
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
+  
+  // UI STATE
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
   const [guests, setGuests] = useState<any[]>([])
@@ -28,6 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
+
     supabase.auth.getSession().then(({ data }: { data: { session: any } }) => {
       const session = data.session
       setSession(session)
@@ -40,14 +45,18 @@ export default function Dashboard() {
     })
   }, [router])
 
+  // --- FONKSİYONLAR ---
+
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     if (data) setMyEvents(data)
   }
+
   const fetchCredits = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
     if (data) setCredits(data.credits)
   }
+
   const fetchEventDetails = async (eventId: string) => {
     setSelectedEventId(eventId)
     setLoadingDetails(true)
@@ -57,11 +66,13 @@ export default function Dashboard() {
     if (p) setPhotos(p)
     setLoadingDetails(false)
   }
+
   const deletePhoto = async (id: string) => {
     if (!confirm(t('confirm_delete'))) return
     await supabase.from('photos').delete().eq('id', id)
     setPhotos(photos.filter(p => p.id !== id))
   }
+
   const downloadQRCode = (slug: string) => {
     const canvas = document.getElementById(`qr-${slug}`) as HTMLCanvasElement
     if (canvas) {
@@ -78,24 +89,29 @@ export default function Dashboard() {
         {/* HEADER */}
         <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
             <div>
+                {/* DİNAMİK BAŞLIKLAR (Çeviri) */}
                 <h1 className="text-2xl font-bold text-gray-800">{t('dashboard_title')}</h1>
                 <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
             </div>
             <div className="flex items-center gap-3">
                 
-                {/* ŞIK DİL SEÇİMİ (DROPDOWN) */}
+                {/* DİL SEÇİM MENÜSÜ (DROPDOWN) */}
                 <div className="relative group">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm z-10 pointer-events-none">🌐</span>
+                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
                     <select 
                         value={language} 
                         onChange={(e) => setLanguage(e.target.value as LangType)}
-                        className="bg-gray-100 border border-transparent text-gray-700 text-xs font-bold rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-8 py-2 appearance-none cursor-pointer hover:bg-gray-200 transition uppercase outline-none"
+                        className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
                     >
                         <option value="tr">TR</option>
                         <option value="en">EN</option>
                         <option value="de">DE</option>
+                        <option value="fr">FR</option>
+                        <option value="es">ES</option>
+                        <option value="it">IT</option>
+                        <option value="ru">RU</option>
+                        <option value="ar">AR</option>
                     </select>
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-500 pointer-events-none">▼</span>
                 </div>
 
                 <button onClick={() => supabase.auth.signOut()} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">{t('logout')}</button>
@@ -133,11 +149,17 @@ export default function Dashboard() {
                         </div>
                         <div className="flex gap-2 flex-wrap">
                             <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
-                            <Link href={`/create?edit=${event.id}`}><button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button></Link>
+                            
+                            {/* DÜZENLEME BUTONU */}
+                            <Link href={`/create?edit=${event.id}`}>
+                                <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
+                            </Link>
+
                             <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition">⚙️ {t('manage')}</button>
                         </div>
                     </div>
 
+                    {/* QR PENCERESİ */}
                     {showQrId === event.id && (
                         <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
                             <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
@@ -145,6 +167,7 @@ export default function Dashboard() {
                         </div>
                     )}
 
+                    {/* YÖNETİM PANELİ */}
                     {selectedEventId === event.id && (
                         <div className="mt-6 border-t pt-6">
                             <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
@@ -158,7 +181,8 @@ export default function Dashboard() {
 
                             {loadingDetails ? <p className="text-gray-400 text-sm">{t('loading')}</p> : (
                                 activeTab === 'guests' ? (
-                                    /* GUEST MANAGER (Dili context'ten alacağı için prop'a gerek yok) */
+                                    /* GUEST MANAGER ÇAĞIRIMI */
+                                    /* Artık 'currentLang' prop'una gerek yok, kendi içinden çekiyor */
                                     <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -180,11 +204,11 @@ export default function Dashboard() {
       </div>
        <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
-          <Link href="/legal/terms" className="hover:text-black">Terms</Link>
-          <Link href="/legal/privacy" className="hover:text-black">Privacy</Link>
+          <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
+          <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
           <button onClick={() => supabase.auth.signOut()} className="hover:text-black">{t('logout')}</button>
         </div>
-        <p className="mt-3 text-xs text-gray-400">© 2025 Cereget.</p>
+        <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
       </footer>
     </div>
   )
