@@ -273,8 +273,8 @@ function CreateEventContent() {
             <div className="w-[375px] h-[700px] bg-white rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative flex flex-col scrollbar-hide">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                 <div className="flex-1 overflow-y-auto pb-8 font-sans">
-                     {/* Görsel */}
-                    <div className="w-full h-48 bg-gray-200 relative">
+                     {/* GÖRSEL (KAPAK - KÜÇÜLTÜLDÜ: h-36) */}
+                    <div className="w-full h-36 bg-gray-200 relative">
                         {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">{t('preview_cover_placeholder')}</div>}
                         <div className="absolute inset-0 opacity-10" style={{ backgroundColor: themeColor }}></div>
                     </div>
@@ -283,7 +283,13 @@ function CreateEventContent() {
                     <div className="px-5 -mt-6 relative z-10">
                          <div className="bg-white rounded-xl shadow p-4 border-t-4" style={{ borderColor: themeColor }}>
                             <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{title || t('preview_title_placeholder')}</h1>
-                            {mainPreview ? <img src={mainPreview} className="w-full h-32 object-cover rounded mb-4"/> : <div className="w-full h-20 bg-gray-100 rounded mb-4 flex items-center justify-center text-xs text-gray-400">{t('preview_main_placeholder')}</div>}
+                            
+                            {/* ANA GÖRSEL (BÜYÜTÜLDÜ: h-80) */}
+                            {mainPreview ? (
+                                <img src={mainPreview} className="w-full h-80 object-cover rounded mb-4"/>
+                            ) : (
+                                <div className="w-full h-80 bg-gray-100 rounded mb-4 flex items-center justify-center text-xs text-gray-400">{t('preview_main_placeholder')}</div>
+                            )}
                             
                             <p className="text-center text-sm text-gray-600 whitespace-pre-line" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>{message}</p>
                             
