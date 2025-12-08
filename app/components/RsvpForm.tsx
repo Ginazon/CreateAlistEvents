@@ -153,7 +153,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                               defaultValue=""
                           >
-                              <option value="" disabled>Seçiniz...</option>
+                              <option value="" disabled>Select...</option>
                               {field.options?.split(',').map((opt: string) => (
                                   <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
                               ))}
