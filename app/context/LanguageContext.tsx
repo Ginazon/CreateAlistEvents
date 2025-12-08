@@ -12,30 +12,40 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguageState] = useState<Language>('en'); // Varsayılanı sonra değiştireceğiz
+  // Varsayılan olarak 'tr' başlatıyoruz ki sunucu tarafında hata olmasın
+  const [language, setLanguageState] = useState<Language>('tr');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 1. Önce kayıtlı tercih var mı bak
-    const savedLang = localStorage.getItem('cereget-lang') as Language;
+    setMounted(true); // Bileşen tarayıcıda yüklendi
     
-    if (savedLang) {
-      setLanguageState(savedLang);
-    } else {
-      // 2. Yoksa tarayıcı diline bak
-      const browserLang = navigator.language.startsWith('tr') ? 'tr' : 'en';
-      setLanguageState(browserLang);
+    // Sadece tarayıcıda çalışır
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('cereget-lang') as Language;
+      if (savedLang) {
+        setLanguageState(savedLang);
+      } else {
+        const browserLang = navigator.language.startsWith('en') ? 'en' : 'tr';
+        setLanguageState(browserLang);
+      }
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('cereget-lang', lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cereget-lang', lang);
+    }
   };
 
-  // Çeviri fonksiyonu: t('save') -> "Kaydet" veya "Save" döndürür
   const t = (key: keyof typeof translations['tr']) => {
     return translations[language][key] || key;
   };
+
+  // Hydration hatasını önlemek için mount olana kadar render etme (Opsiyonel ama güvenli)
+  if (!mounted) {
+    return <>{children}</>; 
+  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
@@ -44,7 +54,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Kolay kullanım için Hook
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {
