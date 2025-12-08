@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [session, setSession] = useState<any>(null)
   
   // ... (DİĞER STATE'LER AYNI KALACAK: credits, myEvents, loadingDetails vb.) ...
+  // git push sorunu çıkarsa kaydet için güncellenecek satır
   // Lütfen mevcut state kodlarınızı silmeyin, buraya sığdırmak için kısaltıyorum.
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
