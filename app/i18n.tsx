@@ -194,7 +194,8 @@ public_go_panel_create: 'Panele Git & Etkinlik Oluştur 🚀',
     method_email: '📧 E-posta',
     
     // Table Status & Actions
-    status_waiting_badge: 'Bekleniyor',
+    status_waiting_label: 'Bekleniyor',
+    status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -383,7 +384,8 @@ public_go_panel_create: 'Go to Dashboard & Create Event 🚀',
     method_email: '📧 Email',
     
     // Table Status & Actions
-    status_waiting_badge: 'Pending',
+    status_waiting_label: 'Pending',
+    status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -572,7 +574,8 @@ public_go_panel_create: 'Zum Dashboard & Event erstellen 🚀',
     method_email: '📧 E-Mail',
     
     // Table Status & Actions
-    status_waiting_badge: 'Ausstehend',
+    status_waiting_label: 'Pending',
+status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -761,7 +764,8 @@ public_go_panel_create: 'Aller au tableau de bord & Créer 🚀',
     method_email: '📧 E-mail',
     
     // Table Status & Actions
-    status_waiting_badge: 'En attente',
+    status_waiting_label: 'En attente',
+    status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -950,7 +954,8 @@ public_go_panel_create: 'Ir al Panel y Crear Evento 🚀',
     method_email: '📧 Correo',
     
     // Table Status & Actions
-    status_waiting_badge: 'Pendiente',
+    status_waiting_label: 'Pendiente',
+    status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -1139,7 +1144,8 @@ public_go_panel_create: 'Vai al Pannello e Crea Evento 🚀',
     method_email: '📧 Email',
     
     // Table Status & Actions
-    status_waiting_badge: 'In attesa',
+    status_waiting_label: 'In attesa',
+status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -1328,7 +1334,8 @@ public_go_panel_create: 'В панель и создать событие 🚀',
     method_email: '📧 Email',
     
     // Table Status & Actions
-    status_waiting_badge: 'Ожидание',
+    status_waiting_label: 'Ожидание',
+status_waiting_badge: '⏳',
     btn_send_whatsapp: 'WhatsApp',
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
@@ -1518,7 +1525,8 @@ public_go_panel_create: 'الذهاب للوحة وإنشاء فعالية 🚀'
     method_email: '📧 بريد',
     
     // Table Status & Actions
-    status_waiting_badge: 'قيد الانتظار',
+    status_waiting_label: 'قيد الانتظار',
+    status_waiting_badge: '⏳',
     btn_send_whatsapp: 'واتساب',
     btn_send_sms: 'رسالة',
     btn_send_email: 'بريد',
