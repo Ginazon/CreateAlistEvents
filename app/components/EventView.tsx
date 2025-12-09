@@ -75,7 +75,10 @@ export default function EventView({ slug }: { slug: string }) {
     : '...'
 
   const detailBlocks = event.event_details || []
-  const homeLink = isOwner ? "/" : "/landing";
+  // GÜNCELLEME 1: Yönlendirme Linki Mantığı
+  // Eğer etkinlik sahibiyse VEYA misafir giriş yapmışsa -> Dashboard'a (/) git.
+  // Hiçbiri değilse (Anonimse) -> Landing page'e (/landing) git.
+  const homeLink = (isOwner || currentUserEmail) ? "/" : "/landing";
 
   // GALERİ ERİŞİM İZNİ: Misafir giriş yaptıysa VEYA Etkinlik Sahibiyse
   const canAccessGallery = currentUserEmail || isOwner
@@ -201,10 +204,15 @@ export default function EventView({ slug }: { slug: string }) {
         )}
       </div>
 
-      <div className="max-w-xl w-full px-6 mt-12 pb-10">
+   {/* GÜNCELLEME 2: En Alttaki Buton Alanı */}
+   <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <Link href={homeLink} className="block w-full text-center">
               <button className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm">
-                  {isOwner ? t('public_back_dashboard') : t('public_create_own')}
+                  {/* Metni duruma göre değiştiriyoruz */}
+                  {isOwner 
+                    ? t('public_back_dashboard') 
+                    : (currentUserEmail ? "Kendi Paneline Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
+                  }
               </button>
           </Link>
       </div>

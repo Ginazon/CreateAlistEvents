@@ -16,15 +16,16 @@ export default function Dashboard() {
   
   // Veriler
   const [credits, setCredits] = useState<number | null>(null)
-  const [myEvents, setMyEvents] = useState<any[]>([])      // Kendi oluşturdukları
-  const [invitedEvents, setInvitedEvents] = useState<any[]>([]) // Davet edildikleri
+  const [myEvents, setMyEvents] = useState<any[]>([])
+  const [invitedEvents, setInvitedEvents] = useState<any[]>([])
+  const [packages, setPackages] = useState<any[]>([]) // YENİ: Paketler
   
   // UI State
-  const [activeTab, setActiveTab] = useState<'created' | 'invited'>('created') // Ana Sekme
+  const [activeTab, setActiveTab] = useState<'created' | 'invited'>('created')
   const [loading, setLoading] = useState(true)
   const [origin, setOrigin] = useState('')
 
-  // Etkinlik Detay Yönetimi (Sadece 'created' sekmesi için)
+  // Detay Yönetimi
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
   const [photos, setPhotos] = useState<any[]>([])
@@ -40,7 +41,8 @@ export default function Dashboard() {
       if (session) {
         fetchCredits(session.user.id)
         fetchMyEvents(session.user.id)
-        fetchInvitedEvents(session.user.email) // E-posta ile davetleri bul
+        fetchInvitedEvents(session.user.email)
+        fetchPackages() // YENİ: Paketleri çek
       } else {
         router.push('/landing')
       }
@@ -59,36 +61,37 @@ export default function Dashboard() {
     if (data) setCredits(data.credits)
   }
 
-  // 1. KENDİ ETKİNLİKLERİMİ GETİR
   const fetchMyEvents = async (userId: string) => {
     const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     if (data) setMyEvents(data)
     setLoading(false)
   }
 
-  // 2. DAVET EDİLDİĞİM ETKİNLİKLERİ GETİR
   const fetchInvitedEvents = async (email: string) => {
       if (!email) return
-
-      // A. Önce 'guests' tablosundan benim mailimin olduğu satırları bul
-      // Ve ilişkili 'events' tablosundaki verileri çek (Inner Join mantığı)
-      const { data: guestEntries, error } = await supabase
+      const { data: guestEntries } = await supabase
         .from('guests')
         .select(`
             event_id,
-            events:events (
-                id, title, slug, event_date, image_url, location_name, design_settings
-            )
+            events:events (id, title, slug, event_date, image_url, location_name, design_settings)
         `)
         .eq('email', email)
         
       if (guestEntries) {
-          // Gelen veri yapısını düzelt: [{event_id:..., events:{...}}] -> [{...}]
-          // Sadece 'events' verisi dolu olanları (etkinlik silinmemişse) al.
           // @ts-ignore
           const formattedEvents = guestEntries.map(g => g.events).filter(e => e !== null)
           setInvitedEvents(formattedEvents)
       }
+  }
+
+  // YENİ: Paketleri Çekme Fonksiyonu
+  const fetchPackages = async () => {
+      const { data } = await supabase
+        .from('credit_packages')
+        .select('*')
+        .order('credits_amount', { ascending: true }) // Küçük paketten büyüğe
+      
+      if (data) setPackages(data)
   }
 
   const fetchEventDetails = async (eventId: string) => {
@@ -134,12 +137,7 @@ export default function Dashboard() {
                     >
                         <option value="tr">TR</option>
                         <option value="en">EN</option>
-                        <option value="de">DE</option>
-                        <option value="fr">FR</option>
-                        <option value="es">ES</option>
-                        <option value="it">IT</option>
-                        <option value="ru">RU</option>
-                        <option value="ar">AR</option>
+                        {/* Diğer diller */}
                     </select>
                 </div>
                 <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
@@ -148,22 +146,24 @@ export default function Dashboard() {
             </div>
         </div>
         
-        {/* KREDİ & YENİ ETKİNLİK BUTONU */}
+        {/* KREDİ & AKSİYON ALANI */}
         <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
             <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
                 <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
                 <div><p className="text-xs uppercase font-bold">{t('my_credits')}</p><p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p></div>
             </div>
+            
+            {/* Eğer kredi 0 ise Create butonu yerine Satın Al mesajı verilebilir veya buton bırakılabilir, tıklayınca uyarı verir */}
             <div className="order-1 md:order-2 w-full md:w-auto">
                 <Link href="/create" className="w-full">
-                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full">
-                        {t('create_new_event')}
+                    <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full flex items-center justify-center gap-2">
+                        ✨ {t('create_new_event')}
                     </button>
                 </Link>
             </div>
         </div>
 
-        {/* --- ANA SEKMELER (TAB) --- */}
+        {/* SEKME BAŞLIKLARI */}
         <div className="flex gap-1 mb-6 border-b border-gray-200">
             <button 
                 onClick={() => setActiveTab('created')}
@@ -182,11 +182,46 @@ export default function Dashboard() {
         {/* LİSTE İÇERİĞİ */}
         <div className="space-y-4">
             
-            {/* 1. KENDİ ETKİNLİKLERİM */}
+            {/* 1. KENDİ ETKİNLİKLERİM (VEYA PAKET SATIŞ EKRANI) */}
             {activeTab === 'created' && (
                 <>
-                    {myEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_events')}</div>}
+                    {/* ETKİNLİK YOKSA -> PAKETLERİ GÖSTER */}
+                    {myEvents.length === 0 && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center animate-fadeIn">
+                            <div className="max-w-3xl mx-auto">
+                                <div className="text-6xl mb-4">🚀</div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Henüz Etkinliğin Yok</h2>
+                                <p className="text-gray-500 mb-8">Etkinlik oluşturmak ve davetiyeni hazırlamak için kredi paketlerinden birini seçerek hemen başla.</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {packages.map((pkg) => (
+                                        <div key={pkg.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:border-indigo-300 transition flex flex-col items-center bg-gray-50 hover:bg-white relative overflow-hidden group">
+                                            {/* Süsleme */}
+                                            <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+
+                                            <h3 className="font-bold text-lg text-gray-800 mb-2">{pkg.package_name || 'Standart Paket'}</h3>
+                                            <div className="text-4xl font-extrabold text-indigo-600 mb-2">{pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">Kredi</span></div>
+                                            
+                                            <p className="text-xs text-gray-400 mb-6 text-center">Tek seferlik ödeme. Ömür boyu geçerli.</p>
+                                            
+                                            {/* Etsy Linki */}
+                                            <a 
+    // Öncelik etsy_link sütununda, eğer boşsa eski usul ID ile oluştur (Geriye uyumluluk)
+    href={pkg.etsy_link || `https://www.etsy.com/listing/${pkg.etsy_listing_id}`} 
+    target="_blank" 
+    className="w-full bg-black text-white py-3 rounded-lg font-bold text-sm hover:bg-gray-800 transition shadow-md flex items-center justify-center gap-2"
+>
+    Etsy ile Satın Al ↗
+</a>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-400 mt-6">Satın alma sonrası krediniz hesabınıza otomatik olarak yüklenecektir.</p>
+                            </div>
+                        </div>
+                    )}
                     
+                    {/* ETKİNLİK VARSA -> LİSTEYİ GÖSTER */}
                     {myEvents.map(event => (
                         <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
                             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -206,7 +241,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* QR ALANI */}
+                            {/* QR ve DETAY ALANLARI (Aynı kaldı) */}
                             {showQrId === event.id && (
                                 <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
                                     <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
@@ -214,7 +249,6 @@ export default function Dashboard() {
                                 </div>
                             )}
 
-                            {/* DETAYLAR (GUEST MANAGER) */}
                             {selectedEventId === event.id && (
                                 <div className="mt-6 border-t pt-6">
                                     <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
@@ -248,14 +282,13 @@ export default function Dashboard() {
                 </>
             )}
 
-            {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER */}
+            {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER (Aynı kaldı) */}
             {activeTab === 'invited' && (
                 <>
                     {invitedEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_invited_events')}</div>}
                     
                     {invitedEvents.map(event => (
                         <div key={event.id} className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 transition hover:shadow-xl flex flex-col md:flex-row gap-6">
-                             {/* KAPAK RESMİ (VARSA) */}
                              {event.image_url && (
                                  <div className="w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                                      <img src={event.image_url} className="w-full h-full object-cover" />
@@ -278,7 +311,9 @@ export default function Dashboard() {
 
         </div>
       </div>
-       <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
+      
+      {/* FOOTER */}
+      <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
           <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
           <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
