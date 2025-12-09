@@ -272,7 +272,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                             <td className="px-4 py-3">
                                 {g.status === 'katiliyor' ? <span className="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded font-bold uppercase">✔ {t('rsvp_option_yes')}</span> :
                                  g.status === 'katilmiyor' ? <span className="bg-red-100 text-red-800 text-[10px] px-2 py-1 rounded font-bold uppercase">✖ {t('rsvp_option_no')}</span> :
-                                 <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold uppercase">{t('status_waiting_icon')} {t('status_waiting_badge')}</span>}
+                                 <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold uppercase">{t('status_waiting_badge')} {t('status_waiting_badge')}</span>}
                             </td>
                             <td className="px-4 py-3 font-bold text-center text-gray-600">{g.plus_one > 0 ? `+${g.plus_one}` : '-'}</td>
                             
