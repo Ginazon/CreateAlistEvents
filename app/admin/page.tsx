@@ -35,7 +35,7 @@ export default function AdminPage() {
   }, [])
 
   const checkAdmin = async (email: string | undefined) => {
-    if (email !== 'admin@cereget.com' && email !== 'onur.kaynar@hotmail.com') { // Admin maillerini buraya ekle
+    if (email !== 'onur.kaynar38@gmail.com' && email !== 'onur.kaynar@hotmail.com') { // Admin maillerini buraya ekle
        alert('Yetkisiz Giriş!')
        window.location.href = '/'
     } else {
