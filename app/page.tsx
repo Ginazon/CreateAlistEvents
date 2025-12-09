@@ -68,21 +68,32 @@ export default function Dashboard() {
   }
 
   const fetchInvitedEvents = async (email: string) => {
-      if (!email) return
-      const { data: guestEntries } = await supabase
-        .from('guests')
-        .select(`
-            event_id,
-            events:events (id, title, slug, event_date, image_url, location_name, design_settings)
-        `)
-        .eq('email', email)
-        
-      if (guestEntries) {
-          // @ts-ignore
-          const formattedEvents = guestEntries.map(g => g.events).filter(e => e !== null)
-          setInvitedEvents(formattedEvents)
-      }
-  }
+    if (!email) return
+
+    // GÜNCELLEME: .eq yerine .ilike kullanıyoruz (Büyük/küçük harf farketmez)
+    const { data: guestEntries, error } = await supabase
+      .from('guests')
+      .select(`
+          event_id,
+          events!inner (  
+              id, title, slug, event_date, image_url, location_name, design_settings
+          )
+      `)
+      // !inner kullanımı: Sadece "gerçekten bir etkinliği olan" kayıtları getirir (Silinmişleri eler)
+      .ilike('email', email) 
+      
+    if (error) {
+        console.error("Davetleri çekerken hata:", error.message)
+        return
+    }
+
+    if (guestEntries) {
+        // Gelen veri yapısını düzelt
+        // @ts-ignore
+        const formattedEvents = guestEntries.map(g => g.events)
+        setInvitedEvents(formattedEvents)
+    }
+}
 
   // YENİ: Paketleri Çekme Fonksiyonu
   const fetchPackages = async () => {
