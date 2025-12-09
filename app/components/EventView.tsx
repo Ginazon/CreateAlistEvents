@@ -212,16 +212,24 @@ export default function EventView({ slug }: { slug: string }) {
 
    {/* GÜNCELLEME 2: En Alttaki Buton Alanı */}
    <div className="max-w-xl w-full px-6 mt-12 pb-10">
-          <Link href={homeLink} className="block w-full text-center">
-              <button className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm">
-                  {/* Metni duruma göre değiştiriyoruz */}
+          {/* Link yerine div kullanıyoruz, tıklamayı buton yönetecek */}
+          <div className="block w-full text-center">
+              <button 
+                  onClick={() => {
+                      // Yönlendirmeyi manuel yapıyoruz (Cache takılmasın diye)
+                      const target = (isOwner || currentUserEmail) ? "/" : "/landing";
+                      router.push(target);
+                  }}
+                  className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
+              >
                   {isOwner 
                     ? t('public_back_dashboard') 
                     : (currentUserEmail ? "Kendi Paneline Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
                   }
               </button>
-          </Link>
+          </div>
       </div>
+
     </div>
   )
 }
