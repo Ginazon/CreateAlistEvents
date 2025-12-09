@@ -172,14 +172,19 @@ export default function Dashboard() {
                 <div className="relative group">
                     <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
                     <select 
-                        value={language} 
-                        onChange={(e) => setLanguage(e.target.value as LangType)}
-                        className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
-                    >
-                        <option value="tr">TR</option>
-                        <option value="en">EN</option>
-                        {/* Diğer diller */}
-                    </select>
+    value={language} 
+    onChange={(e) => setLanguage(e.target.value as LangType)}
+    className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
+>
+    <option value="tr">TR</option>
+    <option value="en">EN</option>
+    <option value="de">DE</option>
+    <option value="fr">FR</option>
+    <option value="es">ES</option>
+    <option value="it">IT</option>
+    <option value="ru">RU</option>
+    <option value="ar">AR</option>
+</select>
                 </div>
                 <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
                     {t('logout')}
