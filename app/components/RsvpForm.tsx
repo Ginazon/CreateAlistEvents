@@ -2,18 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-// YENİ: Çeviri motorunu çağır
 import { useTranslation } from '../i18n'
 
-export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { eventId: string, themeColor: string, onLoginSuccess: (email: string) => void }) {
-  // HOOK KULLANIMI: Çeviri fonksiyonunu çek
+interface RsvpFormProps {
+    eventId: string;
+    themeColor: string;
+    onLoginSuccess: (email: string) => void;
+}
+
+export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: RsvpFormProps) {
   const { t } = useTranslation()
 
+  // STATE'LER (Senin yapınla aynı)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('katiliyor')
+  const [status, setStatus] = useState('katiliyor') // Varsayılan: yes/katiliyor
   const [plusOne, setPlusOne] = useState(0)
   const [note, setNote] = useState('')
+  
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   
@@ -38,37 +44,42 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
     e.preventDefault()
     setLoading(true)
 
-    const { data: existing } = await supabase.from('guests').select('*').eq('event_id', eventId).eq('email', email).single()
-
+    // Gönderilecek Veri Paketi
     const payload = {
         event_id: eventId,
         name,
         email,
-        status,
-        plus_one: plusOne,
+        status, // 'yes', 'no', 'maybe' veya 'katiliyor'
+        participants: plusOne ? plusOne + 1 : 1, // Katılımcı sayısı (Kendisi + misafir)
         note,
         form_responses: formResponses
     }
 
-    let error;
-    if (existing) {
-        const { error: err } = await supabase.from('guests').update(payload).eq('id', existing.id)
-        error = err
-    } else {
-        const { error: err } = await supabase.from('guests').insert([payload])
-        error = err
-    }
+    // 1. Veritabanına Ekle
+    const { error } = await supabase.from('guests').insert([payload])
+
+    setLoading(false)
 
     if (error) {
-      alert('Hata: ' + error.message)
+        // HATA YÖNETİMİ
+        // Eğer hata kodu 23505 ise (Unique Violation), kullanıcı zaten kayıtlıdır.
+        // Bu durumda hata vermek yerine "Başarılı" sayıp girişini yapalım.
+        if (error.code === '23505') {
+            console.log("Kullanıcı zaten kayıtlı, giriş yapılıyor...")
+            setSuccess(true)
+            onLoginSuccess(email) // Dashboard'a geçiş için kritik
+        } else {
+            alert('Hata: ' + error.message)
+        }
     } else {
-      setSuccess(true)
-      onLoginSuccess(email)
+        // BAŞARILI
+        setSuccess(true)
+        console.log("Kayıt başarılı, giriş yapılıyor...")
+        onLoginSuccess(email) // Dashboard'a geçiş için kritik
     }
-    setLoading(false)
   }
 
-  // iPhone Dark Mode Fix (Yazıları siyah, zemini beyaz zorla)
+  // iPhone Dark Mode Fix
   const inputStyle = { colorScheme: 'light' }
 
   if (success) {
@@ -76,8 +87,8 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
       <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 animate-fadeIn">
         <div className="text-4xl mb-2">✅</div>
         <h3 className="text-green-800 font-bold text-lg">{t('rsvp_success_title')}</h3>
-        <p className="text-green-600 text-sm mt-1">{t('rsvp_success_msg')}</p>
-        <p className="text-xs text-gray-400 mt-4">{t('rsvp_success_hint')}</p>
+        <p className="text-green-600 text-sm mt-1">{t('rsvp_success_message') || "Kaydınız alındı!"}</p>
+        <p className="text-xs text-gray-400 mt-4">Sayfanın en altından panele geçebilirsiniz.</p>
       </div>
     )
   }
@@ -86,7 +97,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
     <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left bg-gray-50 p-6 rounded-xl border border-gray-100">
       <h3 className="font-bold text-center text-gray-800 mb-4">{t('rsvp_title')}</h3>
       
-      {/* STANDART ALANLAR (Çevirili) */}
+      {/* İSİM ALANI */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_name_label')} *</label>
         <input required type="text" value={name} onChange={e => setName(e.target.value)} 
@@ -95,6 +106,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
                placeholder={t('rsvp_name_ph')}/>
       </div>
 
+      {/* EMAIL ALANI */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_email_label')} *</label>
         <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
@@ -109,8 +121,9 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
             <select value={status} onChange={e => setStatus(e.target.value)} 
                     className="w-full border p-3 rounded-lg bg-white text-gray-900 appearance-none"
                     style={inputStyle}>
-                <option value="katiliyor">{t('rsvp_option_yes')}</option>
-                <option value="katilmiyor">{t('rsvp_option_no')}</option>
+                <option value="yes">{t('rsvp_option_yes') || "Katılıyorum"}</option>
+                <option value="maybe">{t('rsvp_option_maybe') || "Belki"}</option>
+                <option value="no">{t('rsvp_option_no') || "Katılmıyorum"}</option>
             </select>
           </div>
           <div>
@@ -121,7 +134,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
           </div>
       </div>
 
-      {/* --- DİNAMİK ALANLAR (Kullanıcı eklediyse görünür) --- */}
+      {/* DİNAMİK ALANLAR */}
       {customSchema.length > 0 && (
           <div className="border-t border-dashed pt-4 mt-4 space-y-4">
               {customSchema.map((field) => (
@@ -153,7 +166,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                               defaultValue=""
                           >
-                              <option value="" disabled>Select...</option>
+                              <option value="" disabled>Seçiniz...</option>
                               {field.options?.split(',').map((opt: string) => (
                                   <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
                               ))}
@@ -164,7 +177,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
           </div>
       )}
 
-      {/* NOT ALANI (Çevirili) */}
+      {/* NOT ALANI */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_note_label')}</label>
         <textarea value={note} onChange={e => setNote(e.target.value)} 
@@ -174,7 +187,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: { even
       </div>
 
       <button type="submit" disabled={loading} className="w-full text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-90 transition disabled:opacity-50" style={{ backgroundColor: themeColor }}>
-        {loading ? t('rsvp_btn_sending') : t('rsvp_btn_send')}
+        {loading ? (t('rsvp_btn_sending') || "Gönderiliyor...") : (t('rsvp_btn_send') || "Lütfen Cevap Verin (LCV)")}
       </button>
     </form>
   )

@@ -39,6 +39,13 @@ export const dictionary = {
     invited_by: 'Davet Eden:',
     go_to_event: 'Etkinliğe Git ↗',
     no_invited_events: 'Henüz bir etkinliğe davet edilmedin.',
+    // RSVP (LCV) FORMU İÇİN EKLENECEKLER:
+    
+    rsvp_success_message: 'LCV kaydınız başarıyla alındı. Aşağıdan panele geçebilirsiniz.',
+    rsvp_already_registered: 'Zaten kaydınız mevcut, yönlendiriliyorsunuz...',
+    rsvp_error: 'Bir hata oluştu',
+    rsvp_option_maybe: 'Belki',
+    
   },
   en: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', edit: 'Edit', delete: 'Delete', logout: 'Log Out', confirm_delete: 'Are you sure?',
@@ -66,6 +73,12 @@ export const dictionary = {
     invited_by: 'Invited By:',
     go_to_event: 'Go to Event ↗',
     no_invited_events: 'You haven\'t been invited to any events yet.',
+    // RSVP FORM ADDITIONS:
+    
+    rsvp_success_message: 'Your RSVP has been received successfully.',
+    rsvp_already_registered: 'You are already registered, redirecting...',
+    rsvp_error: 'An error occurred',
+    rsvp_option_maybe: 'Belki',
   },
   // (Diğer diller için de aynısını yapabilirsin, şimdilik TR/EN yeterli)
   de: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'Antworten', modal_close_btn: 'Schließen' } as any,
@@ -79,6 +92,7 @@ export const dictionary = {
     comment_placeholder: 'Write a comment...',
     post_btn: 'Post',
     no_photos: 'No photos yet. Be the first! 📸',
+    rsvp_option_maybe: 'Maybe',
 };
 
 export type LangType = keyof typeof dictionary;
