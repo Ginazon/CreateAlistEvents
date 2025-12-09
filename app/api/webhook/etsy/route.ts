@@ -1,88 +1,95 @@
 import { createClient } from '@supabase/supabase-js'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-// Gizli işlemler (Kredi yükleme) için Service Role Key şart!
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY! 
+// DİKKAT: Burası Service Role Key kullanmalı (Admin yetkisi için)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // .env.local dosyasında bu anahtarın olduğundan emin ol!
+)
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    if (!supabaseServiceKey) {
-      return NextResponse.json({ error: 'Server Config Error: Service Key missing' }, { status: 500 })
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await req.json()
     const { email, listing_id } = body
 
+    console.log("🔔 Webhook Tetiklendi!", { email, listing_id })
+
+    // 1. Gelen veriyi kontrol et
     if (!email || !listing_id) {
       return NextResponse.json({ error: 'Eksik bilgi: Email veya Listing ID yok' }, { status: 400 })
     }
 
-    console.log(`Webhook Tetiklendi: ${email} - Ürün ${listing_id}`)
-
-    // 1. Paket Bilgisini Al (Admin Panelinden)
-    const { data: packageData, error: packageError } = await supabase
+    // 2. Hangi paket satın alındı? (Kredi miktarını bul)
+    // listing_id string gelebilir, veritabanı text ise sorun yok.
+    const { data: packageData, error: packageError } = await supabaseAdmin
       .from('credit_packages')
-      .select('*')
-      .eq('etsy_listing_id', listing_id.toString())
+      .select('credits_amount')
+      .eq('etsy_listing_id', String(listing_id)) // String'e çevirerek ara
       .single()
 
     if (packageError || !packageData) {
-      return NextResponse.json({ error: 'Tanımsız Paket ID (Admin panelinden ekleyin)' }, { status: 404 })
+      console.error("❌ Paket bulunamadı:", listing_id)
+      return NextResponse.json({ error: 'Paket tanimli degil' }, { status: 400 })
     }
 
-    // 2. Kullanıcı Var mı?
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .single()
+    const creditsToAdd = packageData.credits_amount
+    console.log(`📦 Paket Bulundu: ${creditsToAdd} Kredi`)
 
-    // SENARYO A: Kullanıcı Zaten Üye -> Direkt Yükle
-    if (userData) {
-      const newCredits = (userData.credits || 0) + packageData.credits_amount
-      await supabase.from('profiles').update({ credits: newCredits }).eq('id', userData.id)
-      
-      // İstatistik (Satış sayısını artır)
-      await supabase.from('credit_packages')
-        .update({ sales_count: (packageData.sales_count || 0) + 1 })
-        .eq('id', packageData.id)
-
-      return NextResponse.json({ 
-        success: true, 
-        message: `Mevcut kullanıcıya ${packageData.credits_amount} kredi yüklendi.`,
-        status: 'DIRECT_LOAD'
-      })
-    } 
+    // 3. Kullanıcı sistemde kayıtlı mı? (Profiles tablosunda ara)
+    // Not: Profiles tablosunda 'email' sütunu olmayabilir (Auth tablosundadır).
+    // Ancak genellikle User ID'yi bulmak için Auth admin API kullanılır.
     
-    // SENARYO B: Kullanıcı Yok -> Emanet Kasasına (Pending) Yaz
-    else {
-      const { error: pendingError } = await supabase.from('pending_credits').insert([{
-        email: email,
-        credits_amount: packageData.credits_amount,
-        listing_id: listing_id.toString()
-      }])
+    // A. Auth kullanıcısını bulmaya çalış
+    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers()
+    const user = users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
-      if (pendingError) {
-        console.error('Pending Kayıt Hatası:', pendingError)
-        return NextResponse.json({ error: 'Pending kayıt hatası: ' + pendingError.message }, { status: 500 })
+    if (user) {
+      // --- SENARYO 1: KULLANICI VAR (Kredi Yükle) ---
+      console.log("✅ Kullanıcı bulundu:", user.id)
+
+      // Mevcut krediyi çek
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('credits')
+        .eq('id', user.id)
+        .single()
+
+      const currentCredits = profile?.credits || 0
+      const newBalance = currentCredits + creditsToAdd
+
+      // Yeni krediyi yaz
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ credits: newBalance })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+      
+      return NextResponse.json({ success: true, message: `Kullanıcıya ${creditsToAdd} kredi yüklendi. Yeni bakiye: ${newBalance}` })
+
+    } else {
+      // --- SENARYO 2: KULLANICI YOK (Bekleyenlere Ekle) ---
+      console.log("⚠️ Kullanıcı bulunamadı, Pending tablosuna yazılıyor...")
+
+      const { error: insertError } = await supabaseAdmin
+        .from('pending_credits')
+        .insert([{
+          email: email.toLowerCase(),
+          credits_amount: creditsToAdd,
+          source: 'etsy',
+          is_claimed: false
+        }])
+
+      if (insertError) {
+        console.error("❌ Pending Save Error:", insertError)
+        return NextResponse.json({ error: 'Pending kayit hatasi: ' + insertError.message }, { status: 500 })
       }
 
-      // Satış sayacını yine de artır
-      await supabase.from('credit_packages')
-        .update({ sales_count: (packageData.sales_count || 0) + 1 })
-        .eq('id', packageData.id)
-
-      return NextResponse.json({ 
-        success: true, 
-        message: `Kullanıcı bulunamadı. ${packageData.credits_amount} kredi bekleyenlere eklendi.`,
-        status: 'PENDING_LOAD'
-      })
+      return NextResponse.json({ success: true, message: `Kullanıcı yok. ${creditsToAdd} kredi 'pending_credits' tablosuna saklandı.` })
     }
 
   } catch (error: any) {
-    console.error('Webhook Hatası:', error)
+    console.error("🔥 Webhook Hatası:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
