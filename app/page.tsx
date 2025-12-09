@@ -6,7 +6,6 @@ import { QRCodeCanvas } from 'qrcode.react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import GuestManager from './components/GuestManager'
-import Countdown from './components/Countdown'
 import { useTranslation, LangType } from './i18n' 
 
 export default function Dashboard() {
@@ -15,16 +14,22 @@ export default function Dashboard() {
   
   const [session, setSession] = useState<any>(null)
   
+  // Veriler
   const [credits, setCredits] = useState<number | null>(null)
-  const [myEvents, setMyEvents] = useState<any[]>([])
+  const [myEvents, setMyEvents] = useState<any[]>([])      // Kendi oluşturdukları
+  const [invitedEvents, setInvitedEvents] = useState<any[]>([]) // Davet edildikleri
   
+  // UI State
+  const [activeTab, setActiveTab] = useState<'created' | 'invited'>('created') // Ana Sekme
+  const [loading, setLoading] = useState(true)
+  const [origin, setOrigin] = useState('')
+
+  // Etkinlik Detay Yönetimi (Sadece 'created' sekmesi için)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
-  const [guests, setGuests] = useState<any[]>([])
   const [photos, setPhotos] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<'guests' | 'photos'>('guests')
+  const [detailTab, setDetailTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
-  const [origin, setOrigin] = useState('')
 
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
@@ -33,28 +38,20 @@ export default function Dashboard() {
       const session = data.session
       setSession(session)
       if (session) {
-        fetchMyEvents(session.user.id)
         fetchCredits(session.user.id)
+        fetchMyEvents(session.user.id)
+        fetchInvitedEvents(session.user.email) // E-posta ile davetleri bul
       } else {
         router.push('/landing')
       }
     })
   }, [router])
 
-  // --- YENİ: GÜVENLİ ÇIKIŞ FONKSİYONU ---
   const handleLogout = async () => {
-      // 1. Supabase'den çıkış yap ve bekle
       await supabase.auth.signOut()
-      // 2. State'i temizle (Opsiyonel ama temizlik için iyi)
       setSession(null)
-      // 3. Kullanıcıyı kesin olarak Landing sayfasına at
       router.push('/landing')
-      router.refresh() // Router önbelleğini temizle
-  }
-
-  const fetchMyEvents = async (userId: string) => {
-    const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
-    if (data) setMyEvents(data)
+      router.refresh()
   }
 
   const fetchCredits = async (userId: string) => {
@@ -62,11 +59,41 @@ export default function Dashboard() {
     if (data) setCredits(data.credits)
   }
 
+  // 1. KENDİ ETKİNLİKLERİMİ GETİR
+  const fetchMyEvents = async (userId: string) => {
+    const { data } = await supabase.from('events').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+    if (data) setMyEvents(data)
+    setLoading(false)
+  }
+
+  // 2. DAVET EDİLDİĞİM ETKİNLİKLERİ GETİR
+  const fetchInvitedEvents = async (email: string) => {
+      if (!email) return
+
+      // A. Önce 'guests' tablosundan benim mailimin olduğu satırları bul
+      // Ve ilişkili 'events' tablosundaki verileri çek (Inner Join mantığı)
+      const { data: guestEntries, error } = await supabase
+        .from('guests')
+        .select(`
+            event_id,
+            events:events (
+                id, title, slug, event_date, image_url, location_name, design_settings
+            )
+        `)
+        .eq('email', email)
+        
+      if (guestEntries) {
+          // Gelen veri yapısını düzelt: [{event_id:..., events:{...}}] -> [{...}]
+          // Sadece 'events' verisi dolu olanları (etkinlik silinmemişse) al.
+          // @ts-ignore
+          const formattedEvents = guestEntries.map(g => g.events).filter(e => e !== null)
+          setInvitedEvents(formattedEvents)
+      }
+  }
+
   const fetchEventDetails = async (eventId: string) => {
     setSelectedEventId(eventId)
     setLoadingDetails(true)
-    const { data: g } = await supabase.from('guests').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
-    if (g) setGuests(g)
     const { data: p } = await supabase.from('photos').select('*').eq('event_id', eventId).order('created_at', { ascending: false })
     if (p) setPhotos(p)
     setLoadingDetails(false)
@@ -98,8 +125,6 @@ export default function Dashboard() {
                 <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
             </div>
             <div className="flex items-center gap-3">
-                
-                {/* DİL SEÇİMİ */}
                 <div className="relative group">
                     <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
                     <select 
@@ -117,15 +142,13 @@ export default function Dashboard() {
                         <option value="ar">AR</option>
                     </select>
                 </div>
-
-                {/* LOGOUT BUTONU (GÜNCELLENDİ) */}
                 <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
                     {t('logout')}
                 </button>
             </div>
         </div>
         
-        {/* AKSİYON BAR */}
+        {/* KREDİ & YENİ ETKİNLİK BUTONU */}
         <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
             <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
                 <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
@@ -140,68 +163,119 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* LİSTE */}
+        {/* --- ANA SEKMELER (TAB) --- */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200">
+            <button 
+                onClick={() => setActiveTab('created')}
+                className={`px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'created' ? 'bg-white text-indigo-600 border-x border-t border-gray-200 shadow-sm relative top-[1px]' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+                👑 {t('tab_created')}
+            </button>
+            <button 
+                onClick={() => setActiveTab('invited')}
+                className={`px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'invited' ? 'bg-white text-indigo-600 border-x border-t border-gray-200 shadow-sm relative top-[1px]' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+                💌 {t('tab_invited')} ({invitedEvents.length})
+            </button>
+        </div>
+
+        {/* LİSTE İÇERİĞİ */}
         <div className="space-y-4">
-            {myEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_events')}</div>}
             
-            {myEvents.map(event => (
-                <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                    <div className="flex justify-between items-center flex-wrap gap-4">
-                        <div className="flex items-center gap-4">
-                             <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
-                             <div>
-                                <h3 className="font-bold text-lg">{event.title}</h3>
-                                <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">{origin}/{event.slug} ↗</a>
-                             </div>
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                            <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
-                            
-                            <Link href={`/create?edit=${event.id}`}>
-                                <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
-                            </Link>
-
-                            <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition">⚙️ {t('manage')}</button>
-                        </div>
-                    </div>
-
-                    {showQrId === event.id && (
-                        <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
-                            <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
-                            <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 {t('download')}</button>
-                        </div>
-                    )}
-
-                    {selectedEventId === event.id && (
-                        <div className="mt-6 border-t pt-6">
-                            <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
-                                <button onClick={() => setActiveTab('guests')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                                    {t('guests_tab')}
-                                </button>
-                                <button onClick={() => setActiveTab('photos')} className={`pb-2 px-3 text-sm font-bold transition ${activeTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                                    {t('photos_tab')} ({photos.length})
-                                </button>
+            {/* 1. KENDİ ETKİNLİKLERİM */}
+            {activeTab === 'created' && (
+                <>
+                    {myEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_events')}</div>}
+                    
+                    {myEvents.map(event => (
+                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                            <div className="flex justify-between items-center flex-wrap gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
+                                    <div>
+                                        <h3 className="font-bold text-lg">{event.title}</h3>
+                                        <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">{origin}/{event.slug} ↗</a>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 flex-wrap">
+                                    <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
+                                    <Link href={`/create?edit=${event.id}`}>
+                                        <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
+                                    </Link>
+                                    <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition">⚙️ {t('manage')}</button>
+                                </div>
                             </div>
 
-                            {loadingDetails ? <p className="text-gray-400 text-sm">{t('loading')}</p> : (
-                                activeTab === 'guests' ? (
-                                    <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
-                                ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">Henüz fotoğraf yüklenmemiş.</p>}
-                                        {photos.map(p => (
-                                            <div key={p.id} className="relative group">
-                                                <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
-                                                <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700">{t('delete')}</button>
-                                            </div>
-                                        ))}
+                            {/* QR ALANI */}
+                            {showQrId === event.id && (
+                                <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
+                                    <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
+                                    <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 {t('download')}</button>
+                                </div>
+                            )}
+
+                            {/* DETAYLAR (GUEST MANAGER) */}
+                            {selectedEventId === event.id && (
+                                <div className="mt-6 border-t pt-6">
+                                    <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
+                                        <button onClick={() => setDetailTab('guests')} className={`pb-2 px-3 text-sm font-bold transition ${detailTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                            {t('guests_tab')}
+                                        </button>
+                                        <button onClick={() => setDetailTab('photos')} className={`pb-2 px-3 text-sm font-bold transition ${detailTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                            {t('photos_tab')} ({photos.length})
+                                        </button>
                                     </div>
-                                )
+
+                                    {loadingDetails ? <p className="text-gray-400 text-sm">{t('loading')}</p> : (
+                                        detailTab === 'guests' ? (
+                                            <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
+                                        ) : (
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">Henüz fotoğraf yüklenmemiş.</p>}
+                                                {photos.map(p => (
+                                                    <div key={p.id} className="relative group">
+                                                        <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
+                                                        <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700">{t('delete')}</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )
+                                    )}
+                                </div>
                             )}
                         </div>
-                    )}
-                </div>
-            ))}
+                    ))}
+                </>
+            )}
+
+            {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER */}
+            {activeTab === 'invited' && (
+                <>
+                    {invitedEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_invited_events')}</div>}
+                    
+                    {invitedEvents.map(event => (
+                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 transition hover:shadow-xl flex flex-col md:flex-row gap-6">
+                             {/* KAPAK RESMİ (VARSA) */}
+                             {event.image_url && (
+                                 <div className="w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                                     <img src={event.image_url} className="w-full h-full object-cover" />
+                                 </div>
+                             )}
+
+                             <div className="flex-1 flex flex-col justify-center">
+                                 <h3 className="font-bold text-xl text-gray-800 mb-1">{event.title}</h3>
+                                 <p className="text-gray-500 text-sm mb-2">📍 {event.location_name || 'Konum belirtilmemiş'}</p>
+                                 <p className="text-gray-500 text-sm mb-4">📅 {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Tarih yok'}</p>
+                                 
+                                 <a href={`/${event.slug}`} target="_blank" className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 hover:scale-105 transition w-fit shadow-md">
+                                     {t('go_to_event')}
+                                 </a>
+                             </div>
+                        </div>
+                    ))}
+                </>
+            )}
+
         </div>
       </div>
        <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">

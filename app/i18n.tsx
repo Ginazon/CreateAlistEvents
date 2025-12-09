@@ -34,6 +34,11 @@ export const dictionary = {
     comment_placeholder: 'Yorum yaz...',
     post_btn: 'Paylaş',
     no_photos: 'Henüz fotoğraf yok. İlk yükleyen sen ol! 📸',
+    tab_created: 'Yönettiğim Etkinlikler',
+    tab_invited: 'Davet Edildiğim Etkinlikler',
+    invited_by: 'Davet Eden:',
+    go_to_event: 'Etkinliğe Git ↗',
+    no_invited_events: 'Henüz bir etkinliğe davet edilmedin.',
   },
   en: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', edit: 'Edit', delete: 'Delete', logout: 'Log Out', confirm_delete: 'Are you sure?',
@@ -55,7 +60,12 @@ export const dictionary = {
     section_extra: '6. Details & Timeline', add_timeline_btn: '+ Timeline', add_note_btn: '+ Note', add_link_btn: '+ Link', timeline_time_ph: 'Time', timeline_title_ph: 'Event', note_title_ph: 'Title', note_desc_ph: 'Description...', link_title_ph: 'Button Text', link_url_ph: 'URL', image_upload_btn: 'Add Image',
     preview_cover_placeholder: 'Cover', preview_main_placeholder: 'Image', preview_title_placeholder: 'Title', preview_location_placeholder: 'Location', preview_map_btn: 'Directions', preview_rsvp_title: 'RSVP Preview', preview_ph_name: 'Full Name', preview_ph_email: 'Email', preview_ph_status: 'Status', preview_ph_count: '+ Guests', preview_ph_note: 'Note...', preview_submit_btn: 'Submit',
     public_date_label: '📅 Date', public_location_label: '📍 Location', public_directions_btn: 'Get Directions 🗺️', public_details_title: 'Event Details', public_memory_wall: '📸 Memory Wall', public_gallery_locked: 'Gallery Locked', public_gallery_hint: 'Login above.', public_back_dashboard: "← Back", public_create_own: "Create your own", public_not_found: "Not Found",
-    rsvp_title: 'RSVP Form', rsvp_name_label: 'Full Name', rsvp_name_ph: 'Your Name', rsvp_email_label: 'Email', rsvp_email_ph: 'email@ex.com', rsvp_status_label: 'Status', rsvp_option_yes: 'Attending 🥳', rsvp_option_no: 'Not Attending 😔', rsvp_count_label: '+ Guests', rsvp_note_label: 'Note', rsvp_note_ph: 'Message...', rsvp_btn_send: 'Send', rsvp_btn_sending: 'Sending...', rsvp_success_title: 'Registered!', rsvp_success_msg: 'Received.', rsvp_success_hint: 'Gallery below.'
+    rsvp_title: 'RSVP Form', rsvp_name_label: 'Full Name', rsvp_name_ph: 'Your Name', rsvp_email_label: 'Email', rsvp_email_ph: 'email@ex.com', rsvp_status_label: 'Status', rsvp_option_yes: 'Attending 🥳', rsvp_option_no: 'Not Attending 😔', rsvp_count_label: '+ Guests', rsvp_note_label: 'Note', rsvp_note_ph: 'Message...', rsvp_btn_send: 'Send', rsvp_btn_sending: 'Sending...', rsvp_success_title: 'Registered!', rsvp_success_msg: 'Received.', rsvp_success_hint: 'Gallery below.',
+    tab_created: 'Events I Manage',
+    tab_invited: 'Events I am Invited To',
+    invited_by: 'Invited By:',
+    go_to_event: 'Go to Event ↗',
+    no_invited_events: 'You haven\'t been invited to any events yet.',
   },
   // (Diğer diller için de aynısını yapabilirsin, şimdilik TR/EN yeterli)
   de: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'Antworten', modal_close_btn: 'Schließen' } as any,
