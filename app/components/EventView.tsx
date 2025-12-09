@@ -1,15 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient' // DİKKAT: Yollar ../ oldu
-import RsvpForm from './RsvpForm'                // Aynı klasörde olduğu için ./
-import PhotoGallery from './PhotoGallery'        // Aynı klasörde olduğu için ./
-import Countdown from './Countdown'              // Aynı klasörde olduğu için ./
+import { supabase } from '../lib/supabaseClient'
+import RsvpForm from './RsvpForm'
+import PhotoGallery from './PhotoGallery'
+import Countdown from './Countdown'
 import { useRouter } from 'next/navigation' 
 import Link from 'next/link'
-import { useTranslation } from '../i18n'         // DİKKAT: Yol ../ oldu
+import { useTranslation } from '../i18n'
 
-// Burası artık bir alt bileşen, adı EventView
 export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
   const { t } = useTranslation()
@@ -19,9 +18,10 @@ export default function EventView({ slug }: { slug: string }) {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false) 
 
+  // 1. BAŞLANGIÇ KONTROLLERİ (Veri Çekme + LocalStorage Kontrolü)
   useEffect(() => {
     const fetchData = async () => {
-      // Slug artık prop olarak geliyor, beklemeye gerek yok
+      // A. Etkinlik Verisini Çek
       const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single()
       
       if (error || !data) {
@@ -29,23 +29,38 @@ export default function EventView({ slug }: { slug: string }) {
         return
       }
 
+      setEvent(data)
+
+      // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
-      if (currentUserId) {
-          if (data.user_id === currentUserId) {
-              setIsOwner(true) 
-          } else {
-              router.push('/landing')
-              return
+      if (currentUserId && data.user_id === currentUserId) {
+          setIsOwner(true) 
+      }
+
+      // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
+      // Tarayıcı hafızasına bakıyoruz: "guest_access_slug"
+      if (typeof window !== 'undefined') {
+          const savedEmail = localStorage.getItem(`guest_access_${slug}`)
+          if (savedEmail) {
+              setCurrentUserEmail(savedEmail)
           }
       }
 
-      setEvent(data)
       setLoading(false)
     }
     fetchData()
   }, [slug, router]) 
+
+  // 2. MİSAFİR GİRİŞ YAPINCA ÇALIŞACAK FONKSİYON
+  const handleGuestLogin = (email: string) => {
+      setCurrentUserEmail(email)
+      // Tarayıcı hafızasına kaydet ki yenileyince gitmesin
+      if (typeof window !== 'undefined') {
+          localStorage.setItem(`guest_access_${slug}`, email)
+      }
+  }
 
   if (loading) return <div className="h-screen flex items-center justify-center">{t('loading')}</div>
   if (!event) return <div className="h-screen flex items-center justify-center">{t('public_not_found')}</div>
@@ -61,6 +76,9 @@ export default function EventView({ slug }: { slug: string }) {
 
   const detailBlocks = event.event_details || []
   const homeLink = isOwner ? "/" : "/landing";
+
+  // GALERİ ERİŞİM İZNİ: Misafir giriş yaptıysa VEYA Etkinlik Sahibiyse
+  const canAccessGallery = currentUserEmail || isOwner
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
@@ -148,7 +166,19 @@ export default function EventView({ slug }: { slug: string }) {
           
           <hr className="my-8 border-gray-100"/>
 
-          <RsvpForm eventId={event.id} themeColor={themeColor} onLoginSuccess={setCurrentUserEmail} />
+          {/* Form: Eğer sahibi değilse ve henüz giriş yapmadıysa göster (veya her zaman göster ama sahibiysen doldurmana gerek yok) */}
+          {!isOwner && !currentUserEmail && (
+             <RsvpForm eventId={event.id} themeColor={themeColor} onLoginSuccess={handleGuestLogin} />
+          )}
+          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı */}
+          {(isOwner || currentUserEmail) && (
+              <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100 mb-8">
+                  <p className="text-green-800 font-bold text-sm">
+                      {isOwner ? "👑 Etkinlik sahibi olarak görüntülüyorsunuz." : "✅ LCV kaydınız alındı."}
+                  </p>
+              </div>
+          )}
+
         </div>
       </div>
 
@@ -156,8 +186,12 @@ export default function EventView({ slug }: { slug: string }) {
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
             {t('public_memory_wall')}
         </h2>
-        {currentUserEmail ? (
-             <PhotoGallery eventId={event.id} currentUserEmail={currentUserEmail} themeColor={themeColor} />
+        {canAccessGallery ? (
+             <PhotoGallery 
+                eventId={event.id} 
+                currentUserEmail={isOwner ? 'owner' : currentUserEmail!} // Sahibi için 'owner' stringi geçiyoruz
+                themeColor={themeColor} 
+             />
         ) : (
             <div className="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200">
                 <div className="text-5xl mb-4 opacity-50">🔒</div>

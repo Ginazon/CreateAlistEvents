@@ -27,7 +27,13 @@ export const dictionary = {
     section_extra: '6. Detaylar & Akış', add_timeline_btn: '+ Akış Ekle', add_note_btn: '+ Not Ekle', add_link_btn: '+ Link Ekle', timeline_time_ph: 'Saat (19:00)', timeline_title_ph: 'Olay (Nikah)', note_title_ph: 'Başlık (Örn: Çocuklar)', note_desc_ph: 'Açıklama...', link_title_ph: 'Buton Yazısı', link_url_ph: 'https://...', image_upload_btn: 'Resim Ekle',
     preview_cover_placeholder: 'Kapak', preview_main_placeholder: 'Görsel', preview_title_placeholder: 'Başlık', preview_location_placeholder: 'Konum', preview_map_btn: 'Yol Tarifi Al', preview_rsvp_title: 'LCV Formu Önizleme', preview_ph_name: 'Ad Soyad', preview_ph_email: 'E-Posta', preview_ph_status: 'Katılım Durumu', preview_ph_count: '+ Kişi Sayısı', preview_ph_note: 'Notunuz...', preview_submit_btn: 'Gönder',
     public_date_label: '📅 Tarih', public_location_label: '📍 Konum', public_directions_btn: 'Yol Tarifi Al 🗺️', public_details_title: 'Etkinlik Detayları', public_memory_wall: '📸 Anı Duvarı', public_gallery_locked: 'Galeri Kilitli', public_gallery_hint: 'Görmek için yukarıdan giriş yapın.', public_back_dashboard: "← Dashboard'a Dön", public_create_own: "Cereget ile kendi davetiyeni oluştur", public_not_found: "Bulunamadı",
-    rsvp_title: 'LCV Formu', rsvp_name_label: 'Ad Soyad', rsvp_name_ph: 'İsminiz', rsvp_email_label: 'E-Posta', rsvp_email_ph: 'ornek@email.com', rsvp_status_label: 'Durum', rsvp_option_yes: 'Katılıyorum 🥳', rsvp_option_no: 'Katılamıyorum 😔', rsvp_count_label: '+ Kişi Sayısı', rsvp_note_label: 'Notunuz (Opsiyonel)', rsvp_note_ph: 'Mesajınız...', rsvp_btn_send: 'Cevabı Gönder', rsvp_btn_sending: 'Gönderiliyor...', rsvp_success_title: 'Kaydınız Alındı!', rsvp_success_msg: 'Teşekkürler, yanıtın bize ulaştı.', rsvp_success_hint: 'Aşağıdaki galeriye fotoğraf yükleyebilirsin.'
+    rsvp_title: 'LCV Formu', rsvp_name_label: 'Ad Soyad', rsvp_name_ph: 'İsminiz', rsvp_email_label: 'E-Posta', rsvp_email_ph: 'ornek@email.com', rsvp_status_label: 'Durum', rsvp_option_yes: 'Katılıyorum 🥳', rsvp_option_no: 'Katılamıyorum 😔', rsvp_count_label: '+ Kişi Sayısı', rsvp_note_label: 'Notunuz (Opsiyonel)', rsvp_note_ph: 'Mesajınız...', rsvp_btn_send: 'Cevabı Gönder', rsvp_btn_sending: 'Gönderiliyor...', rsvp_success_title: 'Kaydınız Alındı!', rsvp_success_msg: 'Teşekkürler, yanıtın bize ulaştı.', rsvp_success_hint: 'Aşağıdaki galeriye fotoğraf yükleyebilirsin.',
+    // GALERİ İÇİN YENİ:
+    show_all_comments: 'Tüm yorumları gör',
+    hide_comments: 'Yorumları gizle',
+    comment_placeholder: 'Yorum yaz...',
+    post_btn: 'Paylaş',
+    no_photos: 'Henüz fotoğraf yok. İlk yükleyen sen ol! 📸',
   },
   en: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', edit: 'Edit', delete: 'Delete', logout: 'Log Out', confirm_delete: 'Are you sure?',
@@ -57,7 +63,12 @@ export const dictionary = {
   es: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'Respuestas', modal_close_btn: 'Cerrar' } as any,
   it: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'Risposte', modal_close_btn: 'Chiudi' } as any,
   ru: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'Ответы', modal_close_btn: 'Закрыть' } as any,
-  ar: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'إجابات', modal_close_btn: 'إغلاق' } as any
+  ar: { export_btn: 'Excel', export_pdf_btn: 'PDF', modal_details_title: 'إجابات', modal_close_btn: 'إغلاق' } as any,
+  show_all_comments: 'View all comments',
+    hide_comments: 'Hide comments',
+    comment_placeholder: 'Write a comment...',
+    post_btn: 'Post',
+    no_photos: 'No photos yet. Be the first! 📸',
 };
 
 export type LangType = keyof typeof dictionary;
