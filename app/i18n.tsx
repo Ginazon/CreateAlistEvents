@@ -547,3 +547,4 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
 // 4. Hook
 export const useTranslation = () => useContext(TranslationContext)
+//git push için eklenmiş satır
