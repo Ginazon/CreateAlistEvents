@@ -46,6 +46,10 @@ export const dictionary = {
     public_gallery_hint: 'Fotoğrafları görmek için lütfen yukarıdaki LCV formunu doldurun veya giriş yapın.',
     public_create_own: 'Bu Davetiyeyi Kendi Etkinliğin İçin Kullan 🎨',
     public_back_dashboard: 'Panele Dön 👑',
+    time_day: 'Gün',
+    time_hour: 'Saat',
+    time_min: 'Dakika',
+    time_sec: 'Saniye',
 
     // RSVP (LCV) FORMU
     rsvp_title: 'Lütfen Cevap Verin (LCV)',
@@ -174,6 +178,10 @@ export const dictionary = {
     public_gallery_hint: 'Please fill out the RSVP form above or login to view photos.',
     public_create_own: 'Create Your Own Event Like This 🎨',
     public_back_dashboard: 'Back to Dashboard 👑',
+    time_day: 'Day',
+    time_hour: 'Hour',
+    time_min: 'Minute',
+    time_sec: 'Second',
 
     rsvp_title: 'RSVP',
     rsvp_name_label: 'Full Name',
@@ -300,6 +308,10 @@ export const dictionary = {
     public_gallery_hint: 'Bitte füllen Sie das RSVP-Formular aus, um Fotos zu sehen.',
     public_create_own: 'Erstelle dein eigenes Event 🎨',
     public_back_dashboard: 'Zurück zum Dashboard 👑',
+    time_day: 'Tag',
+    time_hour: 'Std.',
+    time_min: 'Min.',
+    time_sec: 'Sek.',
 
     rsvp_title: 'u.A.w.g. (RSVP)',
     rsvp_name_label: 'Vollständiger Name',
@@ -426,6 +438,10 @@ export const dictionary = {
     public_gallery_hint: 'Veuillez remplir le formulaire RSVP pour voir les photos.',
     public_create_own: 'Créez votre propre événement 🎨',
     public_back_dashboard: 'Retour au tableau de bord 👑',
+    time_day: 'Jour',
+    time_hour: 'Heure',
+    time_min: 'Minute',
+    time_sec: 'Seconde',
 
     rsvp_title: 'Répondez s\'il vous plaît (RSVP)',
     rsvp_name_label: 'Nom complet',
@@ -552,6 +568,10 @@ export const dictionary = {
     public_gallery_hint: 'Por favor completa el formulario RSVP para ver las fotos.',
     public_create_own: 'Crea tu propio evento 🎨',
     public_back_dashboard: 'Volver al Panel 👑',
+    time_day: 'Día',
+    time_hour: 'Hora',
+    time_min: 'Minuto',
+    time_sec: 'Segundo',
 
     rsvp_title: 'Confirmar Asistencia (RSVP)',
     rsvp_name_label: 'Nombre Completo',
@@ -678,6 +698,10 @@ export const dictionary = {
     public_gallery_hint: 'Compila il modulo RSVP per vedere le foto.',
     public_create_own: 'Crea il tuo evento 🎨',
     public_back_dashboard: 'Torna al Pannello 👑',
+    time_day: 'Giorno',
+    time_hour: 'Ora',
+    time_min: 'Minuto',
+    time_sec: 'Secondo',
 
     rsvp_title: 'RSVP',
     rsvp_name_label: 'Nome Completo',
@@ -804,6 +828,10 @@ export const dictionary = {
     public_gallery_hint: 'Пожалуйста, заполните форму RSVP, чтобы увидеть фото.',
     public_create_own: 'Создать свое событие 🎨',
     public_back_dashboard: 'Вернуться в панель 👑',
+    time_day: 'День',
+    time_hour: 'Час',
+    time_min: 'Мин',
+    time_sec: 'Сек',
 
     rsvp_title: 'RSVP (Подтверждение)',
     rsvp_name_label: 'ФИО',
@@ -931,6 +959,10 @@ export const dictionary = {
     public_gallery_hint: 'يرجى تعبئة نموذج الحضور لمشاهدة الصور.',
     public_create_own: 'أنشئ فعاليتك الخاصة 🎨',
     public_back_dashboard: 'عودة للوحة التحكم 👑',
+    time_day: 'يوم',
+    time_hour: 'ساعة',
+    time_min: 'دقيقة',
+    time_sec: 'ثانية',
 
     rsvp_title: 'تأكيد الحضور',
     rsvp_name_label: 'الاسم الكامل',

@@ -6,7 +6,7 @@ import { useTranslation } from '../i18n'
 export default function Countdown({ targetDate, themeColor }: { targetDate: string, themeColor: string }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [isExpired, setIsExpired] = useState(false)
-
+  const { t } = useTranslation()
   useEffect(() => {
     const target = new Date(targetDate).getTime()
 
@@ -37,7 +37,7 @@ export default function Countdown({ targetDate, themeColor }: { targetDate: stri
   return (
     
     <div className="flex gap-2 justify-center my-6">
-      {[('time_day'), ('time_hour'), ('time_min'), ('time_sec')].map((label, index) => {
+      {[t('time_day'), t('time_hour'), t('time_min'), t('time_sec')].map((label, index) => {
         const value = index === 0 ? timeLeft.days : index === 1 ? timeLeft.hours : index === 2 ? timeLeft.minutes : timeLeft.seconds
         return (
           <div key={label} className="flex flex-col items-center">
