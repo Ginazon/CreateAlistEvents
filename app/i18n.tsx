@@ -528,8 +528,8 @@ export const dictionary = {
 // 2. Context Oluşturma
 const TranslationContext = createContext<any>(null)
 
-// 3. Provider Bileşeni
-export function TranslationProvider({ children }: { children: React.ReactNode }) {
+// 3. Provider Bileşeni (ADINI I18nProvider OLARAK GÜNCELLEDİM) 
+export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<LangType>('tr') // Varsayılan TR
 
   // t fonksiyonu: Anahtar (key) alır, seçili dildeki karşılığını döner
