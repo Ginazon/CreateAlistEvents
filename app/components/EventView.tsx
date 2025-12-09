@@ -55,13 +55,17 @@ export default function EventView({ slug }: { slug: string }) {
 
   // 2. MİSAFİR GİRİŞ YAPINCA ÇALIŞACAK FONKSİYON
   const handleGuestLogin = (email: string) => {
-    console.log("📍 2. EventView: Sinyal alındı! Email:", email) // <--- EKLE
-      setCurrentUserEmail(email)
-      // Tarayıcı hafızasına kaydet ki yenileyince gitmesin
-      if (typeof window !== 'undefined') {
-          localStorage.setItem(`guest_access_${slug}`, email)
-      }
-  }
+    setCurrentUserEmail(email)
+    setIsOwner(false)
+    
+    if (typeof window !== 'undefined') {
+        // 1. Bu etkinliğe özel kayıt (Eski mantık kalsın)
+        localStorage.setItem(`guest_access_${slug}`, email)
+        
+        // 2. YENİ: Dashboard'un bulabileceği GENEL bir kayıt açıyoruz
+        localStorage.setItem('cereget_guest_email', email)
+    }
+}
 
   if (loading) return <div className="h-screen flex items-center justify-center">{t('loading')}</div>
   if (!event) return <div className="h-screen flex items-center justify-center">{t('public_not_found')}</div>
@@ -209,28 +213,15 @@ export default function EventView({ slug }: { slug: string }) {
             </div>
         )}
       </div>
-
-   {/* GÜNCELLEME 2: En Alttaki Buton Alanı */}
-   <div className="max-w-xl w-full px-6 mt-12 pb-10">
+      <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
               <button 
-                  onClick={() => {
-                      // 1. DOĞRUDAN KONTROL: React State'i bekleme, hafızaya bak
-                      // Bu yöntem "acaba state güncellendi mi?" riskini sıfırlar.
-                      const savedEmail = localStorage.getItem(`guest_access_${slug}`)
-                      const target = (isOwner || savedEmail) ? "/" : "/landing"
-                      
-                      console.log("🚀 Yönlendiriliyor:", target) // Konsolda görelim
-                      
-                      // 2. YÖNLENDİRME
-                      router.push(target)
-                  }}
+                  onClick={() => router.push('/')} // HİÇBİR ŞART YOK, DİREKT GİT! 🚀
                   className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
               >
-                  {/* Buton Metni */}
                   {isOwner 
                     ? t('public_back_dashboard') 
-                    : (currentUserEmail ? "Kendi Paneline Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
+                    : (currentUserEmail ? "Panele Git 🚀" : t('public_create_own'))
                   }
               </button>
           </div>

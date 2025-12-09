@@ -35,20 +35,48 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
 
-    supabase.auth.getSession().then(({ data }: { data: { session: any } }) => {
-      const session = data.session
-      setSession(session)
-      if (session) {
-        fetchCredits(session.user.id)
-        fetchMyEvents(session.user.id)
-        fetchInvitedEvents(session.user.email)
-        fetchPackages() // YENİ: Paketleri çek
-      } else {
-        router.push('/landing')
-      }
-    })
+    const checkUser = async () => {
+        // 1. Önce: Oturum açmış (Üye) kullanıcı var mı?
+        const { data } = await supabase.auth.getSession()
+        
+        if (data.session) {
+            // A. ÜYE VARSA -> Normal akış
+            setSession(data.session)
+            fetchCredits(data.session.user.id)
+            fetchMyEvents(data.session.user.id)
+            
+            // DÜZELTME: Email'in var olduğunu kontrol edip öyle gönderiyoruz
+            if (data.session.user.email) {
+                fetchInvitedEvents(data.session.user.email)
+            }
+            
+            fetchPackages()
+        } else {
+            // B. ÜYE YOKSA -> Misafir kaydı var mı? (LocalStorage)
+            const guestEmail = localStorage.getItem('cereget_guest_email')
+            
+            if (guestEmail) {
+                // MİSAFİR BULUNDU! -> İçeri al
+                console.log("Misafir girişi algılandı:", guestEmail)
+                
+                // Session'ı "fake" (geçici) bir obje gibi dolduruyoruz
+                // @ts-ignore (TypeScript'in session tipine takılmaması için)
+                setSession({ user: { email: guestEmail, isGuest: true } }) 
+                
+                setActiveTab('invited') // Direkt davetiye sekmesini aç
+                fetchInvitedEvents(guestEmail)
+                fetchPackages() 
+            } else {
+                // C. HİÇBİRİ YOKSA -> Landing Page'e postala 👋
+                router.push('/landing')
+            }
+        }
+    }
+
+    checkUser()
   }, [router])
 
+    
   const handleLogout = async () => {
       await supabase.auth.signOut()
       setSession(null)
