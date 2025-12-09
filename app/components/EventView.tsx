@@ -212,16 +212,22 @@ export default function EventView({ slug }: { slug: string }) {
 
    {/* GÜNCELLEME 2: En Alttaki Buton Alanı */}
    <div className="max-w-xl w-full px-6 mt-12 pb-10">
-          {/* Link yerine div kullanıyoruz, tıklamayı buton yönetecek */}
           <div className="block w-full text-center">
               <button 
                   onClick={() => {
-                      // Yönlendirmeyi manuel yapıyoruz (Cache takılmasın diye)
-                      const target = (isOwner || currentUserEmail) ? "/" : "/landing";
-                      router.push(target);
+                      // 1. DOĞRUDAN KONTROL: React State'i bekleme, hafızaya bak
+                      // Bu yöntem "acaba state güncellendi mi?" riskini sıfırlar.
+                      const savedEmail = localStorage.getItem(`guest_access_${slug}`)
+                      const target = (isOwner || savedEmail) ? "/" : "/landing"
+                      
+                      console.log("🚀 Yönlendiriliyor:", target) // Konsolda görelim
+                      
+                      // 2. YÖNLENDİRME
+                      router.push(target)
                   }}
                   className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
               >
+                  {/* Buton Metni */}
                   {isOwner 
                     ? t('public_back_dashboard') 
                     : (currentUserEmail ? "Kendi Paneline Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
