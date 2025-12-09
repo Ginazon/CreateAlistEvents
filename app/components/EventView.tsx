@@ -171,8 +171,12 @@ export default function EventView({ slug }: { slug: string }) {
 
           {/* Form: Eğer sahibi değilse ve henüz giriş yapmadıysa göster (veya her zaman göster ama sahibiysen doldurmana gerek yok) */}
           {!isOwner && !currentUserEmail && (
-             <RsvpForm eventId={event.id} themeColor={themeColor} onLoginSuccess={handleGuestLogin} />
-          )}
+    <RsvpForm 
+        eventId={event.id} 
+        themeColor={themeColor} 
+        onLoginSuccess={handleGuestLogin}  // 👈 İŞTE BU EKSİK! Bunu eklemezsen fonksiyon çalışmaz.
+    />
+)}
           {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı */}
           {(isOwner || currentUserEmail) && (
               <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100 mb-8">
