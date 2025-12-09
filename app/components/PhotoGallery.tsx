@@ -16,8 +16,6 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   const [photos, setPhotos] = useState<any[]>([])
   const [uploading, setUploading] = useState(false)
   const [commentText, setCommentText] = useState<Record<string, string>>({})
-  
-  // Hangi fotoğrafların yorumları açık? (ID -> true/false)
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
@@ -25,8 +23,8 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }, [eventId])
 
   const fetchPhotos = async () => {
-      // Fotoğrafları, Yorumları ve Beğenileri çek
-      const { data, error } = await supabase
+      // uploader_name alanını da çekiyoruz
+      const { data } = await supabase
         .from('photos')
         .select(`
             *,
@@ -41,41 +39,71 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
-      if (!file || !currentUserEmail) return
+      if (!file) return 
+      if (!currentUserEmail) {
+          alert("Hata: Kullanıcı oturumu bulunamadı. Sayfayı yenileyiniz.")
+          return
+      }
 
       setUploading(true)
       const fileName = `${eventId}/${Date.now()}-${Math.floor(Math.random()*1000)}`
       
-      // 1. Storage'a Yükle
+      // 1. Önce İsmi Belirle (Dedektiflik Kısmı 🕵️‍♂️)
+      let finalName = currentUserEmail.split('@')[0] // Varsayılan: Mailin başı
+
+      if (currentUserEmail === 'owner') {
+          finalName = "Etkinlik Sahibi 👑"
+      } else {
+          // Misafir listesinden bu mailin sahibinin ismini bul
+          const { data: guestData } = await supabase
+              .from('guests')
+              .select('name')
+              .eq('event_id', eventId)
+              .eq('email', currentUserEmail)
+              .single()
+          
+          if (guestData && guestData.name) {
+              finalName = guestData.name // Bulduk!
+          }
+      }
+
+      // 2. Storage'a Yükle
       const { error: uploadError } = await supabase.storage.from('guest-uploads').upload(fileName, file)
       
-      if (!uploadError) {
-          const publicUrl = supabase.storage.from('guest-uploads').getPublicUrl(fileName).data.publicUrl
-          
-          // 2. Veritabanına Yaz
-          await supabase.from('photos').insert([{
-              event_id: eventId,
-              user_email: currentUserEmail,
-              image_url: publicUrl
-          }])
-          fetchPhotos()
-      } else {
-          alert('Yükleme hatası: ' + uploadError.message)
+      if (uploadError) {
+          alert('Dosya Yükleme Hatası: ' + uploadError.message)
+          setUploading(false)
+          return
       }
+
+      const publicUrl = supabase.storage.from('guest-uploads').getPublicUrl(fileName).data.publicUrl
+      
+      // 3. Veritabanına Yaz (İsimle Birlikte)
+      const { error: dbError } = await supabase.from('photos').insert([{
+          event_id: eventId,
+          user_email: currentUserEmail,
+          uploader_name: finalName, // YENİ: İsmi de kaydediyoruz
+          image_url: publicUrl
+      }])
+
+      if (dbError) {
+          console.error("DB Hatası:", dbError)
+          alert('Veritabanı Kayıt Hatası: ' + dbError.message)
+      } else {
+          fetchPhotos()
+      }
+      
       setUploading(false)
   }
 
   const handleLike = async (photoId: string) => {
       if (!currentUserEmail) return
-      
       const photo = photos.find(p => p.id === photoId)
       const hasLiked = photo.photo_likes.some((l: any) => l.user_email === currentUserEmail)
 
       if (hasLiked) {
-          // Beğeniyi Kaldır
           await supabase.from('photo_likes').delete().eq('photo_id', photoId).eq('user_email', currentUserEmail)
       } else {
-          // Beğeni Ekle
           await supabase.from('photo_likes').insert([{ photo_id: photoId, user_email: currentUserEmail }])
       }
       fetchPhotos()
@@ -90,17 +118,12 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
           user_email: currentUserEmail,
           content: text
       }])
-      
-      setCommentText({ ...commentText, [photoId]: '' }) // Inputu temizle
+      setCommentText({ ...commentText, [photoId]: '' })
       fetchPhotos()
   }
 
-  // Yorumları Göster/Gizle Fonksiyonu
   const toggleComments = (photoId: string) => {
-      setExpandedComments(prev => ({
-          ...prev,
-          [photoId]: !prev[photoId]
-      }))
+      setExpandedComments(prev => ({ ...prev, [photoId]: !prev[photoId] }))
   }
 
   return (
@@ -124,8 +147,6 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
             const isLiked = photo.photo_likes.some((l: any) => l.user_email === currentUserEmail)
             const comments = photo.photo_comments || []
             const isExpanded = expandedComments[photo.id] || false
-            
-            // Gösterilecek yorumlar: Genişletilmişse hepsi, değilse son 2 tanesi
             const visibleComments = isExpanded ? comments : comments.slice(0, 2)
 
             return (
@@ -135,8 +156,12 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                     <div className="relative">
                         <img src={photo.image_url} className="w-full h-auto object-cover max-h-[500px]" loading="lazy"/>
                         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4 flex justify-between items-end">
-                            <span className="text-white text-xs font-bold opacity-80">{photo.user_email.split('@')[0]}</span>
-                            <button onClick={() => handleLike(photo.id)} className="text-white flex items-center gap-1 hover:scale-110 transition">
+                            {/* YENİ: ARTIK GERÇEK İSMİ GÖSTERİYORUZ */}
+                            <span className="text-white text-xs font-bold opacity-90 drop-shadow-md bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">
+                                {photo.uploader_name || photo.user_email.split('@')[0]}
+                            </span>
+                            
+                            <button onClick={() => handleLike(photo.id)} className="text-white flex items-center gap-1 hover:scale-110 transition drop-shadow-md">
                                 <span className="text-2xl">{isLiked ? '❤️' : '🤍'}</span>
                                 <span className="font-bold">{photo.photo_likes.length > 0 && photo.photo_likes.length}</span>
                             </button>
@@ -145,30 +170,22 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
 
                     {/* YORUMLAR */}
                     <div className="p-4 bg-gray-50">
-                        {/* Yorum Listesi */}
                         <div className="space-y-3 mb-4">
                             {visibleComments.map((c: any) => (
                                 <div key={c.id} className="text-sm">
+                                    {/* Yorumlarda da sadece mail başı yerine, ileride isim göstermek istersek burayı da güncelleyebiliriz */}
                                     <span className="font-bold text-gray-800 mr-2">{c.user_email.split('@')[0]}:</span>
                                     <span className="text-gray-600">{c.content}</span>
                                 </div>
                             ))}
                         </div>
 
-                        {/* "Tümünü Gör" Butonu */}
                         {comments.length > 2 && (
-                            <button 
-                                onClick={() => toggleComments(photo.id)}
-                                className="text-xs font-bold text-gray-400 hover:text-gray-600 mb-4 block"
-                            >
-                                {isExpanded 
-                                    ? t('hide_comments') 
-                                    : `${t('show_all_comments')} (${comments.length})`
-                                }
+                            <button onClick={() => toggleComments(photo.id)} className="text-xs font-bold text-gray-400 hover:text-gray-600 mb-4 block">
+                                {isExpanded ? t('hide_comments') : `${t('show_all_comments')} (${comments.length})`}
                             </button>
                         )}
 
-                        {/* Yorum Ekleme */}
                         <div className="flex gap-2 relative">
                             <input 
                                 type="text" 
