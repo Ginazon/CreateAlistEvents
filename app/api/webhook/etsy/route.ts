@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-// DİKKAT: Burası Service Role Key kullanmalı (Admin yetkisi için)
+// Admin Yetkisi (Service Role) ile Supabase istemcisi
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // .env.local dosyasında bu anahtarın olduğundan emin ol!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! 
 )
 
 export async function POST(req: Request) {
@@ -19,12 +19,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Eksik bilgi: Email veya Listing ID yok' }, { status: 400 })
     }
 
-    // 2. Hangi paket satın alındı? (Kredi miktarını bul)
-    // listing_id string gelebilir, veritabanı text ise sorun yok.
+    // 2. Hangi paket satın alındı? (Kredi miktarını ve Satış sayısını çek)
     const { data: packageData, error: packageError } = await supabaseAdmin
       .from('credit_packages')
-      .select('credits_amount')
-      .eq('etsy_listing_id', String(listing_id)) // String'e çevirerek ara
+      .select('id, credits_amount, sales_count') // YENİ: id ve sales_count'u da çekiyoruz
+      .eq('etsy_listing_id', String(listing_id))
       .single()
 
     if (packageError || !packageData) {
@@ -33,21 +32,22 @@ export async function POST(req: Request) {
     }
 
     const creditsToAdd = packageData.credits_amount
-    console.log(`📦 Paket Bulundu: ${creditsToAdd} Kredi`)
+    console.log(`📦 Paket Bulundu: ${creditsToAdd} Kredi. İşleniyor...`)
 
-    // 3. Kullanıcı sistemde kayıtlı mı? (Profiles tablosunda ara)
-    // Not: Profiles tablosunda 'email' sütunu olmayabilir (Auth tablosundadır).
-    // Ancak genellikle User ID'yi bulmak için Auth admin API kullanılır.
-    
-    // A. Auth kullanıcısını bulmaya çalış
-    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers()
+    // YENİ ADIM: Paketin satış sayısını 1 arttır
+    await supabaseAdmin
+      .from('credit_packages')
+      .update({ sales_count: (packageData.sales_count || 0) + 1 })
+      .eq('id', packageData.id)
+
+    // 3. Kullanıcı sistemde kayıtlı mı? (Auth listesinden kontrol)
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
     const user = users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (user) {
-      // --- SENARYO 1: KULLANICI VAR (Kredi Yükle) ---
+      // --- SENARYO 1: KULLANICI VAR (Hesaba Yükle) ---
       console.log("✅ Kullanıcı bulundu:", user.id)
 
-      // Mevcut krediyi çek
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('credits')
@@ -57,13 +57,10 @@ export async function POST(req: Request) {
       const currentCredits = profile?.credits || 0
       const newBalance = currentCredits + creditsToAdd
 
-      // Yeni krediyi yaz
-      const { error: updateError } = await supabaseAdmin
+      await supabaseAdmin
         .from('profiles')
         .update({ credits: newBalance })
         .eq('id', user.id)
-
-      if (updateError) throw updateError
       
       return NextResponse.json({ success: true, message: `Kullanıcıya ${creditsToAdd} kredi yüklendi. Yeni bakiye: ${newBalance}` })
 
@@ -77,7 +74,8 @@ export async function POST(req: Request) {
           email: email.toLowerCase(),
           credits_amount: creditsToAdd,
           source: 'etsy',
-          is_claimed: false
+          is_claimed: false,
+          listing_id: String(listing_id) // YENİ: Listing ID'yi buraya ekledik!
         }])
 
       if (insertError) {
@@ -85,7 +83,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Pending kayit hatasi: ' + insertError.message }, { status: 500 })
       }
 
-      return NextResponse.json({ success: true, message: `Kullanıcı yok. ${creditsToAdd} kredi 'pending_credits' tablosuna saklandı.` })
+      return NextResponse.json({ success: true, message: `Kullanıcı yok. ${creditsToAdd} kredi 'pending_credits' tablosuna ve Listing ID ile saklandı.` })
     }
 
   } catch (error: any) {
