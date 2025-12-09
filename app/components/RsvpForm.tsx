@@ -75,6 +75,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess }: RsvpFo
         // BAŞARILI
         setSuccess(true)
         console.log("Kayıt başarılı, giriş yapılıyor...")
+        console.log("📍 1. RsvpForm: Kayıt başarılı, onLoginSuccess tetikleniyor...", email) // <--- EKLE
         onLoginSuccess(email) // Dashboard'a geçiş için kritik
     }
   }

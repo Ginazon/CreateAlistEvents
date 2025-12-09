@@ -55,6 +55,7 @@ export default function EventView({ slug }: { slug: string }) {
 
   // 2. MİSAFİR GİRİŞ YAPINCA ÇALIŞACAK FONKSİYON
   const handleGuestLogin = (email: string) => {
+    console.log("📍 2. EventView: Sinyal alındı! Email:", email) // <--- EKLE
       setCurrentUserEmail(email)
       // Tarayıcı hafızasına kaydet ki yenileyince gitmesin
       if (typeof window !== 'undefined') {
@@ -79,6 +80,7 @@ export default function EventView({ slug }: { slug: string }) {
   // Eğer etkinlik sahibiyse VEYA misafir giriş yapmışsa -> Dashboard'a (/) git.
   // Hiçbiri değilse (Anonimse) -> Landing page'e (/landing) git.
   const homeLink = (isOwner || currentUserEmail) ? "/" : "/landing";
+  console.log("📍 3. EventView Render: Link şu an ->", homeLink, "| User:", currentUserEmail) // <--- EKLE
 
   // GALERİ ERİŞİM İZNİ: Misafir giriş yaptıysa VEYA Etkinlik Sahibiyse
   const canAccessGallery = currentUserEmail || isOwner
