@@ -47,10 +47,10 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       const fileName = `${eventId}/${Date.now()}-${Math.floor(Math.random()*1000)}`
       
       // 1. Storage'a Yükle
-      const { error: uploadError } = await supabase.storage.from('event-photos').upload(fileName, file)
+      const { error: uploadError } = await supabase.storage.from('guest-uploads').upload(fileName, file)
       
       if (!uploadError) {
-          const publicUrl = supabase.storage.from('event-photos').getPublicUrl(fileName).data.publicUrl
+          const publicUrl = supabase.storage.from('guest-uploads').getPublicUrl(fileName).data.publicUrl
           
           // 2. Veritabanına Yaz
           await supabase.from('photos').insert([{
