@@ -134,6 +134,8 @@ export const dictionary = {
     timeline_title_ph: 'Etkinlik',
     link_title_ph: 'Link Etiketi',
     link_url_ph: 'Linki Bu Alana Yapıştırın',
+    file_btn_cover: 'Kapak Fotoğrafı Yükle',
+    file_btn_main: 'Davetiye Fotoğrafı Yükle',
   },
 
   // 🇺🇸 İNGİLİZCE
@@ -258,6 +260,8 @@ export const dictionary = {
     timeline_title_ph: 'Event',
     link_title_ph: 'Link Label',
     link_url_ph: 'Paste Link Here',
+    file_btn_cover: 'Upload Cover Photo',
+    file_btn_main: 'Upload Invitation Photo',
   },
 
   // 🇩🇪 ALMANCA
@@ -382,6 +386,8 @@ export const dictionary = {
     timeline_title_ph: 'Ereignis',
     link_title_ph: 'Link-Titel',
     link_url_ph: 'Link hier einfügen',
+    file_btn_cover: 'Titelbild hochladen',
+    file_btn_main: 'Einladungsfoto hochladen',
   },
 
   // 🇫🇷 FRANSIZCA
@@ -506,6 +512,8 @@ export const dictionary = {
     timeline_title_ph: 'Événement',
     link_title_ph: 'Titre du lien',
     link_url_ph: 'Collez le lien ici',
+    file_btn_cover: 'Importer la photo de couverture',
+    file_btn_main: 'Importer la photo d\'invitation',
   },
 
   // 🇪🇸 İSPANYOLCA
@@ -630,6 +638,8 @@ export const dictionary = {
     timeline_title_ph: 'Evento',
     link_title_ph: 'Etiqueta del Enlace',
     link_url_ph: 'Pegar enlace aquí',
+    file_btn_cover: 'Subir foto de portada',
+    file_btn_main: 'Subir foto de invitación',
   },
 
   // 🇮🇹 İTALYANCA
@@ -754,6 +764,8 @@ export const dictionary = {
     timeline_title_ph: 'Evento',
     link_title_ph: 'Etichetta Link',
     link_url_ph: 'Incolla qui il link',
+    file_btn_cover: 'Carica foto di copertina',
+    file_btn_main: 'Carica foto invito',
   },
 
   // 🇷🇺 RUSÇA
@@ -818,7 +830,7 @@ export const dictionary = {
     hide_comments: 'Скрыть комментарии',
     comment_placeholder: 'Написать комментарий...',
     post_btn: 'Опубликовать',
-
+   
     // LANDING PAGE
     landing_hero_title: "Привет, первый перевод",
     landing_hero_desc: 'Больше, чем просто шаблон Canva. Пусть гости делятся фото, комментариями и лайками; превратите ваш день в цифровую "Стену памяти".',
@@ -878,6 +890,9 @@ export const dictionary = {
     timeline_title_ph: 'Событие',
     link_title_ph: 'Название ссылки',
     link_url_ph: 'Вставьте ссылку здесь',
+    file_btn_cover: 'Загрузить обложку',
+    file_btn_main: 'Загрузить фото приглашения',
+
   },
 
   // 🇸🇦 ARAPÇA
@@ -1002,6 +1017,8 @@ export const dictionary = {
     timeline_title_ph: 'الحدث',
     link_title_ph: 'عنوان الرابط',
     link_url_ph: 'الصق الرابط هنا',
+    file_btn_cover: 'رفع صورة الغلاف',
+    file_btn_main: 'رفع صورة الدعوة',
   }
 };
 
