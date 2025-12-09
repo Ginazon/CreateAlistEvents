@@ -11,7 +11,8 @@ import { useTranslation } from '../i18n'
 
 export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
-  const { t } = useTranslation()
+  // language değişkenini de çekiyoruz ki tarihi ona göre formatlayalım
+  const { t, language } = useTranslation()
   
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -40,7 +41,6 @@ export default function EventView({ slug }: { slug: string }) {
       }
 
       // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
-      // Tarayıcı hafızasına bakıyoruz: "guest_access_slug"
       if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
@@ -59,10 +59,10 @@ export default function EventView({ slug }: { slug: string }) {
     setIsOwner(false)
     
     if (typeof window !== 'undefined') {
-        // 1. Bu etkinliğe özel kayıt (Eski mantık kalsın)
+        // 1. Bu etkinliğe özel kayıt
         localStorage.setItem(`guest_access_${slug}`, email)
         
-        // 2. YENİ: Dashboard'un bulabileceği GENEL bir kayıt açıyoruz
+        // 2. Dashboard erişimi için genel kayıt
         localStorage.setItem('cereget_guest_email', email)
     }
 }
@@ -75,18 +75,14 @@ export default function EventView({ slug }: { slug: string }) {
   const titleSize = event.design_settings?.titleSize || 2.5
   const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
   const messageSize = event.design_settings?.messageSize || 1
+  
+  // DİNAMİK TARİH FORMATI (Dile göre ayarlanır)
   const formattedDate = event.event_date 
-    ? new Date(event.event_date).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })
+    ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, { dateStyle: 'long', timeStyle: 'short' })
     : '...'
 
   const detailBlocks = event.event_details || []
-  // GÜNCELLEME 1: Yönlendirme Linki Mantığı
-  // Eğer etkinlik sahibiyse VEYA misafir giriş yapmışsa -> Dashboard'a (/) git.
-  // Hiçbiri değilse (Anonimse) -> Landing page'e (/landing) git.
-  const homeLink = (isOwner || currentUserEmail) ? "/" : "/landing";
-  console.log("📍 3. EventView Render: Link şu an ->", homeLink, "| User:", currentUserEmail) // <--- EKLE
-
-  // GALERİ ERİŞİM İZNİ: Misafir giriş yaptıysa VEYA Etkinlik Sahibiyse
+  
   const canAccessGallery = currentUserEmail || isOwner
 
   return (
@@ -175,19 +171,20 @@ export default function EventView({ slug }: { slug: string }) {
           
           <hr className="my-8 border-gray-100"/>
 
-          {/* Form: Eğer sahibi değilse ve henüz giriş yapmadıysa göster (veya her zaman göster ama sahibiysen doldurmana gerek yok) */}
+          {/* Form */}
           {!isOwner && !currentUserEmail && (
-    <RsvpForm 
-        eventId={event.id} 
-        themeColor={themeColor} 
-        onLoginSuccess={handleGuestLogin}  // 👈 İŞTE BU EKSİK! Bunu eklemezsen fonksiyon çalışmaz.
-    />
-)}
-          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı */}
+            <RsvpForm 
+                eventId={event.id} 
+                themeColor={themeColor} 
+                onLoginSuccess={handleGuestLogin}  
+            />
+          )}
+
+          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı (ÇEVRİLDİ) */}
           {(isOwner || currentUserEmail) && (
               <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100 mb-8">
                   <p className="text-green-800 font-bold text-sm">
-                      {isOwner ? "👑 Etkinlik sahibi olarak görüntülüyorsunuz." : "✅ LCV kaydınız alındı."}
+                      {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
                   </p>
               </div>
           )}
@@ -202,7 +199,7 @@ export default function EventView({ slug }: { slug: string }) {
         {canAccessGallery ? (
              <PhotoGallery 
                 eventId={event.id} 
-                currentUserEmail={isOwner ? 'owner' : currentUserEmail!} // Sahibi için 'owner' stringi geçiyoruz
+                currentUserEmail={isOwner ? 'owner' : currentUserEmail!} 
                 themeColor={themeColor} 
              />
         ) : (
@@ -216,29 +213,24 @@ export default function EventView({ slug }: { slug: string }) {
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
           <button 
-    onClick={() => {
-        // 1. Önce kim olduğunu bul (State'ten veya o sayfanın hafızasından)
-        const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
-        
-        if (emailToSave) {
-            // 2. PASAPORTU HAZIRLA: Dashboard'un aradığı GENEL anahtara yaz
-            console.log("🚀 Dashboard'a gidiliyor. Pasaport:", emailToSave)
-            localStorage.setItem('cereget_guest_email', emailToSave)
-            
-            // 3. Şimdi git (Artık kapı açılacak)
-            router.push('/')
-        } else {
-            // 4. Mail yoksa yapacak bir şey yok, Landing'e git
-            router.push('/landing')
-        }
-    }}
-    className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
->
-    {isOwner 
-      ? t('public_back_dashboard') 
-      : (currentUserEmail ? "Panele Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
-    }
-</button>
+                onClick={() => {
+                    const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
+                    
+                    if (emailToSave) {
+                        localStorage.setItem('cereget_guest_email', emailToSave)
+                        router.push('/')
+                    } else {
+                        router.push('/landing')
+                    }
+                }}
+                className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
+            >
+                {/* BUTON METNİ ÇEVRİLDİ */}
+                {isOwner 
+                ? t('public_back_dashboard') 
+                : (currentUserEmail ? t('public_go_panel_create') : t('public_create_own'))
+                }
+          </button>
           </div>
       </div>
 

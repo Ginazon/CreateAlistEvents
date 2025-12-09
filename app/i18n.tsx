@@ -50,6 +50,9 @@ export const dictionary = {
     time_hour: 'Saat',
     time_min: 'Dakika',
     time_sec: 'Saniye',
+    owner_view_alert: '👑 Etkinlik sahibi olarak görüntülüyorsunuz.',
+rsvp_registered_success: '✅ LCV kaydınız alındı.',
+public_go_panel_create: 'Panele Git & Etkinlik Oluştur 🚀',
 
     // RSVP (LCV) FORMU
     rsvp_title: 'Lütfen Cevap Verin (LCV)',
@@ -182,6 +185,9 @@ export const dictionary = {
     time_hour: 'Hour',
     time_min: 'Minute',
     time_sec: 'Second',
+    owner_view_alert: '👑 You are viewing as the event host.',
+rsvp_registered_success: '✅ RSVP received.',
+public_go_panel_create: 'Go to Dashboard & Create Event 🚀',
 
     rsvp_title: 'RSVP',
     rsvp_name_label: 'Full Name',
@@ -312,6 +318,9 @@ export const dictionary = {
     time_hour: 'Std.',
     time_min: 'Min.',
     time_sec: 'Sek.',
+    owner_view_alert: '👑 Sie sehen dies als Gastgeber.',
+rsvp_registered_success: '✅ Rückmeldung erhalten.',
+public_go_panel_create: 'Zum Dashboard & Event erstellen 🚀',
 
     rsvp_title: 'u.A.w.g. (RSVP)',
     rsvp_name_label: 'Vollständiger Name',
@@ -442,6 +451,9 @@ export const dictionary = {
     time_hour: 'Heure',
     time_min: 'Minute',
     time_sec: 'Seconde',
+    owner_view_alert: '👑 Vous visualisez en tant qu\'organisateur.',
+rsvp_registered_success: '✅ RSVP reçu.',
+public_go_panel_create: 'Aller au tableau de bord & Créer 🚀',
 
     rsvp_title: 'Répondez s\'il vous plaît (RSVP)',
     rsvp_name_label: 'Nom complet',
@@ -572,6 +584,9 @@ export const dictionary = {
     time_hour: 'Hora',
     time_min: 'Minuto',
     time_sec: 'Segundo',
+    owner_view_alert: '👑 Estás viendo esto como anfitrión.',
+rsvp_registered_success: '✅ RSVP recibido.',
+public_go_panel_create: 'Ir al Panel y Crear Evento 🚀',
 
     rsvp_title: 'Confirmar Asistencia (RSVP)',
     rsvp_name_label: 'Nombre Completo',
@@ -702,6 +717,9 @@ export const dictionary = {
     time_hour: 'Ora',
     time_min: 'Minuto',
     time_sec: 'Secondo',
+    owner_view_alert: '👑 Stai visualizzando come organizzatore.',
+rsvp_registered_success: '✅ RSVP ricevuto.',
+public_go_panel_create: 'Vai al Pannello e Crea Evento 🚀',
 
     rsvp_title: 'RSVP',
     rsvp_name_label: 'Nome Completo',
@@ -832,6 +850,9 @@ export const dictionary = {
     time_hour: 'Час',
     time_min: 'Мин',
     time_sec: 'Сек',
+    owner_view_alert: '👑 Вы просматриваете как организатор.',
+rsvp_registered_success: '✅ Ответ получен.',
+public_go_panel_create: 'В панель и создать событие 🚀',
 
     rsvp_title: 'RSVP (Подтверждение)',
     rsvp_name_label: 'ФИО',
@@ -963,6 +984,9 @@ export const dictionary = {
     time_hour: 'ساعة',
     time_min: 'دقيقة',
     time_sec: 'ثانية',
+    owner_view_alert: '👑 أنت تشاهد بصفتك المضيف.',
+rsvp_registered_success: '✅ تم استلام الرد.',
+public_go_panel_create: 'الذهاب للوحة وإنشاء فعالية 🚀',
 
     rsvp_title: 'تأكيد الحضور',
     rsvp_name_label: 'الاسم الكامل',
