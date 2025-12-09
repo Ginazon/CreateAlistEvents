@@ -74,6 +74,8 @@ export const dictionary = {
     hide_comments: 'Yorumları gizle',
     comment_placeholder: 'Yorum yaz...',
     post_btn: 'Paylaş',
+    // LANDING PAGE
+    landing_hero_title: "Merhaba ilk Tercüme"
   },
 
   // 🇺🇸 İNGİLİZCE
