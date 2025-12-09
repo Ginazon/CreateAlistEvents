@@ -211,7 +211,7 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">📷</div>}
                                 </div>
-                                <div><label className="cursor-pointer bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-indigo-100 transition inline-block">{t('file_btn_label')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" /></label></div>
+                                <div><label className="cursor-pointer bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-indigo-100 transition inline-block">{t('file_btn_cover')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" /></label></div>
                             </div>
                         </div>
                         <div>
@@ -220,7 +220,7 @@ function CreateEventContent() {
                                 <div className="w-20 h-20 bg-gray-100 rounded border overflow-hidden shrink-0 relative">
                                     {mainPreview ? <img src={mainPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300">🖼️</div>}
                                 </div>
-                                <div><label className="cursor-pointer bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-100 transition inline-block">{t('file_btn_label')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" /></label></div>
+                                <div><label className="cursor-pointer bg-pink-50 text-pink-700 px-4 py-2 rounded-full text-xs font-bold hover:bg-pink-100 transition inline-block">{t('file_btn_main')}<input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" /></label></div>
                             </div>
                         </div>
                     </div>
