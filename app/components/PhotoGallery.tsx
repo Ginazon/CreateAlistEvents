@@ -23,19 +23,25 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }, [eventId])
 
   const fetchPhotos = async () => {
-      // uploader_name alanını da çekiyoruz
-      const { data } = await supabase
-        .from('photos')
-        .select(`
-            *,
-            photo_comments(id, user_email, content, created_at),
-            photo_likes(id, user_email)
-        `)
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false })
+    console.log("Fotoğraflar çekiliyor... Event ID:", eventId) // 1. Kontrol
 
-      if (data) setPhotos(data)
-  }
+    const { data, error } = await supabase
+      .from('photos')
+      .select(`
+          *,
+          photo_comments(id, user_email, content, created_at),
+          photo_likes(id, user_email)
+      `)
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error("Çekme Hatası:", error.message) // 2. Hata varsa gör
+    } else {
+        console.log("Gelen Veri:", data) // 3. Veri boş mu geliyor dolu mu?
+        setPhotos(data || [])
+    }
+}
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
