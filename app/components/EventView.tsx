@@ -215,15 +215,30 @@ export default function EventView({ slug }: { slug: string }) {
       </div>
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
-              <button 
-                  onClick={() => router.push('/')} // HİÇBİR ŞART YOK, DİREKT GİT! 🚀
-                  className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
-              >
-                  {isOwner 
-                    ? t('public_back_dashboard') 
-                    : (currentUserEmail ? "Panele Git 🚀" : t('public_create_own'))
-                  }
-              </button>
+          <button 
+    onClick={() => {
+        // 1. Önce kim olduğunu bul (State'ten veya o sayfanın hafızasından)
+        const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
+        
+        if (emailToSave) {
+            // 2. PASAPORTU HAZIRLA: Dashboard'un aradığı GENEL anahtara yaz
+            console.log("🚀 Dashboard'a gidiliyor. Pasaport:", emailToSave)
+            localStorage.setItem('cereget_guest_email', emailToSave)
+            
+            // 3. Şimdi git (Artık kapı açılacak)
+            router.push('/')
+        } else {
+            // 4. Mail yoksa yapacak bir şey yok, Landing'e git
+            router.push('/landing')
+        }
+    }}
+    className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
+>
+    {isOwner 
+      ? t('public_back_dashboard') 
+      : (currentUserEmail ? "Panele Git & Etkinlik Oluştur 🚀" : t('public_create_own'))
+    }
+</button>
           </div>
       </div>
 

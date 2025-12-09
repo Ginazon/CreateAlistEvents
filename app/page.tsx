@@ -36,38 +36,40 @@ export default function Dashboard() {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
 
     const checkUser = async () => {
-        // 1. Önce: Oturum açmış (Üye) kullanıcı var mı?
+        // 1. Supabase Oturumu Var mı?
         const { data } = await supabase.auth.getSession()
         
         if (data.session) {
-            // A. ÜYE VARSA -> Normal akış
+            // A. ÜYE VARSA
             setSession(data.session)
             fetchCredits(data.session.user.id)
             fetchMyEvents(data.session.user.id)
             
-            // DÜZELTME: Email'in var olduğunu kontrol edip öyle gönderiyoruz
+            // HATA ÇÖZÜMÜ: Email varsa fonksiyonu çağır (Undefined hatasını engeller)
             if (data.session.user.email) {
                 fetchInvitedEvents(data.session.user.email)
             }
             
             fetchPackages()
         } else {
-            // B. ÜYE YOKSA -> Misafir kaydı var mı? (LocalStorage)
+            // B. ÜYE YOKSA -> Pasaport (Local Storage) Var mı?
+            // EventView'dan gönderdiğimiz 'cereget_guest_email' anahtarına bakıyoruz
             const guestEmail = localStorage.getItem('cereget_guest_email')
             
             if (guestEmail) {
-                // MİSAFİR BULUNDU! -> İçeri al
-                console.log("Misafir girişi algılandı:", guestEmail)
+                // MİSAFİR KABUL EDİLDİ ✅
+                console.log("Misafir girişi onaylandı:", guestEmail)
                 
-                // Session'ı "fake" (geçici) bir obje gibi dolduruyoruz
-                // @ts-ignore (TypeScript'in session tipine takılmaması için)
+                // Sahte bir oturum objesi oluşturup ekranı açıyoruz
+                // @ts-ignore
                 setSession({ user: { email: guestEmail, isGuest: true } }) 
                 
                 setActiveTab('invited') // Direkt davetiye sekmesini aç
                 fetchInvitedEvents(guestEmail)
                 fetchPackages() 
             } else {
-                // C. HİÇBİRİ YOKSA -> Landing Page'e postala 👋
+                // C. KİMLİK YOKSA -> Landing Page'e Yolla ❌
+                console.warn("Kimlik bulunamadı, Landing'e yönlendiriliyor...")
                 router.push('/landing')
             }
         }
