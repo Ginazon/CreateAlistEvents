@@ -7,6 +7,7 @@ export default function Countdown({ targetDate, themeColor }: { targetDate: stri
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [isExpired, setIsExpired] = useState(false)
   const { t } = useTranslation()
+
   useEffect(() => {
     const target = new Date(targetDate).getTime()
 
@@ -31,11 +32,10 @@ export default function Countdown({ targetDate, themeColor }: { targetDate: stri
   }, [targetDate])
 
   if (isExpired) {
-    return <div className="text-center font-bold p-4 bg-gray-100 rounded-lg">Etkinlik Başladı / Sona Erdi! 🎉</div>
+    return <div className="text-center font-bold p-4 bg-gray-100 rounded-lg">{t('countdown.event_expired')}</div> // GÜNCELLENDİ
   }
 
   return (
-    
     <div className="flex gap-2 justify-center my-6">
       {[t('time_day'), t('time_hour'), t('time_min'), t('time_sec')].map((label, index) => {
         const value = index === 0 ? timeLeft.days : index === 1 ? timeLeft.hours : index === 2 ? timeLeft.minutes : timeLeft.seconds

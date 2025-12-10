@@ -23,7 +23,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }, [eventId])
 
   const fetchPhotos = async () => {
-    console.log("Fotoğraflar çekiliyor... Event ID:", eventId) // 1. Kontrol
+    console.log("Fotoğraflar çekiliyor... Event ID:", eventId)
 
     const { data, error } = await supabase
       .from('photos')
@@ -36,9 +36,9 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       .order('created_at', { ascending: false })
 
     if (error) {
-        console.error("Çekme Hatası:", error.message) // 2. Hata varsa gör
+        console.error("Çekme Hatası:", error.message)
     } else {
-        console.log("Gelen Veri:", data) // 3. Veri boş mu geliyor dolu mu?
+        console.log("Gelen Veri:", data)
         setPhotos(data || [])
     }
 }
@@ -47,20 +47,18 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       const file = e.target.files?.[0]
       if (!file) return 
       if (!currentUserEmail) {
-          alert("Hata: Kullanıcı oturumu bulunamadı. Sayfayı yenileyiniz.")
+          alert(t('gallery.alert_session_error')) // GÜNCELLENDİ
           return
       }
 
       setUploading(true)
       const fileName = `${eventId}/${Date.now()}-${Math.floor(Math.random()*1000)}`
       
-      // 1. Önce İsmi Belirle (Dedektiflik Kısmı 🕵️‍♂️)
-      let finalName = currentUserEmail.split('@')[0] // Varsayılan: Mailin başı
+      let finalName = currentUserEmail.split('@')[0]
 
       if (currentUserEmail === 'owner') {
-          finalName = "Etkinlik Sahibi 👑"
+          finalName = t('gallery.owner_name') // GÜNCELLENDİ
       } else {
-          // Misafir listesinden bu mailin sahibinin ismini bul
           const { data: guestData } = await supabase
               .from('guests')
               .select('name')
@@ -69,32 +67,30 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
               .single()
           
           if (guestData && guestData.name) {
-              finalName = guestData.name // Bulduk!
+              finalName = guestData.name
           }
       }
 
-      // 2. Storage'a Yükle
       const { error: uploadError } = await supabase.storage.from('guest-uploads').upload(fileName, file)
       
       if (uploadError) {
-          alert('Dosya Yükleme Hatası: ' + uploadError.message)
+          alert(t('gallery.alert_upload_error') + uploadError.message) // GÜNCELLENDİ
           setUploading(false)
           return
       }
 
       const publicUrl = supabase.storage.from('guest-uploads').getPublicUrl(fileName).data.publicUrl
       
-      // 3. Veritabanına Yaz (İsimle Birlikte)
       const { error: dbError } = await supabase.from('photos').insert([{
           event_id: eventId,
           user_email: currentUserEmail,
-          uploader_name: finalName, // YENİ: İsmi de kaydediyoruz
+          uploader_name: finalName,
           image_url: publicUrl
       }])
 
       if (dbError) {
           console.error("DB Hatası:", dbError)
-          alert('Veritabanı Kayıt Hatası: ' + dbError.message)
+          alert(t('gallery.alert_db_error') + dbError.message) // GÜNCELLENDİ
       } else {
           fetchPhotos()
       }
@@ -162,7 +158,6 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                     <div className="relative">
                         <img src={photo.image_url} className="w-full h-auto object-cover max-h-[500px]" loading="lazy"/>
                         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4 flex justify-between items-end">
-                            {/* YENİ: ARTIK GERÇEK İSMİ GÖSTERİYORUZ */}
                             <span className="text-white text-xs font-bold opacity-90 drop-shadow-md bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm">
                                 {photo.uploader_name || photo.user_email.split('@')[0]}
                             </span>
@@ -179,7 +174,6 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                         <div className="space-y-3 mb-4">
                             {visibleComments.map((c: any) => (
                                 <div key={c.id} className="text-sm">
-                                    {/* Yorumlarda da sadece mail başı yerine, ileride isim göstermek istersek burayı da güncelleyebiliriz */}
                                     <span className="font-bold text-gray-800 mr-2">{c.user_email.split('@')[0]}:</span>
                                     <span className="text-gray-600">{c.content}</span>
                                 </div>

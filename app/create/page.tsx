@@ -143,8 +143,8 @@ function CreateEventContent() {
   }
 
   const handleSave = async () => {
-    if (!title || !eventDate) return alert('Başlık ve Tarih zorunludur')
-    if (!editId && credits !== null && credits < 1) return alert('Yetersiz Kredi!')
+    if (!title || !eventDate) return alert(t('create.alert_required_fields')) // GÜNCELLENDİ
+    if (!editId && credits !== null && credits < 1) return alert(t('create.alert_insufficient_credits')) // GÜNCELLENDİ
     setUploading(true)
     
     let finalCoverUrl = existingCoverUrl
@@ -170,18 +170,18 @@ function CreateEventContent() {
 
     if (editId) {
         await supabase.from('events').update(eventData).eq('id', editId)
-        alert('Güncellendi! ✅'); router.push('/')
+        alert(t('create.alert_updated')); router.push('/') // GÜNCELLENDİ
     } else {
         const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
         await supabase.from('events').insert([{ ...eventData, slug: autoSlug, user_id: session?.user.id }])
         const newCredit = (credits || 0) - 1
         await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-        alert('Oluşturuldu! 🎉'); router.push('/')
+        alert(t('create.alert_created')); router.push('/') // GÜNCELLENDİ
     }
     setUploading(false)
   }
 
-  if(loadingData) return <div>{t('loading')}</div>
+  if(loadingData) return <div>{t('common.loading_suspense')}</div> // GÜNCELLENDİ
   const formattedDate = eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
 
   return (
@@ -268,7 +268,11 @@ function CreateEventContent() {
                                 <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
                                 <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder={t('question_placeholder')}/>
                                 <div className="flex gap-2 mb-2">
-                                    <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900"><option value="text">Text</option><option value="textarea">Long Text</option><option value="select">Dropdown</option></select>
+                                    <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900">
+                                        <option value="text">{t('create.field_type_text')}</option>
+                                        <option value="textarea">{t('create.field_type_textarea')}</option>
+                                        <option value="select">{t('create.field_type_dropdown')}</option>
+                                    </select>
                                     <label className="flex items-center gap-1 text-xs text-gray-600"><input type="checkbox" checked={field.required} onChange={(e) => updateField(index, 'required', e.target.checked)}/> {t('required_checkbox')}</label>
                                 </div>
                                 {field.type === 'select' && <input type="text" value={field.options} onChange={(e) => updateField(index, 'options', e.target.value)} placeholder={t('option_placeholder')} className="w-full text-xs border p-2 rounded bg-yellow-50 text-gray-900"/>}
@@ -289,7 +293,7 @@ function CreateEventContent() {
                     </div>
 
                     <div className="space-y-4">
-                        {detailBlocks.length === 0 && <p className="text-xs text-gray-400 italic text-center">Henüz detay eklenmedi.</p>}
+                        {detailBlocks.length === 0 && <p className="text-xs text-gray-400 italic text-center">{t('create.details_empty_msg')}</p>}
                         
                         {detailBlocks.map((block, index) => (
                             <div key={block.id} className="bg-white p-4 rounded shadow-sm border relative group animate-fadeIn">
@@ -297,7 +301,7 @@ function CreateEventContent() {
                                 
                                 {block.type === 'timeline' && (
                                     <div className="flex gap-2 items-center">
-                                        <div className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold">AKIŞ</div>
+                                        <div className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded font-bold">{t('create.badge_timeline')}</div>
                                         <input type="text" value={block.content} onChange={(e) => updateBlock(index, 'content', e.target.value)} placeholder={t('timeline_time_ph')} className="w-1/3 text-sm border p-1 rounded font-mono"/>
                                         <input type="text" value={block.subContent} onChange={(e) => updateBlock(index, 'subContent', e.target.value)} placeholder={t('timeline_title_ph')} className="w-2/3 text-sm border p-1 rounded font-bold"/>
                                     </div>
@@ -306,9 +310,9 @@ function CreateEventContent() {
                                 {block.type === 'note' && (
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <div className="bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded font-bold">NOT</div>
+                                            <div className="bg-blue-100 text-blue-800 text-[10px] px-2 py-1 rounded font-bold">{t('create.badge_note')}</div>
                                             <label className="text-[10px] cursor-pointer text-indigo-600 hover:underline flex items-center gap-1">
-                                                {block.imageUrl ? 'Resim Değiştir' : t('image_upload_btn')}
+                                                {block.imageUrl ? t('create.btn_change_image') : t('image_upload_btn')}
                                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleBlockImageUpload(index, e)}/>
                                             </label>
                                         </div>
@@ -320,7 +324,7 @@ function CreateEventContent() {
 
                                 {block.type === 'link' && (
                                     <div className="space-y-2">
-                                        <div className="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded font-bold w-fit">LİNK / BUTON</div>
+                                        <div className="bg-green-100 text-green-800 text-[10px] px-2 py-1 rounded font-bold w-fit">{t('create.badge_link')}</div>
                                         <input type="text" value={block.title} onChange={(e) => updateBlock(index, 'title', e.target.value)} placeholder={t('link_title_ph')} className="w-full text-sm border p-1 rounded font-bold"/>
                                         <input type="text" value={block.content} onChange={(e) => updateBlock(index, 'content', e.target.value)} placeholder={t('link_url_ph')} className="w-full text-xs border p-1 rounded text-blue-600"/>
                                     </div>
@@ -338,7 +342,7 @@ function CreateEventContent() {
             <div className="w-[375px] h-[700px] bg-white rounded-[3rem] border-8 border-gray-900 shadow-2xl overflow-hidden relative flex flex-col scrollbar-hide">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
                 <div className="flex-1 overflow-y-auto pb-8 font-sans">
-                     
+                      
                     {/* GÖRSELLER */}
                     <div className="w-full h-36 bg-gray-200 relative">
                         {coverPreview ? <img src={coverPreview} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">{t('preview_cover_placeholder')}</div>}

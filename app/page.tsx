@@ -172,19 +172,19 @@ export default function Dashboard() {
                 <div className="relative group">
                     <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
                     <select 
-    value={language} 
-    onChange={(e) => setLanguage(e.target.value as LangType)}
-    className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
->
-    <option value="tr">TR</option>
-    <option value="en">EN</option>
-    <option value="de">DE</option>
-    <option value="fr">FR</option>
-    <option value="es">ES</option>
-    <option value="it">IT</option>
-    <option value="ru">RU</option>
-    <option value="ar">AR</option>
-</select>
+                        value={language} 
+                        onChange={(e) => setLanguage(e.target.value as LangType)}
+                        className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
+                    >
+                        <option value="tr">TR</option>
+                        <option value="en">EN</option>
+                        <option value="de">DE</option>
+                        <option value="fr">FR</option>
+                        <option value="es">ES</option>
+                        <option value="it">IT</option>
+                        <option value="ru">RU</option>
+                        <option value="ar">AR</option>
+                    </select>
                 </div>
                 <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
                     {t('logout')}
@@ -236,8 +236,8 @@ export default function Dashboard() {
                         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center animate-fadeIn">
                             <div className="max-w-3xl mx-auto">
                                 <div className="text-6xl mb-4">🚀</div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Henüz Etkinliğin Yok</h2>
-                                <p className="text-gray-500 mb-8">Etkinlik oluşturmak ve davetiyeni hazırlamak için kredi paketlerinden birini seçerek hemen başla.</p>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('dashboard.empty_state_title')}</h2>
+                                <p className="text-gray-500 mb-8">{t('dashboard.empty_state_desc')}</p>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {packages.map((pkg) => (
@@ -245,24 +245,24 @@ export default function Dashboard() {
                                             {/* Süsleme */}
                                             <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
 
-                                            <h3 className="font-bold text-lg text-gray-800 mb-2">{pkg.package_name || 'Standart Paket'}</h3>
-                                            <div className="text-4xl font-extrabold text-indigo-600 mb-2">{pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">Kredi</span></div>
+                                            <h3 className="font-bold text-lg text-gray-800 mb-2">{pkg.package_name || t('dashboard.package_default_name')}</h3>
+                                            <div className="text-4xl font-extrabold text-indigo-600 mb-2">{pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">{t('dashboard.credit_label')}</span></div>
                                             
-                                            <p className="text-xs text-gray-400 mb-6 text-center">Tek seferlik ödeme. Ömür boyu geçerli.</p>
+                                            <p className="text-xs text-gray-400 mb-6 text-center">{t('dashboard.package_lifetime_note')}</p>
                                             
                                             {/* Etsy Linki */}
                                             <a 
-    // Öncelik etsy_link sütununda, eğer boşsa eski usul ID ile oluştur (Geriye uyumluluk)
-    href={pkg.etsy_link || `https://www.etsy.com/listing/${pkg.etsy_listing_id}`} 
-    target="_blank" 
-    className="w-full bg-black text-white py-3 rounded-lg font-bold text-sm hover:bg-gray-800 transition shadow-md flex items-center justify-center gap-2"
->
-    Etsy ile Satın Al ↗
-</a>
+                                                // Öncelik etsy_link sütununda, eğer boşsa eski usul ID ile oluştur (Geriye uyumluluk)
+                                                href={pkg.etsy_link || `https://www.etsy.com/listing/${pkg.etsy_listing_id}`} 
+                                                target="_blank" 
+                                                className="w-full bg-black text-white py-3 rounded-lg font-bold text-sm hover:bg-gray-800 transition shadow-md flex items-center justify-center gap-2"
+                                            >
+                                                {t('dashboard.btn_buy_etsy')}
+                                            </a>
                                         </div>
                                     ))}
                                 </div>
-                                <p className="text-xs text-gray-400 mt-6">Satın alma sonrası krediniz hesabınıza otomatik olarak yüklenecektir.</p>
+                                <p className="text-xs text-gray-400 mt-6">{t('dashboard.buy_success_note')}</p>
                             </div>
                         </div>
                     )}
@@ -279,7 +279,7 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2 flex-wrap">
-                                    <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 QR</button>
+                                    <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 {t('dashboard.btn_qr_short')}</button>
                                     <Link href={`/create?edit=${event.id}`}>
                                         <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
                                     </Link>
@@ -311,7 +311,7 @@ export default function Dashboard() {
                                             <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
                                         ) : (
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">Henüz fotoğraf yüklenmemiş.</p>}
+                                                {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">{t('dashboard.photos_empty')}</p>}
                                                 {photos.map(p => (
                                                     <div key={p.id} className="relative group">
                                                         <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
@@ -343,8 +343,8 @@ export default function Dashboard() {
 
                              <div className="flex-1 flex flex-col justify-center">
                                  <h3 className="font-bold text-xl text-gray-800 mb-1">{event.title}</h3>
-                                 <p className="text-gray-500 text-sm mb-2">📍 {event.location_name || 'Konum belirtilmemiş'}</p>
-                                 <p className="text-gray-500 text-sm mb-4">📅 {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Tarih yok'}</p>
+                                 <p className="text-gray-500 text-sm mb-2">📍 {event.location_name || t('dashboard.location_fallback')}</p>
+                                 <p className="text-gray-500 text-sm mb-4">📅 {event.event_date ? new Date(event.event_date).toLocaleDateString() : t('dashboard.date_fallback')}</p>
                                  
                                  <a href={`/${event.slug}`} target="_blank" className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 hover:scale-105 transition w-fit shadow-md">
                                      {t('go_to_event')}
@@ -361,11 +361,11 @@ export default function Dashboard() {
       {/* FOOTER */}
       <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
-          <Link href="/legal/terms" className="hover:text-black">Kullanım Şartları</Link>
-          <Link href="/legal/privacy" className="hover:text-black">Gizlilik ve KVKK</Link>
+          <Link href="/legal/terms" className="hover:text-black">{t('footer.link_terms')}</Link>
+          <Link href="/legal/privacy" className="hover:text-black">{t('footer.link_privacy')}</Link>
           <button onClick={handleLogout} className="hover:text-black">{t('logout')}</button>
         </div>
-        <p className="mt-3 text-xs text-gray-400">© 2025 Cereget. Tüm hakları saklıdır.</p>
+        <p className="mt-3 text-xs text-gray-400">{t('footer.copyright_text')}</p>
       </footer>
     </div>
   )

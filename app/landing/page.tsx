@@ -50,10 +50,10 @@ export default function LandingPage() {
 
         if (signUpError) {
             // GERÇEK HATAYI GÖSTER
-            alert('Hata: ' + signUpError.message) 
+            alert(t('auth.alert_error_prefix') + signUpError.message) // GÜNCELLENDİ
         } else { 
             // Kayıt başarılı, otomatik giriş
-            alert('Hesap oluşturuldu! Yönlendiriliyorsunuz...')
+            alert(t('auth.alert_account_created')) // GÜNCELLENDİ
             router.push('/') 
         }
         setLoginLoading(false)
@@ -103,7 +103,7 @@ export default function LandingPage() {
             <header className="py-20 px-8 bg-indigo-600 text-white">
                 <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
                     <div className="lg:w-1/2 text-center lg:text-left">
-                        <p className="text-sm font-semibold uppercase tracking-widest opacity-80 mb-3">Master Plan</p>
+                        <p className="text-sm font-semibold uppercase tracking-widest opacity-80 mb-3">{t('landing.hero_badge')}</p>
                         <h2 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
                             {t('landing_hero_title')}
                         </h2>
@@ -116,7 +116,7 @@ export default function LandingPage() {
                     </div>
                     <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
                         <div className="w-full h-96 bg-indigo-500 rounded-xl shadow-2xl flex items-center justify-center text-white text-3xl font-bold opacity-60">
-                            (Ekran Görüntüsü)
+                            {t('landing.screenshot_placeholder')}
                         </div>
                     </div>
                 </div>
@@ -169,11 +169,11 @@ export default function LandingPage() {
             {/* FOOTER */}
             <footer className="py-6 px-8 text-center border-t text-sm text-gray-500">
                 <div className="flex justify-center space-x-6 mb-2">
-                    <Link href="/legal/terms" className="hover:text-black">Terms</Link>
-                    <Link href="/legal/privacy" className="hover:text-black">Privacy</Link>
-                    <button onClick={() => setShowLoginModal(true)} className="hover:text-black">Admin</button>
+                    <Link href="/legal/terms" className="hover:text-black">{t('footer.link_terms')}</Link>
+                    <Link href="/legal/privacy" className="hover:text-black">{t('footer.link_privacy')}</Link>
+                    <button onClick={() => setShowLoginModal(true)} className="hover:text-black">{t('footer.admin')}</button>
                 </div>
-                <p>© 2025 Cereget.</p>
+                <p>{t('footer.copyright_text')}</p>
             </footer>
 
             {/* MODAL */}
@@ -183,10 +183,10 @@ export default function LandingPage() {
                         <button onClick={() => setShowLoginModal(false)} className="absolute top-3 right-3 text-gray-500 hover:text-black text-2xl">&times;</button>
                         <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">{t('landing_login')}</h2>
                         <form onSubmit={handleLogin} className="space-y-4">
-                            <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="E-Mail" />
-                            <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Password" />
+                            <input type="email" required className="w-full border p-2 rounded" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder={t('auth.placeholder_email')} />
+                            <input type="password" required className="w-full border p-2 rounded" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder={t('auth.placeholder_password')} />
                             <button type="submit" disabled={loginLoading} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700 disabled:opacity-50">
-                                {loginLoading ? '...' : 'Giriş / Kayıt'}
+                                {loginLoading ? t('auth.btn_loading') : t('auth.btn_login_register')}
                             </button>
                         </form>
                     </div>

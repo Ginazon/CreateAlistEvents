@@ -18,7 +18,6 @@ interface GuestManagerProps {
 export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestManagerProps) {
   const { t } = useTranslation()
   
-  // Varsayılan şablonu da dil desteğine göre ayarlıyoruz (Placeholders [Ad] ve [Link] sabit kalmalı)
   const defaultTemplate = t('default_invite_template')
     .replace('{eventTitle}', eventTitle)
 
@@ -99,7 +98,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
       const worksheet = XLSX.utils.json_to_sheet(dataToExport)
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, t('sheet_name'))
-      XLSX.writeFile(workbook, `Guests_${eventSlug}.xlsx`)
+      XLSX.writeFile(workbook, `${t('export.filename_prefix')}${eventSlug}.xlsx`) // GÜNCELLENDİ
   }
 
   // --- PDF İNDİRME ---
@@ -235,11 +234,11 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
         <div className="bg-white p-4 rounded-xl shadow-lg border-2 border-indigo-100">
             <h3 className="font-bold text-gray-800 mb-3 text-sm">{t('add_guest_title')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
-                <div className="md:col-span-3"><label className="text-[10px] font-bold text-gray-400 block mb-1">{t('name_label')}</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50" placeholder="..."/></div>
+                <div className="md:col-span-3"><label className="text-[10px] font-bold text-gray-400 block mb-1">{t('name_label')}</label><input type="text" value={newName} onChange={e => setNewName(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50" placeholder={t('form.placeholder_name')}/></div>
                 <div className="md:col-span-2"><label className="text-[10px] font-bold text-gray-400 block mb-1">{t('method_label')}</label><select value={newMethod} onChange={e => setNewMethod(e.target.value)} className="w-full border p-2 rounded text-sm bg-gray-50 font-bold text-gray-700"><option value="whatsapp">{t('method_whatsapp')}</option><option value="sms">{t('method_sms')}</option><option value="email">{t('method_email')}</option></select></div>
-                <div className="md:col-span-3"><label className={`text-[10px] font-bold block mb-1 ${newMethod === 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('phone_label')}</label><div className={newMethod === 'email' ? 'opacity-50 pointer-events-none' : ''}><PhoneInput country={defaultCountry} value={newPhone} onChange={phone => setNewPhone(phone)} inputStyle={{width:'100%', height:'38px', fontSize:'14px', borderColor:'#e5e7eb', borderRadius:'0.375rem', backgroundColor: newMethod === 'email' ? '#f3f4f6' : 'white'}} buttonStyle={{borderColor:'#e5e7eb'}} disabled={newMethod === 'email'} placeholder="555..."/></div></div>
-                <div className="md:col-span-3"><label className={`text-[10px] font-bold block mb-1 ${newMethod !== 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('email_label')}</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} disabled={newMethod !== 'email'} className={`w-full border p-2 rounded text-sm h-[38px] ${newMethod !== 'email' ? 'bg-gray-100 text-gray-300' : 'bg-white'}`} placeholder="@"/></div>
-                <div className="md:col-span-1"><button onClick={addGuest} disabled={loading} className="w-full bg-indigo-600 text-white h-[38px] rounded font-bold hover:bg-indigo-700 transition flex items-center justify-center">{loading ? '...' : '+'}</button></div>
+                <div className="md:col-span-3"><label className={`text-[10px] font-bold block mb-1 ${newMethod === 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('phone_label')}</label><div className={newMethod === 'email' ? 'opacity-50 pointer-events-none' : ''}><PhoneInput country={defaultCountry} value={newPhone} onChange={phone => setNewPhone(phone)} inputStyle={{width:'100%', height:'38px', fontSize:'14px', borderColor:'#e5e7eb', borderRadius:'0.375rem', backgroundColor: newMethod === 'email' ? '#f3f4f6' : 'white'}} buttonStyle={{borderColor:'#e5e7eb'}} disabled={newMethod === 'email'} placeholder={t('form.placeholder_phone')}/></div></div>
+                <div className="md:col-span-3"><label className={`text-[10px] font-bold block mb-1 ${newMethod !== 'email' ? 'text-gray-300' : 'text-gray-600'}`}>{t('email_label')}</label><input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} disabled={newMethod !== 'email'} className={`w-full border p-2 rounded text-sm h-[38px] ${newMethod !== 'email' ? 'bg-gray-100 text-gray-300' : 'bg-white'}`} placeholder={t('form.placeholder_email')}/></div>
+                <div className="md:col-span-1"><button onClick={addGuest} disabled={loading} className="w-full bg-indigo-600 text-white h-[38px] rounded font-bold hover:bg-indigo-700 transition flex items-center justify-center">{loading ? t('btn.loading') : t('btn.add_symbol')}</button></div>
             </div>
         </div>
 
@@ -262,7 +261,7 @@ export default function GuestManager({ eventId, eventSlug, eventTitle }: GuestMa
                             <td className="px-4 py-3 font-bold text-gray-800 flex items-center gap-2">
                                 {g.name}
                                 {g.form_responses && Object.keys(g.form_responses).length > 0 && (
-                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title="Detay">👁️</span>
+                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-1 rounded" title={t('list.tooltip_details')}>👁️</span>
                                 )}
                             </td>
                             <td className="px-4 py-3 text-gray-500 font-mono text-xs">
