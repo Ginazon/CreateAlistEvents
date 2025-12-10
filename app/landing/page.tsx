@@ -22,7 +22,7 @@ export default function LandingPage() {
     const [loginPassword, setLoginPassword] = useState('')
     const [loginLoading, setLoginLoading] = useState(false)
 
-    // LOGO URL'si (Supabase Storage'dan)
+    // LOGO URL
     const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand/logo.png`
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -66,7 +66,7 @@ export default function LandingPage() {
         <div className="min-h-screen bg-white font-sans text-gray-800">
             
             {/* ÜST BAŞLIK */}
-            <div className="bg-indigo-700 text-white py-4 px-8 flex justify-between items-center sticky top-0 z-50">
+            <div className="bg-indigo-700 text-white py-4 px-8 flex justify-between items-center sticky top-0 z-50 shadow-md">
                 
                 {/* LOGO ALANI */}
                 <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export default function LandingPage() {
                         src={logoUrl} 
                         alt="CreateAlist Logo" 
                         className="h-10 w-auto object-contain bg-white/20 rounded-lg p-1 backdrop-blur-sm"
-                        onError={(e) => { e.currentTarget.style.display = 'none' }} // Logo yoksa gizle
+                        onError={(e) => { e.currentTarget.style.display = 'none' }} 
                     />
                     <h1 className="text-xl font-bold tracking-tight">CreateAlist</h1>
                 </div>
@@ -145,34 +145,25 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* FİYATLANDIRMA */}
-            <section id="fiyatlandirma" className="py-20 px-8 bg-white">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h3 className="text-3xl font-bold mb-4">{t('pricing_title')}</h3>
-                    <p className="text-lg text-gray-600 mb-10">{t('pricing_desc')}</p>
-                    
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="p-8 border-4 border-gray-200 rounded-xl hover:border-indigo-500 transition shadow-lg">
-                            <h4 className="text-2xl font-bold mb-2">{t('price_starter')}</h4>
-                            <p className="text-4xl font-extrabold mb-4 text-indigo-600">10</p>
-                            <a href="#" className="block bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">{t('landing_buy')}</a>
-                        </div>
-                        <div className="p-8 border-4 border-yellow-500 rounded-xl bg-yellow-50 shadow-2xl transform scale-105 relative">
-                            <h4 className="text-2xl font-bold mb-2">{t('price_premium')}</h4>
-                            <p className="text-4xl font-extrabold mb-4 text-yellow-600">∞</p>
-                            <a href="#" className="block bg-yellow-500 text-indigo-900 py-3 rounded-lg font-bold hover:bg-yellow-400">{t('landing_buy')}</a>
-                        </div>
-                         <div className="p-8 border-4 border-gray-200 rounded-xl hover:border-indigo-500 transition shadow-lg">
-                            <h4 className="text-2xl font-bold mb-2">{t('price_trial')}</h4>
-                            <p className="text-4xl font-extrabold mb-4 text-indigo-600">1</p>
-                            <a href="#" className="block bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">{t('landing_buy')}</a>
-                        </div>
-                    </div>
+            {/* ETSY SHOP (FİYATLANDIRMA YERİNE) */}
+            <section id="fiyatlandirma" className="py-24 px-8 bg-white border-t border-gray-100 text-center">
+                <div className="max-w-4xl mx-auto flex flex-col items-center justify-center">
+                    <h3 className="text-3xl font-bold mb-8 text-gray-800">CreateAlist Shop</h3>
+                    <a 
+                        href="https://createalist.etsy.com" 
+                        target="_blank" 
+                        className="bg-[#F1641E] text-white px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:bg-[#d55619] transition transform hover:scale-105 flex items-center gap-3"
+                    >
+                        Etsy Shop ↗
+                    </a>
+                    <p className="mt-6 text-gray-500 text-sm">
+                        {t('pricing_desc')} 
+                    </p>
                 </div>
             </section>
 
             {/* FOOTER */}
-            <footer className="py-6 px-8 text-center border-t text-sm text-gray-500">
+            <footer className="py-6 px-8 text-center border-t text-sm text-gray-500 bg-gray-50">
                 <div className="flex justify-center space-x-6 mb-2">
                     <Link href="/legal/terms" className="hover:text-black">{t('footer.link_terms')}</Link>
                     <Link href="/legal/privacy" className="hover:text-black">{t('footer.link_privacy')}</Link>
