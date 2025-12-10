@@ -13,14 +13,63 @@ const THEME_COLORS = [
   { name: 'Rose', hex: '#E11D48' },
   { name: 'Green', hex: '#059669' },
   { name: 'Black', hex: '#111827' },
+  { name: 'Purple', hex: '#7C3AED' },
+  { name: 'Teal', hex: '#0D9488' },
 ]
 
+// 1. GÜNCELLENMİŞ FONT LİSTESİ (El yazıları eklendi)
 const FONT_OPTIONS = [
+  // Standart Fontlar
   { name: 'Inter', value: "'Inter', sans-serif" },
-  { name: 'Playfair', value: "'Playfair Display', serif" },
-  { name: 'Dancing Script', value: "'Dancing Script', cursive" },
-  { name: 'Merriweather', value: "'Merriweather', serif" },
+  { name: 'Roboto', value: "'Roboto', sans-serif" },
+  { name: 'Open Sans', value: "'Open Sans', sans-serif" },
+  { name: 'Lato', value: "'Lato', sans-serif" },
   { name: 'Montserrat', value: "'Montserrat', sans-serif" },
+  { name: 'Poppins', value: "'Poppins', sans-serif" },
+  { name: 'Raleway', value: "'Raleway', sans-serif" },
+  
+  // Serif (Tırnaklı) Fontlar
+  { name: 'Playfair Display', value: "'Playfair Display', serif" },
+  { name: 'Merriweather', value: "'Merriweather', serif" },
+  { name: 'Lora', value: "'Lora', serif" },
+  { name: 'Cinzel', value: "'Cinzel', serif" },
+
+  // El Yazısı & Dekoratif Fontlar
+  { name: 'Dancing Script', value: "'Dancing Script', cursive" },
+  { name: 'Great Vibes', value: "'Great Vibes', cursive" },
+  { name: 'Pacifico', value: "'Pacifico', cursive" },
+  { name: 'Lobster', value: "'Lobster', display" },
+  { name: 'Sacramento', value: "'Sacramento', cursive" },
+  { name: 'Satisfy', value: "'Satisfy', cursive" },
+  { name: 'Caveat', value: "'Caveat', cursive" },
+  { name: 'Courgette', value: "'Courgette', cursive" },
+  { name: 'Allura', value: "'Allura', cursive" },
+  { name: 'Alex Brush', value: "'Alex Brush', cursive" },
+  
+  // Diğer
+  { name: 'Oswald', value: "'Oswald', sans-serif" },
+]
+
+// Fontları yüklemek için güncellenmiş Google Fonts URL'si
+const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Alex+Brush&family=Allura&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:ital,wght@0,400;1,400&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&family=Sacramento&family=Satisfy&display=swap"
+
+const TITLE_SIZES = [
+    { label: 'Küçük (XS)', value: 1.5 },
+    { label: 'Normal (S)', value: 2 },
+    { label: 'Orta (M)', value: 2.5 },
+    { label: 'Büyük (L)', value: 3 },
+    { label: 'Çok Büyük (XL)', value: 4 },
+    { label: 'Devasa (XXL)', value: 5 },
+    { label: 'Mega (3XL)', value: 6 },
+]
+
+const MESSAGE_SIZES = [
+    { label: 'Çok Küçük (XS)', value: 0.8 },
+    { label: 'Küçük (S)', value: 0.9 },
+    { label: 'Normal (M)', value: 1 },
+    { label: 'Orta (L)', value: 1.1 },
+    { label: 'Büyük (XL)', value: 1.25 },
+    { label: 'Çok Büyük (XXL)', value: 1.5 },
 ]
 
 const turkishSlugify = (text: string) => {
@@ -55,14 +104,13 @@ function CreateEventContent() {
   const [message, setMessage] = useState('')
   const [themeColor, setThemeColor] = useState(THEME_COLORS[0].hex)
   const [titleFont, setTitleFont] = useState(FONT_OPTIONS[0].value)
-  const [titleSize, setTitleSize] = useState(2.5)
+  const [titleSize, setTitleSize] = useState(2.5) 
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
   const [messageSize, setMessageSize] = useState(1)
 
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select'; options?: string; required: boolean; }
   const [formFields, setFormFields] = useState<FormField[]>([])
 
-  // --- YENİ: DETAY BLOKLARI (Akış, Not, Link) ---
   interface DetailBlock {
       id: string;
       type: 'timeline' | 'note' | 'link';
@@ -106,20 +154,17 @@ function CreateEventContent() {
               setMessageSize(data.design_settings.messageSize || 1)
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
-          // YENİ: Blokları Yükle
           if(data.event_details) setDetailBlocks(data.event_details)
       }
       setLoadingData(false)
   }
 
-  // --- BLOK YÖNETİMİ ---
   const addBlock = (type: 'timeline' | 'note' | 'link') => {
       setDetailBlocks([...detailBlocks, { id: Date.now().toString(), type, title: '', content: '' }])
   }
   const removeBlock = (index: number) => { const newB = [...detailBlocks]; newB.splice(index, 1); setDetailBlocks(newB) }
   const updateBlock = (index: number, key: keyof DetailBlock, value: any) => { const newB = [...detailBlocks]; newB[index] = { ...newB[index], [key]: value }; setDetailBlocks(newB) }
   
-  // Blok Resmi Yükleme
   const handleBlockImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if(file && session) {
@@ -143,8 +188,8 @@ function CreateEventContent() {
   }
 
   const handleSave = async () => {
-    if (!title || !eventDate) return alert(t('create.alert_required_fields')) // GÜNCELLENDİ
-    if (!editId && credits !== null && credits < 1) return alert(t('create.alert_insufficient_credits')) // GÜNCELLENDİ
+    if (!title || !eventDate) return alert(t('create.alert_required_fields'))
+    if (!editId && credits !== null && credits < 1) return alert(t('create.alert_insufficient_credits'))
     setUploading(true)
     
     let finalCoverUrl = existingCoverUrl
@@ -165,27 +210,30 @@ function CreateEventContent() {
         image_url: finalCoverUrl, main_image_url: finalMainUrl,
         design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
         custom_form_schema: formFields,
-        event_details: detailBlocks // YENİ: Blokları Kaydet
+        event_details: detailBlocks
     }
 
     if (editId) {
         await supabase.from('events').update(eventData).eq('id', editId)
-        alert(t('create.alert_updated')); router.push('/') // GÜNCELLENDİ
+        alert(t('create.alert_updated')); router.push('/')
     } else {
         const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
         await supabase.from('events').insert([{ ...eventData, slug: autoSlug, user_id: session?.user.id }])
         const newCredit = (credits || 0) - 1
         await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-        alert(t('create.alert_created')); router.push('/') // GÜNCELLENDİ
+        alert(t('create.alert_created')); router.push('/')
     }
     setUploading(false)
   }
 
-  if(loadingData) return <div>{t('common.loading_suspense')}</div> // GÜNCELLENDİ
+  if(loadingData) return <div>{t('common.loading_suspense')}</div>
   const formattedDate = eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* GOOGLE FONTS YÜKLEME */}
+      <link href={GOOGLE_FONTS_URL} rel="stylesheet" />
+
       <div className="bg-white border-b px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <h1 className="text-xl font-bold text-gray-800">{editId ? t('edit_event_title') : t('design_studio_title')}</h1>
         <div className="flex items-center gap-4">
@@ -226,18 +274,40 @@ function CreateEventContent() {
                     </div>
                 </section>
 
-                {/* 2. İÇERİK */}
+                {/* 2. İÇERİK - GÜNCELLENDİ (Dropdown ve Fontlar) */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_content')}</h3>
+                    
+                    {/* BAŞLIK AYARLARI */}
                     <div className="bg-gray-50 p-4 rounded-xl border mb-4">
                         <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_title')}</label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2"/>
-                         <div className="flex gap-2"><select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="1.5" max="5" step="0.1" value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
+                         <div className="flex gap-2">
+                            {/* Font Seçimi */}
+                            <select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-2 rounded text-xs bg-white text-gray-800 font-bold h-10">
+                                {FONT_OPTIONS.map(o => <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>{o.name}</option>)}
+                            </select>
+                            {/* Boyut Seçimi (Dropdown) */}
+                            <select value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 border p-2 rounded text-xs bg-white text-gray-800 h-10">
+                                {TITLE_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+                         </div>
                     </div>
+
+                    {/* MESAJ AYARLARI */}
                     <div className="bg-gray-50 p-4 rounded-xl border">
                         <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_message')}</label>
                         <textarea value={message} onChange={e => setMessage(e.target.value)} className="w-full border p-2 rounded mb-2 h-20 text-sm"/>
-                        <div className="flex gap-2"><select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-1 rounded text-xs bg-white">{FONT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.name}</option>)}</select><input type="range" min="0.8" max="2" step="0.1" value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 h-2"/></div>
+                        <div className="flex gap-2">
+                            {/* Font Seçimi */}
+                            <select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-2 rounded text-xs bg-white text-gray-800 font-bold h-10">
+                                {FONT_OPTIONS.map(o => <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>{o.name}</option>)}
+                            </select>
+                            {/* Boyut Seçimi (Dropdown) */}
+                            <select value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 border p-2 rounded text-xs bg-white text-gray-800 h-10">
+                                {MESSAGE_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </section>
 
@@ -255,7 +325,7 @@ function CreateEventContent() {
                 {/* 4. RENK */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_color')}</h3>
-                    <div className="flex gap-3">{THEME_COLORS.map(c => (<button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-8 h-8 rounded-full border-4 ${themeColor === c.hex ? 'border-gray-400 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c.hex }}/>))}</div>
+                    <div className="flex gap-3 flex-wrap">{THEME_COLORS.map(c => (<button key={c.hex} onClick={() => setThemeColor(c.hex)} className={`w-8 h-8 rounded-full border-4 ${themeColor === c.hex ? 'border-gray-400 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c.hex }}/>))}</div>
                 </section>
 
                 {/* 5. FORM BUILDER */}
@@ -281,7 +351,7 @@ function CreateEventContent() {
                     </div>
                 </section>
 
-                {/* 6. DETAYLAR VE AKIŞ (YENİ MODÜL) */}
+                {/* 6. DETAYLAR VE AKIŞ */}
                 <section className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
                     <h3 className="text-sm font-black text-yellow-900 uppercase tracking-wider mb-4 border-b border-yellow-200 pb-2 flex justify-between items-center">
                         {t('section_extra')}
