@@ -54,22 +54,22 @@ const FONT_OPTIONS = [
 const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Alex+Brush&family=Allura&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:ital,wght@0,400;1,400&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&family=Sacramento&family=Satisfy&display=swap"
 
 const TITLE_SIZES = [
-    { label: 'Küçük (XS)', value: 1.5 },
-    { label: 'Normal (S)', value: 2 },
-    { label: 'Orta (M)', value: 2.5 },
-    { label: 'Büyük (L)', value: 3 },
-    { label: 'Çok Büyük (XL)', value: 4 },
-    { label: 'Devasa (XXL)', value: 5 },
-    { label: 'Mega (3XL)', value: 6 },
+    { label: '1', value: 0.5 },
+    { label: '2', value: 1 },
+    { label: '3', value: 1.5 },
+    { label: '4', value: 2 },
+    { label: '5', value: 2.5 },
+    { label: '6', value: 3 },
+    { label: '7', value: 3.5 },
 ]
 
 const MESSAGE_SIZES = [
-    { label: 'Çok Küçük (XS)', value: 0.8 },
-    { label: 'Küçük (S)', value: 0.9 },
-    { label: 'Normal (M)', value: 1 },
-    { label: 'Orta (L)', value: 1.1 },
-    { label: 'Büyük (XL)', value: 1.25 },
-    { label: 'Çok Büyük (XXL)', value: 1.5 },
+    { label: '1', value: 0.3 },
+    { label: '2', value: 0.5 },
+    { label: '3', value: 1 },
+    { label: '4', value: 1.5 },
+    { label: '5', value: 2 },
+    { label: '6', value: 2.5 },
 ]
 
 const turkishSlugify = (text: string) => {
