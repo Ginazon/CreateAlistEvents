@@ -47,7 +47,7 @@ export const dictionary = {
     invited_by: 'Davet Eden:',
 
     // METADATA & COUNTDOWN
-    "metadata.event_not_found": "Etkinlik Bulunamadı - Cereget",
+    "metadata.event_not_found": "Etkinlik Bulunamadı - CreateAlist",
     "metadata.default_description": "Davetlisiniz!",
     "countdown.event_expired": "Etkinlik Başladı / Sona Erdi! 🎉",
 
@@ -251,7 +251,7 @@ export const dictionary = {
     "footer.terms": "Kullanım Şartları",
     "footer.privacy": "Gizlilik",
     "footer.admin": "Yönetici",
-    "footer.copyright_text": "© 2025 Cereget. Tüm hakları saklıdır.",
+    "footer.copyright_text": "© 2025 CreateAlist. Tüm hakları saklıdır.",
     "footer.link_terms": "Kullanım Şartları",
     "footer.link_privacy": "Gizlilik ve KVKK"
   },
@@ -293,7 +293,7 @@ export const dictionary = {
     go_to_event: 'Go to Event ↗',
     invited_by: 'Invited By:',
 
-    "metadata.event_not_found": "Event Not Found - Cereget",
+    "metadata.event_not_found": "Event Not Found - CreateAlist",
     "metadata.default_description": "You are invited!",
     "countdown.event_expired": "Event Started / Ended! 🎉",
 
@@ -487,7 +487,7 @@ export const dictionary = {
     "footer.terms": "Terms of Use",
     "footer.privacy": "Privacy",
     "footer.admin": "Admin",
-    "footer.copyright_text": "© 2025 Cereget. All rights reserved.",
+    "footer.copyright_text": "© 2025 CreateAlist. All rights reserved.",
     "footer.link_terms": "Terms of Use",
     "footer.link_privacy": "Privacy Policy"
   },
@@ -529,7 +529,7 @@ export const dictionary = {
     go_to_event: 'Zum Event ↗',
     invited_by: 'Eingeladen von:',
 
-    "metadata.event_not_found": "Veranstaltung nicht gefunden - Cereget",
+    "metadata.event_not_found": "Veranstaltung nicht gefunden - CreateAlist",
     "metadata.default_description": "Du bist eingeladen!",
     "countdown.event_expired": "Veranstaltung hat begonnen / ist beendet! 🎉",
 
@@ -723,7 +723,7 @@ export const dictionary = {
     "footer.terms": "Nutzungsbedingungen",
     "footer.privacy": "Datenschutz",
     "footer.admin": "Admin",
-    "footer.copyright_text": "© 2025 Cereget. Alle Rechte vorbehalten.",
+    "footer.copyright_text": "© 2025 CreateAlist. Alle Rechte vorbehalten.",
     "footer.link_terms": "AGB",
     "footer.link_privacy": "Datenschutz"
   },
@@ -765,7 +765,7 @@ export const dictionary = {
     go_to_event: 'Voir l\'événement ↗',
     invited_by: 'Invité par :',
 
-    "metadata.event_not_found": "Événement introuvable - Cereget",
+    "metadata.event_not_found": "Événement introuvable - CreateAlist",
     "metadata.default_description": "Vous êtes invité !",
     "countdown.event_expired": "L'événement a commencé / est terminé ! 🎉",
 
@@ -959,7 +959,7 @@ export const dictionary = {
     "footer.terms": "Conditions d'utilisation",
     "footer.privacy": "Confidentialité",
     "footer.admin": "Admin",
-    "footer.copyright_text": "© 2025 Cereget. Tous droits réservés.",
+    "footer.copyright_text": "© 2025 CreateAlist. Tous droits réservés.",
     "footer.link_terms": "Conditions",
     "footer.link_privacy": "Politique de confidentialité"
   },
@@ -1001,7 +1001,7 @@ export const dictionary = {
     go_to_event: 'Ir al Evento ↗',
     invited_by: 'Invitado por:',
 
-    "metadata.event_not_found": "Evento no encontrado - Cereget",
+    "metadata.event_not_found": "Evento no encontrado - CreateAlist",
     "metadata.default_description": "¡Estás invitado!",
     "countdown.event_expired": "¡El evento ha comenzado / terminado! 🎉",
 
@@ -1195,7 +1195,7 @@ export const dictionary = {
     "footer.terms": "Términos de uso",
     "footer.privacy": "Privacidad",
     "footer.admin": "Admin",
-    "footer.copyright_text": "© 2025 Cereget. Todos los derechos reservados.",
+    "footer.copyright_text": "© 2025 CreateAlist. Todos los derechos reservados.",
     "footer.link_terms": "Términos",
     "footer.link_privacy": "Política de privacidad"
   },
@@ -1237,7 +1237,7 @@ export const dictionary = {
     go_to_event: 'Vai all\'Evento ↗',
     invited_by: 'Invitato da:',
 
-    "metadata.event_not_found": "Evento non trovato - Cereget",
+    "metadata.event_not_found": "Evento non trovato - CreateAlist",
     "metadata.default_description": "Sei invitato!",
     "countdown.event_expired": "L'evento è iniziato / finito! 🎉",
 
@@ -1431,7 +1431,7 @@ export const dictionary = {
     "footer.terms": "Termini di utilizzo",
     "footer.privacy": "Privacy",
     "footer.admin": "Admin",
-    "footer.copyright_text": "© 2025 Cereget. Tutti i diritti riservati.",
+    "footer.copyright_text": "© 2025 CreateAlist. Tutti i diritti riservati.",
     "footer.link_terms": "Termini",
     "footer.link_privacy": "Privacy"
   },
@@ -1473,7 +1473,7 @@ export const dictionary = {
     go_to_event: 'Перейти к событию ↗',
     invited_by: 'Пригласил:',
 
-    "metadata.event_not_found": "Событие не найдено - Cereget",
+    "metadata.event_not_found": "Событие не найдено - CreateAlist",
     "metadata.default_description": "Вы приглашены!",
     "countdown.event_expired": "Событие началось / завершилось! 🎉",
 
@@ -1667,7 +1667,7 @@ export const dictionary = {
     "footer.terms": "Условия использования",
     "footer.privacy": "Конфиденциальность",
     "footer.admin": "Админ",
-    "footer.copyright_text": "© 2025 Cereget. Все права защищены.",
+    "footer.copyright_text": "© 2025 CreateAlist. Все права защищены.",
     "footer.link_terms": "Условия",
     "footer.link_privacy": "Политика"
   },
@@ -1709,7 +1709,7 @@ export const dictionary = {
     go_to_event: 'الذهاب للفعالية ↗',
     invited_by: 'دعاك:',
 
-    "metadata.event_not_found": "لم يتم العثور على الحدث - Cereget",
+    "metadata.event_not_found": "لم يتم العثور على الحدث - CreateAlist",
     "metadata.default_description": "أنت مدعو!",
     "countdown.event_expired": "بدأ الحدث / انتهى! 🎉",
 
@@ -1903,7 +1903,7 @@ export const dictionary = {
     "footer.terms": "شروط الاستخدام",
     "footer.privacy": "الخصوصية",
     "footer.admin": "مسؤول",
-    "footer.copyright_text": "© 2025 Cereget. جميع الحقوق محفوظة.",
+    "footer.copyright_text": "© 2025 CreateAlist. جميع الحقوق محفوظة.",
     "footer.link_terms": "الشروط",
     "footer.link_privacy": "الخصوصية"
   }

@@ -5,18 +5,16 @@ import React, { useState } from 'react'
 import { FaQrcode, FaPalette, FaHeart, FaShieldAlt } from 'react-icons/fa' 
 import { supabase } from '../lib/supabaseClient'
 import { useRouter } from 'next/navigation'
-// TEK DOSYA İMPORT (Yol: ../i18n)
 import { useTranslation, LangType } from '../i18n'
 
 interface Feature {
     icon: any;
-    titleKey: any; // Tip hatası olmasın diye any
+    titleKey: any;
     descKey: any;
 }
 
 export default function LandingPage() {
     const router = useRouter()
-    // HOOK KULLANIMI
     const { t, language, setLanguage } = useTranslation()
 
     const [showLoginModal, setShowLoginModal] = useState(false)
@@ -24,36 +22,34 @@ export default function LandingPage() {
     const [loginPassword, setLoginPassword] = useState('')
     const [loginLoading, setLoginLoading] = useState(false)
 
+    // LOGO URL'si (Supabase Storage'dan)
+    const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand/logo.png`
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoginLoading(true)
         
-        // 1. Önce Giriş Yapmayı Dene
         const { error: signInError } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
         if (!signInError) { 
-            // Giriş Başarılı
             router.push('/')
             return
         }
 
-        // 2. Giriş Başarısızsa (Kullanıcı yoksa), Kayıt Olmayı Dene
         console.log("Giriş başarısız, kayıt deneniyor...")
         const { error: signUpError } = await supabase.auth.signUp({ 
             email: loginEmail, 
             password: loginPassword,
             options: {
                 data: {
-                    full_name: loginEmail.split('@')[0] // İsim olarak mailin başını kaydet
+                    full_name: loginEmail.split('@')[0]
                 }
             }
         })
 
         if (signUpError) {
-            // GERÇEK HATAYI GÖSTER
-            alert(t('auth.alert_error_prefix') + signUpError.message) // GÜNCELLENDİ
+            alert(t('auth.alert_error_prefix') + signUpError.message)
         } else { 
-            // Kayıt başarılı, otomatik giriş
-            alert(t('auth.alert_account_created')) // GÜNCELLENDİ
+            alert(t('auth.alert_account_created'))
             router.push('/') 
         }
         setLoginLoading(false)
@@ -71,10 +67,19 @@ export default function LandingPage() {
             
             {/* ÜST BAŞLIK */}
             <div className="bg-indigo-700 text-white py-4 px-8 flex justify-between items-center sticky top-0 z-50">
-                <h1 className="text-xl font-bold">Cereget</h1>
+                
+                {/* LOGO ALANI */}
+                <div className="flex items-center gap-3">
+                    <img 
+                        src={logoUrl} 
+                        alt="CreateAlist Logo" 
+                        className="h-10 w-auto object-contain bg-white/20 rounded-lg p-1 backdrop-blur-sm"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }} // Logo yoksa gizle
+                    />
+                    <h1 className="text-xl font-bold tracking-tight">CreateAlist</h1>
+                </div>
                 
                 <div className='flex items-center gap-3'>
-                    {/* DİL SEÇİMİ */}
                     <select 
                         value={language} 
                         onChange={(e) => setLanguage(e.target.value as LangType)}

@@ -14,61 +14,52 @@ export default function Dashboard() {
   
   const [session, setSession] = useState<any>(null)
   
-  // Veriler
   const [credits, setCredits] = useState<number | null>(null)
   const [myEvents, setMyEvents] = useState<any[]>([])
   const [invitedEvents, setInvitedEvents] = useState<any[]>([])
-  const [packages, setPackages] = useState<any[]>([]) // YENİ: Paketler
+  const [packages, setPackages] = useState<any[]>([]) 
   
-  // UI State
   const [activeTab, setActiveTab] = useState<'created' | 'invited'>('created')
   const [loading, setLoading] = useState(true)
   const [origin, setOrigin] = useState('')
 
-  // Detay Yönetimi
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showQrId, setShowQrId] = useState<string | null>(null)
   const [photos, setPhotos] = useState<any[]>([])
   const [detailTab, setDetailTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
 
+  // LOGO URL
+  const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand/logo.png`
+
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin)
 
     const checkUser = async () => {
-        // 1. Supabase Oturumu Var mı?
         const { data } = await supabase.auth.getSession()
         
         if (data.session) {
-            // A. ÜYE VARSA
             setSession(data.session)
             fetchCredits(data.session.user.id)
             fetchMyEvents(data.session.user.id)
             
-            // HATA ÇÖZÜMÜ: Email varsa fonksiyonu çağır (Undefined hatasını engeller)
             if (data.session.user.email) {
                 fetchInvitedEvents(data.session.user.email)
             }
             
             fetchPackages()
         } else {
-            // B. ÜYE YOKSA -> Pasaport (Local Storage) Var mı?
-            // EventView'dan gönderdiğimiz 'cereget_guest_email' anahtarına bakıyoruz
-            const guestEmail = localStorage.getItem('cereget_guest_email')
+            // İSİM DEĞİŞİKLİĞİ BURADA: cereget -> createalist
+            const guestEmail = localStorage.getItem('createalist_guest_email') 
             
             if (guestEmail) {
-                // MİSAFİR KABUL EDİLDİ ✅
                 console.log("Misafir girişi onaylandı:", guestEmail)
-                
-                // Sahte bir oturum objesi oluşturup ekranı açıyoruz
                 // @ts-ignore
                 setSession({ user: { email: guestEmail, isGuest: true } }) 
-                
-                setActiveTab('invited') // Direkt davetiye sekmesini aç
+                setActiveTab('invited') 
                 fetchInvitedEvents(guestEmail)
                 fetchPackages() 
             } else {
-                // C. KİMLİK YOKSA -> Landing Page'e Yolla ❌
                 console.warn("Kimlik bulunamadı, Landing'e yönlendiriliyor...")
                 router.push('/landing')
             }
@@ -100,7 +91,6 @@ export default function Dashboard() {
   const fetchInvitedEvents = async (email: string) => {
     if (!email) return
 
-    // GÜNCELLEME: .eq yerine .ilike kullanıyoruz (Büyük/küçük harf farketmez)
     const { data: guestEntries, error } = await supabase
       .from('guests')
       .select(`
@@ -109,7 +99,6 @@ export default function Dashboard() {
               id, title, slug, event_date, image_url, location_name, design_settings
           )
       `)
-      // !inner kullanımı: Sadece "gerçekten bir etkinliği olan" kayıtları getirir (Silinmişleri eler)
       .ilike('email', email) 
       
     if (error) {
@@ -118,19 +107,17 @@ export default function Dashboard() {
     }
 
     if (guestEntries) {
-        // Gelen veri yapısını düzelt
         // @ts-ignore
         const formattedEvents = guestEntries.map(g => g.events)
         setInvitedEvents(formattedEvents)
     }
 }
 
-  // YENİ: Paketleri Çekme Fonksiyonu
   const fetchPackages = async () => {
       const { data } = await supabase
         .from('credit_packages')
         .select('*')
-        .order('credits_amount', { ascending: true }) // Küçük paketten büyüğe
+        .order('credits_amount', { ascending: true })
       
       if (data) setPackages(data)
   }
@@ -164,9 +151,17 @@ export default function Dashboard() {
         
         {/* HEADER */}
         <div className="flex justify-between items-center bg-white p-6 rounded-t-xl shadow-sm border border-b-0">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-800">{t('dashboard_title')}</h1>
-                <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
+            <div className="flex items-center gap-3">
+                <img 
+                    src={logoUrl} 
+                    alt="Logo" 
+                    className="h-8 w-auto object-contain hidden md:block" 
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800">{t('dashboard_title')}</h1>
+                    <p className="text-gray-500 text-sm">{t('dashboard_subtitle')}</p>
+                </div>
             </div>
             <div className="flex items-center gap-3">
                 <div className="relative group">
@@ -199,7 +194,6 @@ export default function Dashboard() {
                 <div><p className="text-xs uppercase font-bold">{t('my_credits')}</p><p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p></div>
             </div>
             
-            {/* Eğer kredi 0 ise Create butonu yerine Satın Al mesajı verilebilir veya buton bırakılabilir, tıklayınca uyarı verir */}
             <div className="order-1 md:order-2 w-full md:w-auto">
                 <Link href="/create" className="w-full">
                     <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full flex items-center justify-center gap-2">
@@ -228,10 +222,9 @@ export default function Dashboard() {
         {/* LİSTE İÇERİĞİ */}
         <div className="space-y-4">
             
-            {/* 1. KENDİ ETKİNLİKLERİM (VEYA PAKET SATIŞ EKRANI) */}
+            {/* 1. KENDİ ETKİNLİKLERİM */}
             {activeTab === 'created' && (
                 <>
-                    {/* ETKİNLİK YOKSA -> PAKETLERİ GÖSTER */}
                     {myEvents.length === 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center animate-fadeIn">
                             <div className="max-w-3xl mx-auto">
@@ -242,17 +235,11 @@ export default function Dashboard() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {packages.map((pkg) => (
                                         <div key={pkg.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:border-indigo-300 transition flex flex-col items-center bg-gray-50 hover:bg-white relative overflow-hidden group">
-                                            {/* Süsleme */}
                                             <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
-
                                             <h3 className="font-bold text-lg text-gray-800 mb-2">{pkg.package_name || t('dashboard.package_default_name')}</h3>
                                             <div className="text-4xl font-extrabold text-indigo-600 mb-2">{pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">{t('dashboard.credit_label')}</span></div>
-                                            
                                             <p className="text-xs text-gray-400 mb-6 text-center">{t('dashboard.package_lifetime_note')}</p>
-                                            
-                                            {/* Etsy Linki */}
                                             <a 
-                                                // Öncelik etsy_link sütununda, eğer boşsa eski usul ID ile oluştur (Geriye uyumluluk)
                                                 href={pkg.etsy_link || `https://www.etsy.com/listing/${pkg.etsy_listing_id}`} 
                                                 target="_blank" 
                                                 className="w-full bg-black text-white py-3 rounded-lg font-bold text-sm hover:bg-gray-800 transition shadow-md flex items-center justify-center gap-2"
@@ -267,7 +254,6 @@ export default function Dashboard() {
                         </div>
                     )}
                     
-                    {/* ETKİNLİK VARSA -> LİSTEYİ GÖSTER */}
                     {myEvents.map(event => (
                         <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
                             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -287,7 +273,6 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* QR ve DETAY ALANLARI (Aynı kaldı) */}
                             {showQrId === event.id && (
                                 <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
                                     <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
@@ -328,7 +313,7 @@ export default function Dashboard() {
                 </>
             )}
 
-            {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER (Aynı kaldı) */}
+            {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER */}
             {activeTab === 'invited' && (
                 <>
                     {invitedEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_invited_events')}</div>}
