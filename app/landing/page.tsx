@@ -120,9 +120,14 @@ export default function LandingPage() {
                         </a>
                     </div>
                     <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
-                        <div className="w-full h-96 bg-indigo-500 rounded-xl shadow-2xl flex items-center justify-center text-white text-3xl font-bold opacity-60">
-                            {t('landing.screenshot_placeholder')}
-                        </div>
+                        <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
+  
+                           <img 
+                           src="https://knjwmbwrgcojxcbmrbtm.supabase.co/storage/v1/object/public/brand/1.png"
+                           alt="Brand Screenshot"
+                         className="w-full h-96 object-cover rounded-xl shadow-2xl"
+                              />
+                            </div>
                     </div>
                 </div>
             </header>
