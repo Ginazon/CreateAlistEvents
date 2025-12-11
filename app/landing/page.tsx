@@ -121,13 +121,12 @@ export default function LandingPage() {
                     </div>
                     <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
                         <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
-  
-                           <img 
-                           src="https://knjwmbwrgcojxcbmrbtm.supabase.co/storage/v1/object/public/brand/landing.png"
-                           alt="Brand Screenshot"
-                         className="w-full h-96 object-cover rounded-xl shadow-2xl"
+                          <img 
+                               src="https://knjwmbwrgcojxcbmrbtm.supabase.co/storage/v1/object/public/brand/landing.png"
+                                alt="Brand Screenshot"
+                            className="w-full h-96 object-cover rounded-xl shadow-2xl"
                               />
-                            </div>
+</div>
                     </div>
                 </div>
             </header>
