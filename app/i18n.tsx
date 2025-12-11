@@ -171,6 +171,7 @@ export const dictionary = {
     link_url_ph: 'Linki Bu Alana Yapıştırın',
     file_btn_cover: 'Kapak Fotoğrafı Yükle',
     file_btn_main: 'Davetiye Fotoğrafı Yükle',
+   
     // Create New Keys
     "create.alert_required_fields": "Başlık ve Tarih zorunludur",
     "create.alert_insufficient_credits": "Yetersiz Kredi!",
@@ -489,7 +490,8 @@ export const dictionary = {
     "footer.admin": "Admin",
     "footer.copyright_text": "© 2025 CreateAlist. All rights reserved.",
     "footer.link_terms": "Terms of Use",
-    "footer.link_privacy": "Privacy Policy"
+    "footer.link_privacy": "Privacy Policy",
+    section_form: 'RSVP Form Sections',
   },
 
   // 🇩🇪 ALMANCA
