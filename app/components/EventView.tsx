@@ -13,14 +13,17 @@ export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
   const { t, language } = useTranslation()
   
+  // STATE TANIMLARI
   const [event, setEvent] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false) 
+  const [isEditing, setIsEditing] = useState(false) // YENİ: Düzenleme modu state'i
 
   // 1. BAŞLANGIÇ KONTROLLERİ
   useEffect(() => {
     const fetchData = async () => {
+      // A. Etkinlik Verisini Çek
       const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single()
       
       if (error || !data) {
@@ -30,6 +33,7 @@ export default function EventView({ slug }: { slug: string }) {
 
       setEvent(data)
 
+      // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
@@ -37,6 +41,7 @@ export default function EventView({ slug }: { slug: string }) {
           setIsOwner(true) 
       }
 
+      // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
       if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
@@ -49,20 +54,22 @@ export default function EventView({ slug }: { slug: string }) {
     fetchData()
   }, [slug, router]) 
 
-  // 2. MİSAFİR GİRİŞ YAPINCA ÇALIŞACAK FONKSİYON
+  // 2. MİSAFİR GİRİŞ YAPINCA VEYA GÜNCELLEME YAPINCA ÇALIŞACAK FONKSİYON
   const handleGuestLogin = (email: string) => {
     setCurrentUserEmail(email)
     setIsOwner(false)
+    setIsEditing(false) // YENİ: Başarılı işlem sonrası düzenleme modunu kapat
     
     if (typeof window !== 'undefined') {
         localStorage.setItem(`guest_access_${slug}`, email)
         localStorage.setItem('cereget_guest_email', email)
     }
-}
+  }
 
   if (loading) return <div className="h-screen flex items-center justify-center">{t('loading')}</div>
   if (!event) return <div className="h-screen flex items-center justify-center">{t('public_not_found')}</div>
 
+  // Stil ve Tema Ayarları
   const themeColor = event.design_settings?.theme || '#4F46E5'
   const titleFont = event.design_settings?.titleFont || "'Inter', sans-serif"
   const titleSize = event.design_settings?.titleSize || 2.5
@@ -83,7 +90,7 @@ export default function EventView({ slug }: { slug: string }) {
       {/* 1. KAPAK GÖRSELİ */}
       {event.image_url ? (
         <div className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative" style={{ backgroundColor: themeColor + '10' }}>
-          <img src={event.image_url} className="object-cover w-full h-full" />
+          <img src={event.image_url} className="object-cover w-full h-full" alt="Event Cover" />
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
       ) : (
@@ -98,7 +105,7 @@ export default function EventView({ slug }: { slug: string }) {
 
           {event.main_image_url && (
             <div className="mb-8 rounded-xl overflow-hidden shadow-md">
-                <img src={event.main_image_url} className="w-full h-auto object-cover" />
+                <img src={event.main_image_url} className="w-full h-auto object-cover" alt="Main Event" />
             </div>
           )}
 
@@ -119,7 +126,7 @@ export default function EventView({ slug }: { slug: string }) {
                 <p className="font-bold text-gray-800 text-lg mb-1">{t('public_location_label')}</p>
                 <p className="text-gray-600 mb-4">{event.location_name || '...'}</p>
                 {event.location_url && (
-                    <a href={event.location_url} target="_blank" className="inline-block px-6 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90 shadow-md transform hover:scale-105" style={{ backgroundColor: themeColor }}>
+                    <a href={event.location_url} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90 shadow-md transform hover:scale-105" style={{ backgroundColor: themeColor }}>
                         {t('public_directions_btn')}
                     </a>
                 )}
@@ -145,14 +152,14 @@ export default function EventView({ slug }: { slug: string }) {
                         )}
                         {block.type === 'note' && (
                             <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm text-center mb-4">
-                                {block.imageUrl && <div className="mb-4 rounded-lg overflow-hidden h-40 w-full"><img src={block.imageUrl} className="w-full h-full object-cover"/></div>}
+                                {block.imageUrl && <div className="mb-4 rounded-lg overflow-hidden h-40 w-full"><img src={block.imageUrl} className="w-full h-full object-cover" alt="Note" /></div>}
                                 <h3 className="font-bold text-lg mb-2" style={{ color: themeColor }}>{block.title}</h3>
                                 <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{block.content}</p>
                             </div>
                         )}
                         {block.type === 'link' && (
                             <div className="mb-4">
-                                <a href={block.content} target="_blank" className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition transform hover:-translate-y-1" style={{ backgroundColor: themeColor }}>
+                                <a href={block.content} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition transform hover:-translate-y-1" style={{ backgroundColor: themeColor }}>
                                     {block.title} ↗
                                 </a>
                             </div>
@@ -161,39 +168,51 @@ export default function EventView({ slug }: { slug: string }) {
                 ))}
             </div>
           )}
-          
-          
 
         </div>
       </div>
-      //push içi değşiklik
 
-     {/* --- RSVP FORM İLE İLGİLİ BÖLÜM BAŞLANGIÇ --- */}
+      {/* --- 3. RSVP FORM VE DURUM ALANI --- */}
       <div className="max-w-xl w-full px-6 mt-12">
-          {/* Form */}
-          {!isOwner && !currentUserEmail && (
+          
+          {/* DURUM 1: Form Gösterilecekse (Sahip değilse VE (Giriş yapmamışsa YA DA Düzenleme Modundaysa)) */}
+          {!isOwner && (!currentUserEmail || isEditing) && (
             <RsvpForm 
                 eventId={event.id} 
                 themeColor={themeColor} 
-                onLoginSuccess={handleGuestLogin}  
+                onLoginSuccess={handleGuestLogin}
+                initialEmail={currentUserEmail} // Düzenleme modunda e-posta gönderilir
             />
           )}
 
-          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı (Form yerine bu gözükecek) */}
-          {(isOwner || currentUserEmail) && (
-              <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm">
+          {/* DURUM 2: Bilgi Mesajı Gösterilecekse (Sahipse YA DA (Giriş yapmışsa VE Düzenleme Modunda Değilse)) */}
+          {(isOwner || (currentUserEmail && !isEditing)) && (
+              <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
                   <div className="text-3xl mb-2">🎉</div>
                   <p className="text-green-800 font-bold text-lg">
                       {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
                   </p>
-                  <p className="text-green-600 text-sm mt-1">
+                  <p className="text-green-600 text-sm mt-1 mb-4">
                       {t('public_gallery_hint') || "Aşağıdaki alandan fotoğraflara bakabilirsiniz."}
                   </p>
+                  
+                  {/* SADECE MİSAFİRLER İÇİN DÜZENLEME BUTONU */}
+                  {!isOwner && currentUserEmail && (
+                    <div className="mt-4 pt-4 border-t border-green-100">
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
+                        >
+                            Daha önce formu doldurdunuz.<br/>Değişiklik yapmak için tıklayın.
+                        </button>
+                    </div>
+                  )}
               </div>
           )}
       </div>
-      {/* --- RSVP FORM İLE İLGİLİ BÖLÜM BİTİŞ --- */}
+      {/* --- RSVP BÖLÜMÜ SONU --- */}
 
+      {/* 4. FOTOĞRAF GALERİSİ (MEMORY WALL) */}
       <div className="max-w-xl w-full px-6 mt-12">
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
             {t('public_memory_wall')}
@@ -213,6 +232,7 @@ export default function EventView({ slug }: { slug: string }) {
         )}
       </div>
 
+      {/* 5. ALT AKSİYON BUTONU */}
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
           <button 
