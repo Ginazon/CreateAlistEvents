@@ -175,18 +175,20 @@ export default function EventView({ slug }: { slug: string }) {
       {/* --- 3. RSVP FORM VE DURUM ALANI --- */}
       <div className="max-w-xl w-full px-6 mt-12">
           
-          {/* DURUM 1: Form Gösterilecekse (Sahip değilse VE (Giriş yapmamışsa YA DA Düzenleme Modundaysa)) */}
-          {!isOwner && (!currentUserEmail || isEditing) && (
+          {/* DURUM 1: Form Gösterilecekse */}
+          {/* ŞART: (Misafir yeni ise VE Sahip Değilse) VEYA (Düzenleme/Test Modundaysa) */}
+          { ( (!currentUserEmail && !isOwner) || isEditing ) && (
             <RsvpForm 
                 eventId={event.id} 
                 themeColor={themeColor} 
                 onLoginSuccess={handleGuestLogin}
-                initialEmail={currentUserEmail} // Düzenleme modunda e-posta gönderilir
+                initialEmail={currentUserEmail} // Sahip test ederken burası boş gider, form sıfırdan açılır
             />
           )}
 
-          {/* DURUM 2: Bilgi Mesajı Gösterilecekse (Sahipse YA DA (Giriş yapmışsa VE Düzenleme Modunda Değilse)) */}
-          {(isOwner || (currentUserEmail && !isEditing)) && (
+          {/* DURUM 2: Bilgi Mesajı Gösterilecekse */}
+          {/* ŞART: Düzenleme modunda DEĞİLSE VE (Sahipse VEYA Giriş yapmışsa) */}
+          { !isEditing && (isOwner || currentUserEmail) && (
               <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
                   <div className="text-3xl mb-2">🎉</div>
                   <p className="text-green-800 font-bold text-lg">
@@ -196,7 +198,22 @@ export default function EventView({ slug }: { slug: string }) {
                       {t('public_gallery_hint') || "Aşağıdaki alandan fotoğraflara bakabilirsiniz."}
                   </p>
                   
-                  {/* SADECE MİSAFİRLER İÇİN DÜZENLEME BUTONU */}
+                  {/* SAHİP İÇİN: TEST BUTONU */}
+                  {isOwner && (
+                    <div className="mt-4 pt-4 border-t border-green-100">
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
+                        >
+                            <span>📝</span> RSVP Formunu Test Et / Önizle
+                        </button>
+                        <p className="text-[10px] text-green-600 mt-2 opacity-70">
+                            (Formu doldurursanız misafir gibi görünürsünüz. Eski haline dönmek için sayfayı yenileyin.)
+                        </p>
+                    </div>
+                  )}
+
+                  {/* MİSAFİR İÇİN: DÜZENLEME BUTONU */}
                   {!isOwner && currentUserEmail && (
                     <div className="mt-4 pt-4 border-t border-green-100">
                         <button 
@@ -210,6 +227,7 @@ export default function EventView({ slug }: { slug: string }) {
               </div>
           )}
       </div>
+      
       {/* --- RSVP BÖLÜMÜ SONU --- */}
 
       {/* 4. FOTOĞRAF GALERİSİ (MEMORY WALL) */}
