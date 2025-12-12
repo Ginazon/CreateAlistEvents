@@ -8,20 +8,20 @@ interface RsvpFormProps {
     eventId: string;
     themeColor: string;
     onLoginSuccess: (email: string) => void;
-    initialEmail?: string | null; // YENİ: Düzenleme modu için e-posta
+    initialEmail?: string | null;
 }
 
 export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialEmail }: RsvpFormProps) {
   const { t } = useTranslation()
 
   const [name, setName] = useState('')
-  const [email, setEmail] = useState(initialEmail || '') // Varsa e-postayı koy
+  const [email, setEmail] = useState(initialEmail || '')
   const [status, setStatus] = useState('yes') 
   const [plusOne, setPlusOne] = useState(0)
   const [note, setNote] = useState('')
   
   const [loading, setLoading] = useState(false)
-  const [fetchingData, setFetchingData] = useState(false) // Veri çekme durumu
+  const [fetchingData, setFetchingData] = useState(false)
   const [success, setSuccess] = useState(false)
   
   const [customSchema, setCustomSchema] = useState<any[]>([])
@@ -48,9 +48,8 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
 
               if (guestData) {
                   setName(guestData.name || '')
-                  // Email zaten initialEmail
                   setStatus(guestData.status || 'yes')
-                  setPlusOne(guestData.participants ? guestData.participants - 1 : 0) // Katılımcı sayısı = kendisi + plusOne
+                  setPlusOne(guestData.participants ? guestData.participants - 1 : 0)
                   setNote(guestData.note || '')
                   setFormResponses(guestData.form_responses || {})
               }
@@ -78,8 +77,6 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
         form_responses: formResponses
     }
 
-    // 2. UPSERT KULLANIMI: Hem yeni kayıt hem güncelleme için
-    // onConflict: 'event_id, email' -> Bu ikili aynıysa güncelle, yoksa ekle.
     const { error } = await supabase
         .from('guests')
         .upsert(payload, { onConflict: 'event_id, email' })
@@ -87,10 +84,9 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
     setLoading(false)
 
     if (error) {
-        alert('Hata: ' + error.message)
+        alert(t('rsvp_error') + ': ' + error.message)
     } else {
         setSuccess(true)
-        // Kısa bir süre sonra dashboard'a yönlendirmesi için success callback
         setTimeout(() => {
              onLoginSuccess(email) 
         }, 1500)
@@ -103,21 +99,20 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
     return (
       <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 animate-fadeIn">
         <div className="text-4xl mb-2">✅</div>
-        <h3 className="text-green-800 font-bold text-lg">{t('rsvp_success_title') || "İşlem Başarılı"}</h3>
-        <p className="text-green-600 text-sm mt-1">{initialEmail ? "Bilgileriniz güncellendi." : (t('rsvp_success_message') || "Kaydınız alındı!")}</p>
+        <h3 className="text-green-800 font-bold text-lg">{t('rsvp_success_title')}</h3>
+        <p className="text-green-600 text-sm mt-1">{initialEmail ? t('rsvp.update_info') : t('rsvp_success_message')}</p>
       </div>
     )
   }
   
-  // Veriler yükleniyorsa bekle
   if (fetchingData) {
-      return <div className="text-center p-10 text-gray-400">Bilgileriniz yükleniyor...</div>
+      return <div className="text-center p-10 text-gray-400">{t('rsvp.loading_data')}</div>
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4 text-left bg-gray-50 p-6 rounded-xl border border-gray-100">
       <h3 className="font-bold text-center text-gray-800 mb-4">
-          {initialEmail ? 'Bilgilerini Güncelle' : t('rsvp_title')}
+          {initialEmail ? t('rsvp.update_title') : t('rsvp_title')}
       </h3>
       
       {/* İSİM ALANI */}
@@ -129,11 +124,11 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
                placeholder={t('rsvp_name_ph')}/>
       </div>
 
-      {/* EMAIL ALANI - Düzenleme modunda değiştirilemesin ki yeni kayıt oluşmasın */}
+      {/* EMAIL ALANI */}
       <div>
         <label className="block text-xs font-bold text-gray-500 mb-1">{t('rsvp_email_label')} *</label>
         <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
-               disabled={!!initialEmail} // Eğer düzenliyorsa email kilitli
+               disabled={!!initialEmail}
                className={`w-full border p-3 rounded-lg outline-none text-gray-900 appearance-none ${initialEmail ? 'bg-gray-200 text-gray-500' : 'bg-white'}`}
                style={inputStyle}
                placeholder={t('rsvp_email_ph')}/>
@@ -145,9 +140,9 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
             <select value={status} onChange={e => setStatus(e.target.value)} 
                     className="w-full border p-3 rounded-lg bg-white text-gray-900 appearance-none"
                     style={inputStyle}>
-                <option value="yes">{t('rsvp_option_yes') || "Katılıyorum"}</option>
-                <option value="maybe">{t('rsvp_option_maybe') || "Belki"}</option>
-                <option value="no">{t('rsvp_option_no') || "Katılmıyorum"}</option>
+                <option value="yes">{t('rsvp_option_yes')}</option>
+                <option value="maybe">{t('rsvp_option_maybe')}</option>
+                <option value="no">{t('rsvp_option_no')}</option>
             </select>
           </div>
           <div>
@@ -192,7 +187,7 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
                               style={inputStyle}
                               onChange={(e) => handleCustomChange(field.label, e.target.value)}
                           >
-                              <option value="" disabled>Seçiniz...</option>
+                              <option value="" disabled>{t('rsvp.select_placeholder')}</option>
                               {field.options?.split(',').map((opt: string) => (
                                   <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
                               ))}
@@ -213,13 +208,13 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
       </div>
 
       <button type="submit" disabled={loading} className="w-full text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-90 transition disabled:opacity-50" style={{ backgroundColor: themeColor }}>
-        {loading ? (t('rsvp_btn_sending') || "Gönderiliyor...") : (initialEmail ? "Güncelle" : (t('rsvp_btn_send') || "Lütfen Cevap Verin (LCV)"))}
+        {loading ? t('rsvp_btn_sending') : (initialEmail ? t('rsvp.btn_update') : t('rsvp_btn_send'))}
       </button>
       
       {/* Düzenlemekten vazgeç butonu */}
       {initialEmail && (
           <button type="button" onClick={() => onLoginSuccess(initialEmail)} className="w-full text-gray-400 text-sm py-2 hover:text-gray-600">
-              Vazgeç
+              {t('rsvp.cancel_edit')}
           </button>
       )}
     </form>

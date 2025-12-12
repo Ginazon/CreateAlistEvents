@@ -18,12 +18,11 @@ export default function EventView({ slug }: { slug: string }) {
   const [loading, setLoading] = useState(true)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false) 
-  const [isEditing, setIsEditing] = useState(false) // YENİ: Düzenleme modu state'i
+  const [isEditing, setIsEditing] = useState(false)
 
   // 1. BAŞLANGIÇ KONTROLLERİ
   useEffect(() => {
     const fetchData = async () => {
-      // A. Etkinlik Verisini Çek
       const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single()
       
       if (error || !data) {
@@ -33,7 +32,6 @@ export default function EventView({ slug }: { slug: string }) {
 
       setEvent(data)
 
-      // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
@@ -41,7 +39,6 @@ export default function EventView({ slug }: { slug: string }) {
           setIsOwner(true) 
       }
 
-      // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
       if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
@@ -58,11 +55,11 @@ export default function EventView({ slug }: { slug: string }) {
   const handleGuestLogin = (email: string) => {
     setCurrentUserEmail(email)
     setIsOwner(false)
-    setIsEditing(false) // YENİ: Başarılı işlem sonrası düzenleme modunu kapat
+    setIsEditing(false)
     
     if (typeof window !== 'undefined') {
         localStorage.setItem(`guest_access_${slug}`, email)
-        localStorage.setItem('cereget_guest_email', email)
+        localStorage.setItem('createalist_guest_email', email)
     }
   }
 
@@ -176,18 +173,16 @@ export default function EventView({ slug }: { slug: string }) {
       <div className="max-w-xl w-full px-6 mt-12">
           
           {/* DURUM 1: Form Gösterilecekse */}
-          {/* ŞART: (Misafir yeni ise VE Sahip Değilse) VEYA (Düzenleme/Test Modundaysa) */}
           { ( (!currentUserEmail && !isOwner) || isEditing ) && (
             <RsvpForm 
                 eventId={event.id} 
                 themeColor={themeColor} 
                 onLoginSuccess={handleGuestLogin}
-                initialEmail={currentUserEmail} // Sahip test ederken burası boş gider, form sıfırdan açılır
+                initialEmail={currentUserEmail}
             />
           )}
 
           {/* DURUM 2: Bilgi Mesajı Gösterilecekse */}
-          {/* ŞART: Düzenleme modunda DEĞİLSE VE (Sahipse VEYA Giriş yapmışsa) */}
           { !isEditing && (isOwner || currentUserEmail) && (
               <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
                   <div className="text-3xl mb-2">🎉</div>
@@ -195,7 +190,7 @@ export default function EventView({ slug }: { slug: string }) {
                       {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
                   </p>
                   <p className="text-green-600 text-sm mt-1 mb-4">
-                      {t('public_gallery_hint') || "Aşağıdaki alandan fotoğraflara bakabilirsiniz."}
+                      {t('public_gallery_hint')}
                   </p>
                   
                   {/* SAHİP İÇİN: TEST BUTONU */}
@@ -205,10 +200,10 @@ export default function EventView({ slug }: { slug: string }) {
                             onClick={() => setIsEditing(true)}
                             className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
                         >
-                            <span>📝</span> RSVP Formunu Test Et / Önizle
+                            <span>📝</span> {t('rsvp_title')} {t('preview_submit_btn')} / {t('preview_rsvp_title')}
                         </button>
                         <p className="text-[10px] text-green-600 mt-2 opacity-70">
-                            (Formu doldurursanız misafir gibi görünürsünüz. Eski haline dönmek için sayfayı yenileyin.)
+                            ({t('rsvp_already_registered')})
                         </p>
                     </div>
                   )}
@@ -220,7 +215,7 @@ export default function EventView({ slug }: { slug: string }) {
                             onClick={() => setIsEditing(true)}
                             className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
                         >
-                            Daha önce formu doldurdunuz.<br/>Değişiklik yapmak için tıklayın.
+                            {t('rsvp.edit_prompt')}
                         </button>
                     </div>
                   )}
@@ -258,7 +253,7 @@ export default function EventView({ slug }: { slug: string }) {
                     const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
                     
                     if (emailToSave) {
-                        localStorage.setItem('cereget_guest_email', emailToSave)
+                        localStorage.setItem('createalist_guest_email', emailToSave)
                         router.push('/')
                     } else {
                         router.push('/landing')

@@ -17,7 +17,6 @@ const THEME_COLORS = [
   { name: 'Teal', hex: '#0D9488' },
 ]
 
-// 1. GÜNCELLENMİŞ FONT LİSTESİ (El yazıları eklendi)
 const FONT_OPTIONS = [
   // Standart Fontlar
   { name: 'Inter', value: "'Inter', sans-serif" },
@@ -50,7 +49,6 @@ const FONT_OPTIONS = [
   { name: 'Oswald', value: "'Oswald', sans-serif" },
 ]
 
-// Fontları yüklemek için güncellenmiş Google Fonts URL'si
 const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Alex+Brush&family=Allura&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Courgette&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Lobster&family=Lora:ital,wght@0,400;1,400&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&family=Sacramento&family=Satisfy&display=swap"
 
 const TITLE_SIZES = [
@@ -274,7 +272,7 @@ function CreateEventContent() {
                     </div>
                 </section>
 
-                {/* 2. İÇERİK - GÜNCELLENDİ (Dropdown ve Fontlar) */}
+                {/* 2. İÇERİK */}
                 <section>
                     <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4 border-b pb-2">{t('section_content')}</h3>
                     
@@ -283,11 +281,9 @@ function CreateEventContent() {
                         <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_title')}</label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border p-2 rounded mb-2"/>
                          <div className="flex gap-2">
-                            {/* Font Seçimi */}
                             <select value={titleFont} onChange={e => setTitleFont(e.target.value)} className="w-2/3 border p-2 rounded text-xs bg-white text-gray-800 font-bold h-10">
                                 {FONT_OPTIONS.map(o => <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>{o.name}</option>)}
                             </select>
-                            {/* Boyut Seçimi (Dropdown) */}
                             <select value={titleSize} onChange={e => setTitleSize(Number(e.target.value))} className="w-1/3 border p-2 rounded text-xs bg-white text-gray-800 h-10">
                                 {TITLE_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                             </select>
@@ -299,11 +295,9 @@ function CreateEventContent() {
                         <label className="block text-sm font-bold text-gray-800 mb-2">{t('label_message')}</label>
                         <textarea value={message} onChange={e => setMessage(e.target.value)} className="w-full border p-2 rounded mb-2 h-20 text-sm"/>
                         <div className="flex gap-2">
-                            {/* Font Seçimi */}
                             <select value={messageFont} onChange={e => setMessageFont(e.target.value)} className="w-2/3 border p-2 rounded text-xs bg-white text-gray-800 font-bold h-10">
                                 {FONT_OPTIONS.map(o => <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>{o.name}</option>)}
                             </select>
-                            {/* Boyut Seçimi (Dropdown) */}
                             <select value={messageSize} onChange={e => setMessageSize(Number(e.target.value))} className="w-1/3 border p-2 rounded text-xs bg-white text-gray-800 h-10">
                                 {MESSAGE_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                             </select>
@@ -336,7 +330,7 @@ function CreateEventContent() {
                         {formFields.map((field, index) => (
                             <div key={field.id} className="bg-white p-3 rounded shadow-sm border relative group animate-fadeIn">
                                 <button onClick={() => removeField(index)} className="absolute top-2 right-2 text-red-400 hover:text-red-600 font-bold bg-red-50 w-6 h-6 rounded-full flex items-center justify-center">&times;</button>
-                                <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder={t('question_placeholder')}/>
+                                <input type="text" value={field.label} onChange={(e) => updateField(index, 'label', e.target.value)} className="w-full font-bold text-sm border-b border-dashed mb-2 text-gray-900 outline-none" placeholder={t('question_place_holder')}/>
                                 <div className="flex gap-2 mb-2">
                                     <select value={field.type} onChange={(e) => updateField(index, 'type', e.target.value)} className="text-xs border rounded p-1 bg-gray-50 text-gray-900">
                                         <option value="text">{t('create.field_type_text')}</option>
@@ -442,12 +436,11 @@ function CreateEventContent() {
                                 </div>
                             </div>
 
-                            {/* --- YENİ: DETAY BLOKLARI ÖNİZLEME --- */}
+                            {/* DETAY BLOKLARI ÖNİZLEME */}
                             <div className="space-y-4 mb-6">
                                 {detailBlocks.map((block) => (
                                     <div key={block.id}>
                                         
-                                        {/* AKIŞ ÖNİZLEME */}
                                         {block.type === 'timeline' && (
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 text-right text-xs font-bold text-gray-500">{block.content}</div>
@@ -456,7 +449,6 @@ function CreateEventContent() {
                                             </div>
                                         )}
 
-                                        {/* NOT ÖNİZLEME */}
                                         {block.type === 'note' && (
                                             <div className="bg-gray-50 p-3 rounded-lg text-center border border-gray-100">
                                                 {block.imageUrl && <img src={block.imageUrl} className="w-full h-32 object-cover rounded mb-2"/>}
@@ -465,7 +457,6 @@ function CreateEventContent() {
                                             </div>
                                         )}
 
-                                        {/* LİNK ÖNİZLEME */}
                                         {block.type === 'link' && (
                                             <div className="text-center">
                                                 <button className="w-full py-3 rounded-lg font-bold text-white text-sm shadow-sm opacity-80" style={{backgroundColor: themeColor}}>
