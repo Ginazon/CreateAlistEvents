@@ -245,25 +245,32 @@ function CreateEventContent() {
             // Yeni event - Trigger otomatik kredi düşecek
             const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
             
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('events')
                 .insert([{ 
                     ...eventData, 
                     slug: autoSlug, 
                     user_id: session?.user.id 
                 }])
+                .select()
             
             if (error) {
-                // Eğer kredi yetersizse, trigger hata fırlatacak
-                if (error.message.includes('Yetersiz kredi') || error.message.includes('check_user_credits')) {
+                console.error('Insert error:', error)
+                
+                // Kredi hatası kontrolü - Supabase trigger'dan gelen hata
+                if (error.message.includes('Insufficient credits') || 
+                    error.message.includes('check_user_credits') ||
+                    error.code === 'P0001') {
                     alert('❌ Yetersiz kredi! Lütfen kredi satın alın.')
                 } else {
-                    alert('❌ Hata: ' + error.message)
+                    alert('❌ Bir hata oluştu: ' + error.message)
                 }
-                throw error
+                
+                setUploading(false)
+                return // Burada çık, finally bloğuna gitme
             }
             
-            // Başarılı - Kredileri yenile
+            // Başarılı - Frontend kredisini güncelle
             await fetchCredits(session.user.id)
             
             alert(t('create.alert_created'))
