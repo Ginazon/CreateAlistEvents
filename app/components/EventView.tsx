@@ -232,7 +232,7 @@ export default function EventView({ slug }: { slug: string }) {
         )}
       </div>
 
-      {/* 5. ALT AKSİYON BUTONU */}
+      {/* 5. ALT AKSİYON BUTONU */} // push için değişiklik
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
           <button 
