@@ -166,7 +166,8 @@ function CreateEventContent() {
   const handleBlockImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if(file && session) {
-          const fileName = `block-${Math.random()}.${file.name.split('.').pop()}`
+          const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+          const fileName = `block-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
           const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, file)
           if(!error) {
               const url = supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`).data.publicUrl
@@ -194,20 +195,26 @@ function CreateEventContent() {
     if (coverFile && session) {
         const fileExt = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const fileName = `cover-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
-      const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
-      if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
+        const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
+        if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
     }
+    
     let finalMainUrl = existingMainUrl
     if (mainFile && session) {
         const fileExt = mainFile.name.split('.').pop()?.toLowerCase() || 'jpg'
         const fileName = `main-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
-      const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
-      if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
+        const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
+        if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
     }
 
     const eventData = {
-        title, event_date: eventDate, location_name: locationName, location_url: locationUrl, message, 
-        image_url: finalCoverUrl, main_image_url: finalMainUrl,
+        title, 
+        event_date: eventDate, 
+        location_name: locationName, 
+        location_url: locationUrl, 
+        message, 
+        image_url: finalCoverUrl, 
+        main_image_url: finalMainUrl,
         design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
         custom_form_schema: formFields,
         event_details: detailBlocks
@@ -215,22 +222,36 @@ function CreateEventContent() {
 
     if (editId) {
         await supabase.from('events').update(eventData).eq('id', editId)
-        alert(t('create.alert_updated')); router.push('/')
+        alert(t('create.alert_updated'))
+        router.push('/')
     } else {
         const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
         await supabase.from('events').insert([{ ...eventData, slug: autoSlug, user_id: session?.user.id }])
         const newCredit = (credits || 0) - 1
         await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-        alert(t('create.alert_created')); router.push('/')
+        alert(t('create.alert_created'))
+        router.push('/')
     }
     setUploading(false)
   }
 
-  if(loadingData) return <div>{t('common.loading_suspense')}</div>
+  // ✅ useMemo ile sarıldı - performance iyileştirmesi
   const formattedDate = useMemo(() => 
-  eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...',
-  [eventDate]
-)
+    eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...',
+    [eventDate]
+  )
+
+  // Loading state
+  if(loadingData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('common.loading_suspense')}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -504,7 +525,14 @@ function CreateEventContent() {
 
 export default function CreateEventPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Yükleniyor...</p>
+                </div>
+            </div>
+        }>
             <CreateEventContent />
         </Suspense>
     )
