@@ -166,6 +166,7 @@ export default function EventView({ slug }: { slug: string }) {
 
         </div>
       </div>
+      //push içi değşiklik
 
      {/* --- RSVP FORM İLE İLGİLİ BÖLÜM BAŞLANGIÇ --- */}
       <div className="max-w-xl w-full px-6 mt-12">
