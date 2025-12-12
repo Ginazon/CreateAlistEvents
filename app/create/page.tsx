@@ -187,53 +187,95 @@ function CreateEventContent() {
   }
 
   const handleSave = async () => {
-    if (!title || !eventDate) return alert(t('create.alert_required_fields'))
-    if (!editId && credits !== null && credits < 1) return alert(t('create.alert_insufficient_credits'))
+    if (!title || !eventDate) {
+        alert(t('create.alert_required_fields'))
+        return
+    }
+    
+    // Kredi kontrolü (frontend)
+    if (!editId && credits !== null && credits < 1) {
+        alert(t('create.alert_insufficient_credits'))
+        return
+    }
+    
     setUploading(true)
     
-    let finalCoverUrl = existingCoverUrl
-    if (coverFile && session) {
-        const fileExt = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-        const fileName = `cover-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
-        const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
-        if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
-    }
-    
-    let finalMainUrl = existingMainUrl
-    if (mainFile && session) {
-        const fileExt = mainFile.name.split('.').pop()?.toLowerCase() || 'jpg'
-        const fileName = `main-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
-        const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
-        if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
-    }
+    try {
+        let finalCoverUrl = existingCoverUrl
+        if (coverFile && session) {
+            const fileExt = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+            const fileName = `cover-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
+            const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
+            if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
+        }
+        
+        let finalMainUrl = existingMainUrl
+        if (mainFile && session) {
+            const fileExt = mainFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+            const fileName = `main-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
+            const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
+            if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
+        }
 
-    const eventData = {
-        title, 
-        event_date: eventDate, 
-        location_name: locationName, 
-        location_url: locationUrl, 
-        message, 
-        image_url: finalCoverUrl, 
-        main_image_url: finalMainUrl,
-        design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
-        custom_form_schema: formFields,
-        event_details: detailBlocks
-    }
+        const eventData = {
+            title, 
+            event_date: eventDate, 
+            location_name: locationName, 
+            location_url: locationUrl, 
+            message, 
+            image_url: finalCoverUrl, 
+            main_image_url: finalMainUrl,
+            design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
+            custom_form_schema: formFields,
+            event_details: detailBlocks
+        }
 
-    if (editId) {
-        await supabase.from('events').update(eventData).eq('id', editId)
-        alert(t('create.alert_updated'))
-        router.push('/')
-    } else {
-        const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
-        await supabase.from('events').insert([{ ...eventData, slug: autoSlug, user_id: session?.user.id }])
-        const newCredit = (credits || 0) - 1
-        await supabase.from('profiles').update({ credits: newCredit }).eq('id', session.user.id)
-        alert(t('create.alert_created'))
-        router.push('/')
+        if (editId) {
+            // Düzenleme - Kredi düşmez
+            const { error } = await supabase
+                .from('events')
+                .update(eventData)
+                .eq('id', editId)
+            
+            if (error) throw error
+            
+            alert(t('create.alert_updated'))
+            router.push('/')
+        } else {
+            // Yeni event - Trigger otomatik kredi düşecek
+            const autoSlug = `${turkishSlugify(title)}-${Math.floor(1000 + Math.random() * 9000)}`
+            
+            const { error } = await supabase
+                .from('events')
+                .insert([{ 
+                    ...eventData, 
+                    slug: autoSlug, 
+                    user_id: session?.user.id 
+                }])
+            
+            if (error) {
+                // Eğer kredi yetersizse, trigger hata fırlatacak
+                if (error.message.includes('Yetersiz kredi') || error.message.includes('check_user_credits')) {
+                    alert('❌ Yetersiz kredi! Lütfen kredi satın alın.')
+                } else {
+                    alert('❌ Hata: ' + error.message)
+                }
+                throw error
+            }
+            
+            // Başarılı - Kredileri yenile
+            await fetchCredits(session.user.id)
+            
+            alert(t('create.alert_created'))
+            router.push('/')
+        }
+    } catch (error: any) {
+        console.error('Save error:', error)
+        // Hata zaten yukarıda handle edildi
+    } finally {
+        setUploading(false)
     }
-    setUploading(false)
-  }
+}
 
   // ✅ useMemo ile sarıldı - performance iyileştirmesi
   const formattedDate = useMemo(() => 
