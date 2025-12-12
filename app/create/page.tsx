@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabaseClient'
 import Link from 'next/link'
@@ -192,13 +192,15 @@ function CreateEventContent() {
     
     let finalCoverUrl = existingCoverUrl
     if (coverFile && session) {
-      const fileName = `cover-${Math.random()}.${coverFile.name.split('.').pop()}`
+        const fileExt = coverFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const fileName = `cover-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
       const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, coverFile)
       if (!error) finalCoverUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
     }
     let finalMainUrl = existingMainUrl
     if (mainFile && session) {
-      const fileName = `main-${Math.random()}.${mainFile.name.split('.').pop()}`
+        const fileExt = mainFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const fileName = `main-${Date.now()}-${crypto.randomUUID()}.${fileExt}`
       const { error } = await supabase.storage.from('event-images').upload(`${session.user.id}/${fileName}`, mainFile)
       if (!error) finalMainUrl = (supabase.storage.from('event-images').getPublicUrl(`${session.user.id}/${fileName}`)).data.publicUrl
     }
@@ -225,7 +227,10 @@ function CreateEventContent() {
   }
 
   if(loadingData) return <div>{t('common.loading_suspense')}</div>
-  const formattedDate = eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...'
+  const formattedDate = useMemo(() => 
+  eventDate ? new Date(eventDate).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' }) : '...',
+  [eventDate]
+)
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">

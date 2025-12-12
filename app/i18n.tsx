@@ -262,7 +262,23 @@ export const dictionary = {
     "footer.admin": "Yönetici",
     "footer.copyright_text": "© 2025 CreateAlist. Tüm hakları saklıdır.",
     "footer.link_terms": "Kullanım Şartları",
-    "footer.link_privacy": "Gizlilik ve KVKK"
+    "footer.link_privacy": "Gizlilik ve KVKK",
+    // Error messages (YENİ EKLE)
+    "error.something_went_wrong": "Bir şeyler yanlış gitti",
+    "error.title": "Hata",
+    "error.description": "Üzgünüz, beklenmeyen bir hata oluştu.",
+    "error.try_again": "Tekrar Dene",
+    "error.go_home": "Ana Sayfa",
+    "error.persist_message": "Sorun devam ederse lütfen destek ekibiyle iletişime geçin.",
+    "error.invalid_email": "Geçersiz e-posta adresi",
+    "error.name_too_short": "İsim en az 2 karakter olmalı",
+    "error.save_failed": "Kaydetme başarısız",
+    "error.fetch_guests_failed": "Misafirler yüklenemedi",
+    
+    // Gallery (YENİ EKLE)
+    "gallery.alert_file_too_large": "Dosya boyutu 10MB'dan küçük olmalıdır",
+    "gallery.alert_invalid_file_type": "Sadece resim dosyaları yüklenebilir",
+    
   },
 
   // 🇺🇸 İNGİLİZCE
@@ -506,11 +522,25 @@ export const dictionary = {
     "footer.admin": "Admin",
     "footer.copyright_text": "© 2025 CreateAlist. All rights reserved.",
     "footer.link_terms": "Terms of Use",
-    "footer.link_privacy": "Privacy Policy"
+    "footer.link_privacy": "Privacy Policy",
+    // Error messages
+    "error.something_went_wrong": "Something went wrong",
+    "error.title": "Error",
+    "error.description": "Sorry, an unexpected error occurred.",
+    "error.try_again": "Try Again",
+    "error.go_home": "Go Home",
+    "error.persist_message": "If the problem persists, please contact support.",
+    "error.invalid_email": "Invalid email address",
+    "error.name_too_short": "Name must be at least 2 characters",
+    "error.save_failed": "Save failed",
+    "error.fetch_guests_failed": "Failed to load guests",
+    
+    // Gallery
+    "gallery.alert_file_too_large": "File size must be less than 10MB",
+    "gallery.alert_invalid_file_type": "Only image files can be uploaded",
   },
 
-  // Diğer diller için de aynı eksik anahtarları ekleyeceğim...
-  // (Uzunluk sınırı nedeniyle sadece DE, FR, ES, IT, RU, AR için özet ekliyorum)
+  
 
   de: {
     // Tüm Almanca çeviriler + eksik anahtarlar

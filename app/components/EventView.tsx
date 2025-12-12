@@ -5,66 +5,112 @@ import { supabase } from '../lib/supabaseClient'
 import RsvpForm from './RsvpForm'
 import PhotoGallery from './PhotoGallery'
 import Countdown from './Countdown'
-import { useRouter } from 'next/navigation' 
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslation } from '../i18n'
+import type { Event, DetailBlock } from '../types'
 
 export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
   const { t, language } = useTranslation()
-  
-  // STATE TANIMLARI
-  const [event, setEvent] = useState<any>(null)
+
+  // STATE TANIMLARI - Type Safe
+  const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
-  const [isOwner, setIsOwner] = useState(false) 
+  const [isOwner, setIsOwner] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
 
-  // 1. BAŞLANGIÇ KONTROLLERİ
+  // BAŞLANGIÇ KONTROLLERİ
   useEffect(() => {
     const fetchData = async () => {
-      const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single()
-      
-      if (error || !data) {
-        setLoading(false)
-        return
-      }
+      try {
+        // A. Etkinlik Verisini Çek
+        const { data, error: fetchError } = await supabase
+          .from('events')
+          .select('*')
+          .eq('slug', slug)
+          .single()
 
-      setEvent(data)
+        if (fetchError || !data) {
+          setError(t('public_not_found'))
+          setLoading(false)
+          return
+        }
 
-      const { data: authData } = await supabase.auth.getSession()
-      const currentUserId = authData.session?.user.id
-      
-      if (currentUserId && data.user_id === currentUserId) {
-          setIsOwner(true) 
-      }
+        setEvent(data)
 
-      if (typeof window !== 'undefined') {
+        // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
+        const { data: authData } = await supabase.auth.getSession()
+        const currentUserId = authData.session?.user.id
+
+        if (currentUserId && data.user_id === currentUserId) {
+          setIsOwner(true)
+        }
+
+        // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
+        // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
+        if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
-              setCurrentUserEmail(savedEmail)
+            setCurrentUserEmail(savedEmail)
           }
-      }
+        }
 
-      setLoading(false)
+        setLoading(false)
+      } catch (err) {
+        console.error('EventView fetch error:', err)
+        setError(t('error.something_went_wrong') || 'Bir hata oluştu')
+        setLoading(false)
+      }
     }
     fetchData()
-  }, [slug, router]) 
+  }, [slug, t])
 
-  // 2. MİSAFİR GİRİŞ YAPINCA VEYA GÜNCELLEME YAPINCA ÇALIŞACAK FONKSİYON
+  // MİSAFİR GİRİŞ YAPINCA VEYA GÜNCELLEME YAPINCA ÇALIŞACAK FONKSİYON
   const handleGuestLogin = (email: string) => {
     setCurrentUserEmail(email)
     setIsOwner(false)
     setIsEditing(false)
-    
+
     if (typeof window !== 'undefined') {
-        localStorage.setItem(`guest_access_${slug}`, email)
-        localStorage.setItem('createalist_guest_email', email)
+      localStorage.setItem(`guest_access_${slug}`, email)
+      // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
+      localStorage.setItem('createalist_guest_email', email)
     }
   }
 
-  if (loading) return <div className="h-screen flex items-center justify-center">{t('loading')}</div>
-  if (!event) return <div className="h-screen flex items-center justify-center">{t('public_not_found')}</div>
+  // LOADING STATE
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // ERROR STATE
+  if (error || !event) {
+    return (
+      <div className="h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">😕</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            {error || t('public_not_found')}
+          </h2>
+          <Link href="/">
+            <button className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700">
+              {t('error.go_home') || 'Ana Sayfa'}
+            </button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   // Stil ve Tema Ayarları
   const themeColor = event.design_settings?.theme || '#4F46E5'
@@ -72,203 +118,239 @@ export default function EventView({ slug }: { slug: string }) {
   const titleSize = event.design_settings?.titleSize || 2.5
   const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
   const messageSize = event.design_settings?.messageSize || 1
-  
-  const formattedDate = event.event_date 
-    ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, { dateStyle: 'long', timeStyle: 'short' })
+
+  const formattedDate = event.event_date
+    ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      })
     : '...'
 
-  const detailBlocks = event.event_details || []
-  
+  const detailBlocks = (event.event_details || []) as DetailBlock[]
+
   const canAccessGallery = currentUserEmail || isOwner
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
-      
       {/* 1. KAPAK GÖRSELİ */}
       {event.image_url ? (
-        <div className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative" style={{ backgroundColor: themeColor + '10' }}>
-          <img src={event.image_url} className="object-cover w-full h-full" alt="Event Cover" />
+        <div
+          className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative"
+          style={{ backgroundColor: themeColor + '10' }}
+        >
+          <img src={event.image_url} className="object-cover w-full h-full" alt={`${event.title} - Cover`} />
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
       ) : (
         <div className="w-full h-32 bg-gray-50"></div>
       )}
 
-      {/* 2. ANA KART (Başlık, Detaylar vs.) */}
+      {/* 2. ANA KART */}
       <div className="max-w-xl w-full px-5 -mt-10 relative z-10">
         <div className="bg-white rounded-xl shadow-xl p-8 border-t-4" style={{ borderColor: themeColor }}>
-          
-          <h1 className="font-bold text-center mb-6 leading-tight" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>{event.title}</h1>
+          <h1
+            className="font-bold text-center mb-6 leading-tight"
+            style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}
+          >
+            {event.title}
+          </h1>
 
           {event.main_image_url && (
             <div className="mb-8 rounded-xl overflow-hidden shadow-md">
-                <img src={event.main_image_url} className="w-full h-auto object-cover" alt="Main Event" />
+              <img src={event.main_image_url} className="w-full h-auto object-cover" alt={`${event.title} - Main`} />
             </div>
           )}
 
           {event.message && (
-            <p className="text-center text-gray-600 mb-8 whitespace-pre-line leading-relaxed" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>{event.message}</p>
+            <p
+              className="text-center text-gray-600 mb-8 whitespace-pre-line leading-relaxed"
+              style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}
+            >
+              {event.message}
+            </p>
           )}
 
-          {event.event_date && <div className="mb-8"><Countdown targetDate={event.event_date} themeColor={themeColor} /></div>}
+          {event.event_date && (
+            <div className="mb-8">
+              <Countdown targetDate={event.event_date} themeColor={themeColor} />
+            </div>
+          )}
 
-          <hr className="my-8 border-gray-100"/>
-          
+          <hr className="my-8 border-gray-100" />
+
           <div className="grid grid-cols-1 gap-4 text-center mb-10">
-             <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
-                <p className="font-bold text-gray-800 text-lg mb-1">{t('public_date_label')}</p>
-                <p className="text-gray-600">{formattedDate}</p>
-             </div>
-             <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
-                <p className="font-bold text-gray-800 text-lg mb-1">{t('public_location_label')}</p>
-                <p className="text-gray-600 mb-4">{event.location_name || '...'}</p>
-                {event.location_url && (
-                    <a href={event.location_url} target="_blank" rel="noopener noreferrer" className="inline-block px-6 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90 shadow-md transform hover:scale-105" style={{ backgroundColor: themeColor }}>
-                        {t('public_directions_btn')}
-                    </a>
-                )}
-             </div>
+            <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+              <p className="font-bold text-gray-800 text-lg mb-1">{t('public_date_label')}</p>
+              <p className="text-gray-600">{formattedDate}</p>
+            </div>
+            <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+              <p className="font-bold text-gray-800 text-lg mb-1">{t('public_location_label')}</p>
+              <p className="text-gray-600 mb-4">{event.location_name || '...'}</p>
+              {event.location_url && (
+                <a
+                  href={event.location_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-6 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90 shadow-md transform hover:scale-105"
+                  style={{ backgroundColor: themeColor }}
+                >
+                  {t('public_directions_btn')}
+                </a>
+              )}
+            </div>
           </div>
 
           {/* DETAY BLOKLARI */}
           {detailBlocks.length > 0 && (
             <div className="space-y-8 mb-4">
-                <h3 className="text-center font-bold text-gray-400 text-xs uppercase tracking-widest mb-4">{t('public_details_title')}</h3>
-                
-                {detailBlocks.map((block: any, index: number) => (
-                    <div key={index} className="animate-fadeIn">
-                        {block.type === 'timeline' && (
-                            <div className="flex group">
-                                <div className="w-16 pt-1 text-right pr-4"><span className="text-sm font-bold text-gray-500">{block.content}</span></div>
-                                <div className="relative flex flex-col items-center">
-                                    <div className="w-3 h-3 rounded-full border-2 bg-white z-10" style={{ borderColor: themeColor }}></div>
-                                    {index !== detailBlocks.length - 1 && <div className="w-0.5 bg-gray-200 h-full absolute top-3"></div>}
-                                </div>
-                                <div className="flex-1 pl-4 pb-8"><h4 className="font-bold text-gray-800 text-lg">{block.subContent}</h4></div>
-                            </div>
+              <h3 className="text-center font-bold text-gray-400 text-xs uppercase tracking-widest mb-4">
+                {t('public_details_title')}
+              </h3>
+
+              {detailBlocks.map((block, index) => (
+                <div key={block.id} className="animate-fadeIn">
+                  {block.type === 'timeline' && (
+                    <div className="flex group">
+                      <div className="w-16 pt-1 text-right pr-4">
+                        <span className="text-sm font-bold text-gray-500">{block.content}</span>
+                      </div>
+                      <div className="relative flex flex-col items-center">
+                        <div
+                          className="w-3 h-3 rounded-full border-2 bg-white z-10"
+                          style={{ borderColor: themeColor }}
+                        ></div>
+                        {index !== detailBlocks.length - 1 && (
+                          <div className="w-0.5 bg-gray-200 h-full absolute top-3"></div>
                         )}
-                        {block.type === 'note' && (
-                            <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm text-center mb-4">
-                                {block.imageUrl && <div className="mb-4 rounded-lg overflow-hidden h-40 w-full"><img src={block.imageUrl} className="w-full h-full object-cover" alt="Note" /></div>}
-                                <h3 className="font-bold text-lg mb-2" style={{ color: themeColor }}>{block.title}</h3>
-                                <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{block.content}</p>
-                            </div>
-                        )}
-                        {block.type === 'link' && (
-                            <div className="mb-4">
-                                <a href={block.content} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition transform hover:-translate-y-1" style={{ backgroundColor: themeColor }}>
-                                    {block.title} ↗
-                                </a>
-                            </div>
-                        )}
+                      </div>
+                      <div className="flex-1 pl-4 pb-8">
+                        <h4 className="font-bold text-gray-800 text-lg">{block.subContent}</h4>
+                      </div>
                     </div>
-                ))}
+                  )}
+                  {block.type === 'note' && (
+                    <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm text-center mb-4">
+                      {block.imageUrl && (
+                        <div className="mb-4 rounded-lg overflow-hidden h-40 w-full">
+                          <img src={block.imageUrl} className="w-full h-full object-cover" alt="Note" />
+                        </div>
+                      )}
+                      <h3 className="font-bold text-lg mb-2" style={{ color: themeColor }}>
+                        {block.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{block.content}</p>
+                    </div>
+                  )}
+                  {block.type === 'link' && (
+                    <div className="mb-4">
+                      <a
+                        href={block.content}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
+                        style={{ backgroundColor: themeColor }}
+                      >
+                        {block.title} ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-
         </div>
       </div>
 
-      {/* --- 3. RSVP FORM VE DURUM ALANI --- */}
+      {/* 3. RSVP FORM VE DURUM ALANI */}
       <div className="max-w-xl w-full px-6 mt-12">
-          
-          {/* DURUM 1: Form Gösterilecekse */}
-          { ( (!currentUserEmail && !isOwner) || isEditing ) && (
-            <RsvpForm 
-                eventId={event.id} 
-                themeColor={themeColor} 
-                onLoginSuccess={handleGuestLogin}
-                initialEmail={currentUserEmail}
-            />
-          )}
+        {/* DURUM 1: Form Gösterilecekse */}
+        {((!currentUserEmail && !isOwner) || isEditing) && (
+          <RsvpForm
+            eventId={event.id}
+            themeColor={themeColor}
+            onLoginSuccess={handleGuestLogin}
+            initialEmail={currentUserEmail}
+          />
+        )}
 
-          {/* DURUM 2: Bilgi Mesajı Gösterilecekse */}
-          { !isEditing && (isOwner || currentUserEmail) && (
-              <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
-                  <div className="text-3xl mb-2">🎉</div>
-                  <p className="text-green-800 font-bold text-lg">
-                      {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
-                  </p>
-                  <p className="text-green-600 text-sm mt-1 mb-4">
-                      {t('public_gallery_hint')}
-                  </p>
-                  
-                  {/* SAHİP İÇİN: TEST BUTONU */}
-                  {isOwner && (
-                    <div className="mt-4 pt-4 border-t border-green-100">
-                        <button 
-                            onClick={() => setIsEditing(true)}
-                            className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
-                        >
-                            <span>📝</span> {t('rsvp_title')} {t('preview_submit_btn')} / {t('preview_rsvp_title')}
-                        </button>
-                        <p className="text-[10px] text-green-600 mt-2 opacity-70">
-                            ({t('rsvp_already_registered')})
-                        </p>
-                    </div>
-                  )}
+        {/* DURUM 2: Bilgi Mesajı Gösterilecekse */}
+        {!isEditing && (isOwner || currentUserEmail) && (
+          <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
+            <div className="text-3xl mb-2">🎉</div>
+            <p className="text-green-800 font-bold text-lg">
+              {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
+            </p>
+            <p className="text-green-600 text-sm mt-1 mb-4">{t('public_gallery_hint')}</p>
 
-                  {/* MİSAFİR İÇİN: DÜZENLEME BUTONU */}
-                  {!isOwner && currentUserEmail && (
-                    <div className="mt-4 pt-4 border-t border-green-100">
-                        <button 
-                            onClick={() => setIsEditing(true)}
-                            className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
-                        >
-                            {t('rsvp.edit_prompt')}
-                        </button>
-                    </div>
-                  )}
+            {/* SAHİP İÇİN: TEST BUTONU */}
+            {isOwner && (
+              <div className="mt-4 pt-4 border-t border-green-100">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
+                >
+                  <span>📝</span> {t('rsvp_title')} {t('preview_submit_btn')} / {t('preview_rsvp_title')}
+                </button>
+                <p className="text-[10px] text-green-600 mt-2 opacity-70">({t('rsvp_already_registered')})</p>
               </div>
-          )}
-      </div>
-      
-      {/* --- RSVP BÖLÜMÜ SONU --- */}
+            )}
 
-      {/* 4. FOTOĞRAF GALERİSİ (MEMORY WALL) */}
-      <div className="max-w-xl w-full px-6 mt-12">
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
-            {t('public_memory_wall')}
-        </h2>
-        {canAccessGallery ? (
-             <PhotoGallery 
-                eventId={event.id} 
-                currentUserEmail={isOwner ? 'owner' : currentUserEmail!} 
-                themeColor={themeColor} 
-             />
-        ) : (
-            <div className="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200">
-                <div className="text-5xl mb-4 opacity-50">🔒</div>
-                <h3 className="font-bold text-gray-800 text-lg">{t('public_gallery_locked')}</h3>
-                <p className="text-sm text-gray-500 mt-2">{t('public_gallery_hint')}</p>
-            </div>
+            {/* MİSAFİR İÇİN: DÜZENLEME BUTONU */}
+            {!isOwner && currentUserEmail && (
+              <div className="mt-4 pt-4 border-t border-green-100">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
+                >
+                  {t('rsvp.edit_prompt')}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* 5. ALT AKSİYON BUTONU */} 
-      <div className="max-w-xl w-full px-6 mt-12 pb-10">
-          <div className="block w-full text-center">
-          <button 
-                onClick={() => {
-                    const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
-                    
-                    if (emailToSave) {
-                        localStorage.setItem('createalist_guest_email', emailToSave)
-                        router.push('/')
-                    } else {
-                        router.push('/landing')
-                    }
-                }}
-                className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
-            >
-                {isOwner 
-                ? t('public_back_dashboard') 
-                : (currentUserEmail ? t('public_go_panel_create') : t('public_create_own'))
-                }
-          </button>
+      {/* 4. FOTOĞRAF GALERİSİ */}
+      <div className="max-w-xl w-full px-6 mt-12">
+        <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
+          {t('public_memory_wall')}
+        </h2>
+        {canAccessGallery ? (
+          <PhotoGallery eventId={event.id} currentUserEmail={isOwner ? 'owner' : currentUserEmail!} themeColor={themeColor} />
+        ) : (
+          <div className="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200">
+            <div className="text-5xl mb-4 opacity-50">🔒</div>
+            <h3 className="font-bold text-gray-800 text-lg">{t('public_gallery_locked')}</h3>
+            <p className="text-sm text-gray-500 mt-2">{t('public_gallery_hint')}</p>
           </div>
+        )}
       </div>
 
+      {/* 5. ALT AKSİYON BUTONU */}
+      <div className="max-w-xl w-full px-6 mt-12 pb-10">
+        <div className="block w-full text-center">
+          <button
+            onClick={() => {
+              const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
+
+              if (emailToSave) {
+                // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
+                localStorage.setItem('createalist_guest_email', emailToSave)
+                router.push('/')
+              } else {
+                router.push('/landing')
+              }
+            }}
+            className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
+          >
+            {isOwner
+              ? t('public_back_dashboard')
+              : currentUserEmail
+              ? t('public_go_panel_create')
+              : t('public_create_own')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
