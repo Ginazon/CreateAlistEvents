@@ -126,27 +126,58 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
     setLoading(true)
 
     try {
+      const normalizedEmail = email.trim().toLowerCase()
+      
       const payload = {
         event_id: eventId,
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         status,
         participants: plusOne ? plusOne + 1 : 1,
         note: note.trim(),
         form_responses: formResponses,
       }
 
-      const { error: upsertError } = await supabase
+      // ✅ Önce mevcut kaydı kontrol et
+      const { data: existing } = await supabase
         .from('guests')
-        .upsert(payload, { onConflict: 'event_id, email' })
+        .select('id')
+        .eq('event_id', eventId)
+        .eq('email', normalizedEmail)
+        .maybeSingle()
 
-      if (upsertError) {
-        throw upsertError
+      let resultError = null
+
+      if (existing) {
+        // ✅ Kayıt var - UPDATE
+        const { error } = await supabase
+          .from('guests')
+          .update({
+            name: payload.name,
+            status: payload.status,
+            participants: payload.participants,
+            note: payload.note,
+            form_responses: payload.form_responses,
+          })
+          .eq('id', existing.id)
+        
+        resultError = error
+      } else {
+        // ✅ Kayıt yok - INSERT
+        const { error } = await supabase
+          .from('guests')
+          .insert([payload])
+        
+        resultError = error
+      }
+
+      if (resultError) {
+        throw resultError
       }
 
       setSuccess(true)
       setTimeout(() => {
-        onLoginSuccess(email.trim().toLowerCase())
+        onLoginSuccess(normalizedEmail)
       }, 1500)
     } catch (err: any) {
       console.error('RSVP submit error:', err)
