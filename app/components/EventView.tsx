@@ -11,7 +11,6 @@ import { useTranslation } from '../i18n'
 
 export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
-  // language değişkenini de çekiyoruz ki tarihi ona göre formatlayalım
   const { t, language } = useTranslation()
   
   const [event, setEvent] = useState<any>(null)
@@ -19,10 +18,9 @@ export default function EventView({ slug }: { slug: string }) {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false) 
 
-  // 1. BAŞLANGIÇ KONTROLLERİ (Veri Çekme + LocalStorage Kontrolü)
+  // 1. BAŞLANGIÇ KONTROLLERİ
   useEffect(() => {
     const fetchData = async () => {
-      // A. Etkinlik Verisini Çek
       const { data, error } = await supabase.from('events').select('*').eq('slug', slug).single()
       
       if (error || !data) {
@@ -32,7 +30,6 @@ export default function EventView({ slug }: { slug: string }) {
 
       setEvent(data)
 
-      // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
       const { data: authData } = await supabase.auth.getSession()
       const currentUserId = authData.session?.user.id
       
@@ -40,7 +37,6 @@ export default function EventView({ slug }: { slug: string }) {
           setIsOwner(true) 
       }
 
-      // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
       if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
@@ -59,10 +55,7 @@ export default function EventView({ slug }: { slug: string }) {
     setIsOwner(false)
     
     if (typeof window !== 'undefined') {
-        // 1. Bu etkinliğe özel kayıt
         localStorage.setItem(`guest_access_${slug}`, email)
-        
-        // 2. Dashboard erişimi için genel kayıt
         localStorage.setItem('cereget_guest_email', email)
     }
 }
@@ -76,7 +69,6 @@ export default function EventView({ slug }: { slug: string }) {
   const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
   const messageSize = event.design_settings?.messageSize || 1
   
-  // DİNAMİK TARİH FORMATI (Dile göre ayarlanır)
   const formattedDate = event.event_date 
     ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, { dateStyle: 'long', timeStyle: 'short' })
     : '...'
@@ -98,6 +90,7 @@ export default function EventView({ slug }: { slug: string }) {
         <div className="w-full h-32 bg-gray-50"></div>
       )}
 
+      {/* 2. ANA KART (Başlık, Detaylar vs.) */}
       <div className="max-w-xl w-full px-5 -mt-10 relative z-10">
         <div className="bg-white rounded-xl shadow-xl p-8 border-t-4" style={{ borderColor: themeColor }}>
           
@@ -135,7 +128,7 @@ export default function EventView({ slug }: { slug: string }) {
 
           {/* DETAY BLOKLARI */}
           {detailBlocks.length > 0 && (
-            <div className="space-y-8 mb-10">
+            <div className="space-y-8 mb-4">
                 <h3 className="text-center font-bold text-gray-400 text-xs uppercase tracking-widest mb-4">{t('public_details_title')}</h3>
                 
                 {detailBlocks.map((block: any, index: number) => (
@@ -169,8 +162,13 @@ export default function EventView({ slug }: { slug: string }) {
             </div>
           )}
           
-          <hr className="my-8 border-gray-100"/>
+          {/* NOT: RsvpForm buradan kaldırıldı */}
 
+        </div>
+      </div>
+
+      {/* --- RSVP FORM İLE İLGİLİ BÖLÜM BAŞLANGIÇ --- */}
+      <div className="max-w-xl w-full px-6 mt-12">
           {/* Form */}
           {!isOwner && !currentUserEmail && (
             <RsvpForm 
@@ -180,17 +178,20 @@ export default function EventView({ slug }: { slug: string }) {
             />
           )}
 
-          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı (ÇEVRİLDİ) */}
+          {/* Sahibi veya Giriş Yapmışsa Bilgi Mesajı (Form yerine bu gözükecek) */}
           {(isOwner || currentUserEmail) && (
-              <div className="bg-green-50 p-4 rounded-lg text-center border border-green-100 mb-8">
-                  <p className="text-green-800 font-bold text-sm">
+              <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm">
+                  <div className="text-3xl mb-2">🎉</div>
+                  <p className="text-green-800 font-bold text-lg">
                       {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
+                  </p>
+                  <p className="text-green-600 text-sm mt-1">
+                      {t('public_gallery_hint') || "Aşağıdaki alandan fotoğraflara bakabilirsiniz."}
                   </p>
               </div>
           )}
-
-        </div>
       </div>
+      {/* --- RSVP FORM İLE İLGİLİ BÖLÜM BİTİŞ --- */}
 
       <div className="max-w-xl w-full px-6 mt-12">
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
@@ -210,6 +211,7 @@ export default function EventView({ slug }: { slug: string }) {
             </div>
         )}
       </div>
+
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
           <div className="block w-full text-center">
           <button 
@@ -225,7 +227,6 @@ export default function EventView({ slug }: { slug: string }) {
                 }}
                 className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
             >
-                {/* BUTON METNİ ÇEVRİLDİ */}
                 {isOwner 
                 ? t('public_back_dashboard') 
                 : (currentUserEmail ? t('public_go_panel_create') : t('public_create_own'))
