@@ -12,7 +12,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-// 1. Dinamik SEO Verisi Oluşturma
+// 1. Dinamik SEO Verisi Oluşturma seo onemli
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params
   const slug = resolvedParams.slug
