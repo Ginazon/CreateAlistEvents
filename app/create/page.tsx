@@ -121,16 +121,40 @@ function CreateEventContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { router.push('/'); return }
+      if (!session) { 
+        router.push('/')
+        return 
+      }
+      
       setSession(session)
-      fetchCredits(session.user.id)
-      if (editId) fetchEventData(editId, session.user.id)
+      
+      // ✅ Kredi kontrolü ile birlikte fetch
+      const initData = async () => {
+        const userCredits = await fetchCredits(session.user.id)
+        
+        if (editId) {
+          // Düzenleme modu - Kredi kontrolü yok
+          fetchEventData(editId, session.user.id)
+        } else {
+          // Yeni event modu - Kredi kontrolü yap
+          if (userCredits !== null && userCredits < 1) {
+            alert(t('create.alert_no_credits_redirect'))
+            router.push('/')
+          }
+        }
+      }
+      
+      initData()
     })
-  }, [router, editId])
+  }, [router, editId, t])
 
   const fetchCredits = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('credits').eq('id', userId).single()
-    if (data) setCredits(data.credits)
+    if (data) {
+      setCredits(data.credits)
+      return data.credits // ✅ Değeri döndür
+    }
+    return null
   }
 
   const fetchEventData = async (id: string, userId: string) => {
@@ -257,17 +281,17 @@ function CreateEventContent() {
             if (error) {
                 console.error('Insert error:', error)
                 
-                // Kredi hatası kontrolü - Supabase trigger'dan gelen hata
+                // ✅ i18n ile güncellenmiş hata mesajları
                 if (error.message.includes('Insufficient credits') || 
                     error.message.includes('check_user_credits') ||
                     error.code === 'P0001') {
-                    alert('❌ Yetersiz kredi! Lütfen kredi satın alın.')
+                    alert(t('dashboard.alert_insufficient_credits'))
                 } else {
-                    alert('❌ Bir hata oluştu: ' + error.message)
+                    alert(t('error.something_went_wrong') + ': ' + error.message)
                 }
                 
                 setUploading(false)
-                return // Burada çık, finally bloğuna gitme
+                return
             }
             
             // Başarılı - Frontend kredisini güncelle
@@ -278,11 +302,10 @@ function CreateEventContent() {
         }
     } catch (error: any) {
         console.error('Save error:', error)
-        // Hata zaten yukarıda handle edildi
     } finally {
         setUploading(false)
     }
-}
+  }
 
   // ✅ useMemo ile sarıldı - performance iyileştirmesi
   const formattedDate = useMemo(() => 

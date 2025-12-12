@@ -135,19 +135,19 @@ export default function Dashboard() {
     // Misafir kontrolü
     // @ts-ignore
     if (session?.user?.isGuest) {
-      alert('❌ Misafir hesaplarla etkinlik oluşturamazsınız.\n\nLütfen hesap oluşturun veya giriş yapın.')
+      alert(t('dashboard.alert_guest_cannot_create'))
       return
     }
 
     // Kredi yükleniyor mu?
     if (credits === null) {
-      alert('⏳ Kredi bilgisi yükleniyor, lütfen bekleyin...')
+      alert(t('dashboard.alert_loading_credits'))
       return
     }
     
     // Kredi var mı?
     if (credits < 1) {
-      alert('❌ Yetersiz kredi!\n\nYeni etkinlik oluşturmak için kredi satın almanız gerekiyor.\n\nAşağıdaki paketlerden birini seçebilirsiniz.')
+      alert(t('dashboard.alert_insufficient_credits'))
       // Scroll to packages (optional)
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
       return

@@ -278,6 +278,13 @@ export const dictionary = {
     // Gallery (YENİ EKLE)
     "gallery.alert_file_too_large": "Dosya boyutu 10MB'dan küçük olmalıdır",
     "gallery.alert_invalid_file_type": "Sadece resim dosyaları yüklenebilir",
+    // Dashboard alerts (YENİ)
+    "dashboard.alert_loading_credits": "⏳ Kredi bilgisi yükleniyor, lütfen bekleyin...",
+    "dashboard.alert_insufficient_credits": "❌ Yetersiz kredi!\n\nYeni etkinlik oluşturmak için kredi satın almanız gerekiyor.\n\nAşağıdaki paketlerden birini seçebilirsiniz.",
+    "dashboard.alert_guest_cannot_create": "❌ Misafir hesaplarla etkinlik oluşturamazsınız.\n\nLütfen hesap oluşturun veya giriş yapın.",
+    
+    // Create page alerts (YENİ)
+    "create.alert_no_credits_redirect": "❌ Yetersiz kredi! Ana sayfaya yönlendiriliyorsunuz.",
     
   },
 
@@ -538,6 +545,13 @@ export const dictionary = {
     // Gallery
     "gallery.alert_file_too_large": "File size must be less than 10MB",
     "gallery.alert_invalid_file_type": "Only image files can be uploaded",
+    // Dashboard alerts
+    "dashboard.alert_loading_credits": "⏳ Credit information is loading, please wait...",
+    "dashboard.alert_insufficient_credits": "❌ Insufficient credits!\n\nYou need to purchase credits to create a new event.\n\nYou can choose one of the packages below.",
+    "dashboard.alert_guest_cannot_create": "❌ Guest accounts cannot create events.\n\nPlease create an account or sign in.",
+    
+    // Create page alerts
+    "create.alert_no_credits_redirect": "❌ Insufficient credits! Redirecting to homepage...",
   },
 
   
@@ -773,11 +787,16 @@ export const dictionary = {
     "footer.admin": "Admin",
     "footer.copyright_text": "© 2025 CreateAlist. Alle Rechte vorbehalten.",
     "footer.link_terms": "AGB",
-    "footer.link_privacy": "Datenschutz"
+    "footer.link_privacy": "Datenschutz",
+    // Dashboard alerts
+    "dashboard.alert_loading_credits": "⏳ Kreditinformationen werden geladen, bitte warten...",
+    "dashboard.alert_insufficient_credits": "❌ Unzureichende Credits!\n\nSie müssen Credits kaufen, um eine neue Veranstaltung zu erstellen.\n\nSie können eines der folgenden Pakete auswählen.",
+    "dashboard.alert_guest_cannot_create": "❌ Gastkonten können keine Veranstaltungen erstellen.\n\nBitte erstellen Sie ein Konto oder melden Sie sich an.",
+    
+    // Create page alerts
+    "create.alert_no_credits_redirect": "❌ Unzureichende Credits! Weiterleitung zur Startseite...",
   },
 
-  // NOT: Karakter limiti nedeniyle diğer diller (FR, ES, IT, RU, AR) için benzer şekilde
-  // tüm eksik anahtarları ekleyeceğim ama burada sadece pattern'i gösteriyorum.
   // Gerçek dosyada tüm diller tam olacak.
   
   fr: { /* Fransızca çeviriler + eksik anahtarlar */ },
