@@ -130,48 +130,170 @@ const EmojiModal = ({ isOpen, onClose, onSelect }: { isOpen: boolean, onClose: (
   )
 }
 
-// Google Maps Location Picker
-const MapLocationPicker = ({ locationUrl, onLocationChange }: { locationUrl: string, onLocationChange: (url: string) => void }) => {
+// Google Maps Location Picker with Search and Click
+const MapLocationPicker = ({ 
+  locationName, 
+  locationUrl, 
+  onLocationNameChange, 
+  onLocationUrlChange 
+}: { 
+  locationName: string
+  locationUrl: string
+  onLocationNameChange: (name: string) => void
+  onLocationUrlChange: (url: string) => void 
+}) => {
   const [showMap, setShowMap] = useState(false)
-  const coords = extractMapCoordinates(locationUrl)
-  
+  const [searchQuery, setSearchQuery] = useState('')
+  const [mapKey, setMapKey] = useState(0) // Force iframe reload
+
+  const handleSearch = () => {
+    if (!searchQuery.trim()) return
+    
+    // Google Maps URL'si oluştur
+    const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(searchQuery)}`
+    
+    // Adres bilgisini güncelle
+    onLocationNameChange(searchQuery)
+    onLocationUrlChange(mapsUrl)
+    
+    // Haritayı yeniden yükle
+    setMapKey(prev => prev + 1)
+  }
+
+  const handleManualUrl = (url: string) => {
+    onLocationUrlChange(url)
+    setMapKey(prev => prev + 1)
+  }
+
+  const getEmbedUrl = () => {
+    if (!locationUrl) {
+      // Default: Istanbul
+      return 'https://maps.google.com/maps?q=41.0082,28.9784&z=12&output=embed'
+    }
+    
+    // Eğer search URL ise
+    if (locationUrl.includes('/search/')) {
+      const query = locationUrl.split('/search/')[1]
+      return `https://maps.google.com/maps?q=${query}&output=embed`
+    }
+    
+    // Eğer koordinat varsa
+    const coords = extractMapCoordinates(locationUrl)
+    if (coords) {
+      return `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`
+    }
+    
+    // Eğer place URL ise
+    if (locationUrl.includes('place/')) {
+      const match = locationUrl.match(/place\/([^\/]+)/)
+      if (match) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(match[1])}&output=embed`
+      }
+    }
+    
+    // Default
+    return 'https://maps.google.com/maps?q=41.0082,28.9784&z=12&output=embed'
+  }
+
   return (
-    <div>
-      <div className="flex gap-2 mb-2">
-        <input 
-          type="text" 
-          value={locationUrl} 
-          onChange={e => onLocationChange(e.target.value)} 
-          placeholder="Google Maps URL veya manuel koordinat"
-          className="flex-1 border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
-        />
+    <div className="space-y-3">
+      <div className="flex gap-2">
         <button
           type="button"
           onClick={() => setShowMap(!showMap)}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
+          className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? 'Gizle' : 'Haritayı Göster'}
+          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
         </button>
+        {locationUrl && (
+          <a
+            href={locationUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
+          >
+            Google Maps'te Aç ↗
+          </a>
+        )}
       </div>
       
-      {showMap && coords && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden h-64">
-          <iframe
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            style={{ border: 0 }}
-            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coords.lat},${coords.lng}&zoom=15`}
-            allowFullScreen
-          />
+      {showMap && (
+        <div className="border-2 border-indigo-100 rounded-xl overflow-hidden bg-white">
+          {/* Search Box */}
+          <div className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100">
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="🔍 Adres ara... (örn: Taksim Meydanı, İstanbul)"
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+              >
+                Ara
+              </button>
+            </div>
+            
+            <div className="text-xs text-gray-600 space-y-1">
+              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
+              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
+            </div>
+          </div>
+          
+          {/* Interactive Map */}
+          <div className="h-96 relative bg-gray-100">
+            <iframe
+              key={mapKey}
+              src={getEmbedUrl()}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          
+          {/* Info Box */}
+          <div className="p-3 bg-gray-50 border-t border-gray-200">
+            <div className="flex items-start gap-2">
+              <span className="text-xl">ℹ️</span>
+              <div className="flex-1 text-xs text-gray-600">
+                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
+                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
+                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
+                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
+                </ol>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       
-      {locationUrl && !coords && (
-        <p className="text-xs text-amber-600 mt-1">
-          ⚠️ Koordinat algılanamadı. Google Maps URL'sini kontrol edin.
-        </p>
-      )}
+      {/* Manual URL Input */}
+      <div>
+        <label className="text-xs font-semibold text-gray-700 mb-1 block">
+          Manuel Google Maps URL (Opsiyonel)
+        </label>
+        <input 
+          type="text" 
+          value={locationUrl} 
+          onChange={e => handleManualUrl(e.target.value)} 
+          placeholder="https://www.google.com/maps/place/..."
+          className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
+        />
+        {locationUrl && (
+          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
+          </p>
+        )}
+      </div>
     </div>
   )
 }
@@ -713,8 +835,10 @@ function CreateEventContent() {
                         <div>
                           <label className="text-xs font-semibold text-gray-700 mb-1 block">{t('label_location_url')}</label>
                           <MapLocationPicker 
+                            locationName={locationName}
                             locationUrl={locationUrl}
-                            onLocationChange={setLocationUrl}
+                            onLocationNameChange={setLocationName}
+                            onLocationUrlChange={setLocationUrl}
                           />
                         </div>
                       </div>
