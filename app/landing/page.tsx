@@ -119,14 +119,13 @@ export default function LandingPage() {
                             {t('landing_cta_button')}
                         </a>
                     </div>
-                    <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
-                        <div className="lg:w-1/2 mt-10 lg:mt-0 relative">
+                    <div className="lg:w-1/2 mt-10 lg:mt-0 flex justify-center relative">
                           <img 
                                src="https://knjwmbwrgcojxcbmrbtm.supabase.co/storage/v1/object/public/brand/landingpage.png"
-                                alt="Brand Screenshot"
-                            className="w-full h-96 object-cover rounded-xl shadow-2xl"
-                              />
-</div>
+                               alt="Brand Screenshot"
+                               className="w-auto max-h-[600px] object-contain rounded-xl shadow-2xl"
+                             />
+                    
                     </div>
                 </div>
             </header>
