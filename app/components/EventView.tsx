@@ -7,26 +7,42 @@ import PhotoGallery from './PhotoGallery'
 import Countdown from './Countdown'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useTranslation } from '../i18n'
+import { useTranslation, LangType } from '../i18n'
 import type { Event, DetailBlock } from '../types'
+
+// Helper: Extract Google Maps coordinates from URL
+const extractMapCoordinates = (url: string): { lat: number, lng: number } | null => {
+  try {
+    const match1 = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (match1) return { lat: parseFloat(match1[1]), lng: parseFloat(match1[2]) }
+    
+    const match2 = url.match(/place\/[^\/]+\/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (match2) return { lat: parseFloat(match2[1]), lng: parseFloat(match2[2]) }
+    
+    const match3 = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (match3) return { lat: parseFloat(match3[1]), lng: parseFloat(match3[2]) }
+    
+    return null
+  } catch {
+    return null
+  }
+}
 
 export default function EventView({ slug }: { slug: string }) {
   const router = useRouter()
-  const { t, language } = useTranslation()
+  const { t, language, setLanguage } = useTranslation()
 
-  // STATE TANIMLARI - Type Safe
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [isOwner, setIsOwner] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [showMap, setShowMap] = useState(false)
 
-  // BAŞLANGIÇ KONTROLLERİ
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // A. Etkinlik Verisini Çek
         const { data, error: fetchError } = await supabase
           .from('events')
           .select('*')
@@ -41,7 +57,6 @@ export default function EventView({ slug }: { slug: string }) {
 
         setEvent(data)
 
-        // B. Giriş Yapan Kişi "Etkinlik Sahibi" mi?
         const { data: authData } = await supabase.auth.getSession()
         const currentUserId = authData.session?.user.id
 
@@ -49,8 +64,6 @@ export default function EventView({ slug }: { slug: string }) {
           setIsOwner(true)
         }
 
-        // C. Misafir Daha Önce Giriş Yapmış mı? (LocalStorage Kontrolü)
-        // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
         if (typeof window !== 'undefined') {
           const savedEmail = localStorage.getItem(`guest_access_${slug}`)
           if (savedEmail) {
@@ -68,7 +81,6 @@ export default function EventView({ slug }: { slug: string }) {
     fetchData()
   }, [slug, t])
 
-  // MİSAFİR GİRİŞ YAPINCA VEYA GÜNCELLEME YAPINCA ÇALIŞACAK FONKSİYON
   const handleGuestLogin = (email: string) => {
     setCurrentUserEmail(email)
     setIsOwner(false)
@@ -76,15 +88,13 @@ export default function EventView({ slug }: { slug: string }) {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem(`guest_access_${slug}`, email)
-      // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
       localStorage.setItem('createalist_guest_email', email)
     }
   }
 
-  // LOADING STATE
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('loading')}</p>
@@ -93,17 +103,16 @@ export default function EventView({ slug }: { slug: string }) {
     )
   }
 
-  // ERROR STATE
   if (error || !event) {
     return (
-      <div className="h-screen flex items-center justify-center p-4">
+      <div className="h-screen flex items-center justify-center p-4 bg-gray-50">
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">😕</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             {error || t('public_not_found')}
           </h2>
           <Link href="/">
-            <button className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700">
+            <button className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
               {t('error.go_home') || 'Ana Sayfa'}
             </button>
           </Link>
@@ -112,7 +121,6 @@ export default function EventView({ slug }: { slug: string }) {
     )
   }
 
-  // Stil ve Tema Ayarları
   const themeColor = event.design_settings?.theme || '#4F46E5'
   const titleFont = event.design_settings?.titleFont || "'Inter', sans-serif"
   const titleSize = event.design_settings?.titleSize || 2.5
@@ -127,27 +135,42 @@ export default function EventView({ slug }: { slug: string }) {
     : '...'
 
   const detailBlocks = (event.event_details || []) as DetailBlock[]
-
   const canAccessGallery = currentUserEmail || isOwner
+  const mapCoords = event.location_url ? extractMapCoordinates(event.location_url) : null
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center pb-20 font-sans">
-      {/* 1. KAPAK GÖRSELİ */}
-      {event.image_url ? (
-        <div
-          className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative"
-          style={{ backgroundColor: themeColor + '10' }}
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center pb-20 font-sans">
+      {/* LANGUAGE SELECTOR - Fixed Top Right */}
+      <div className="fixed top-4 right-4 z-50">
+        <select 
+          value={language} 
+          onChange={(e) => setLanguage(e.target.value as LangType)}
+          className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 shadow-md font-semibold uppercase cursor-pointer hover:bg-gray-50 transition focus:ring-2 focus:ring-indigo-500 outline-none"
         >
+          <option value="tr">TR</option>
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+          <option value="fr">FR</option>
+          <option value="es">ES</option>
+          <option value="it">IT</option>
+          <option value="ru">RU</option>
+          <option value="ar">AR</option>
+        </select>
+      </div>
+
+      {/* COVER IMAGE */}
+      {event.image_url ? (
+        <div className="w-full max-h-[350px] overflow-hidden bg-gray-100 flex items-center justify-center relative">
           <img src={event.image_url} className="object-cover w-full h-full" alt={`${event.title} - Cover`} />
           <div className="absolute inset-0 bg-black/10"></div>
         </div>
       ) : (
-        <div className="w-full h-32 bg-gray-50"></div>
+        <div className="w-full h-32 bg-gray-100"></div>
       )}
 
-      {/* 2. ANA KART */}
+      {/* MAIN CARD */}
       <div className="max-w-xl w-full px-5 -mt-10 relative z-10">
-        <div className="bg-white rounded-xl shadow-xl p-8 border-t-4" style={{ borderColor: themeColor }}>
+        <div className="bg-white rounded-xl shadow-lg p-8 border-t-4" style={{ borderColor: themeColor }}>
           <h1
             className="font-bold text-center mb-6 leading-tight"
             style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}
@@ -156,7 +179,7 @@ export default function EventView({ slug }: { slug: string }) {
           </h1>
 
           {event.main_image_url && (
-            <div className="mb-8 rounded-xl overflow-hidden shadow-md">
+            <div className="mb-8 rounded-xl overflow-hidden shadow-sm">
               <img src={event.main_image_url} className="w-full h-auto object-cover" alt={`${event.title} - Main`} />
             </div>
           )}
@@ -176,31 +199,62 @@ export default function EventView({ slug }: { slug: string }) {
             </div>
           )}
 
-          <hr className="my-8 border-gray-100" />
+          <hr className="my-8 border-gray-200" />
 
           <div className="grid grid-cols-1 gap-4 text-center mb-10">
-            <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
               <p className="font-bold text-gray-800 text-lg mb-1">{t('public_date_label')}</p>
               <p className="text-gray-600">{formattedDate}</p>
             </div>
-            <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+            
+            <div className="p-5 bg-gray-50 rounded-xl border border-gray-200">
               <p className="font-bold text-gray-800 text-lg mb-1">{t('public_location_label')}</p>
               <p className="text-gray-600 mb-4">{event.location_name || '...'}</p>
+              
               {event.location_url && (
-                <a
-                  href={event.location_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-6 py-2 rounded-full text-sm font-bold text-white transition hover:opacity-90 shadow-md transform hover:scale-105"
-                  style={{ backgroundColor: themeColor }}
-                >
-                  {t('public_directions_btn')}
-                </a>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(!showMap)}
+                    className="inline-block px-6 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition mr-2"
+                  >
+                    {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritayı Göster'}
+                  </button>
+                  
+                  <a
+                    href={event.location_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block px-6 py-2 rounded-lg text-sm font-semibold text-white transition hover:opacity-90 shadow-sm"
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    {t('public_directions_btn')}
+                  </a>
+                </div>
+              )}
+              
+              {/* MAP PREVIEW */}
+              {showMap && event.location_url && (
+                <div className="mt-4 rounded-xl overflow-hidden border-2 border-gray-200 shadow-sm">
+                  <iframe
+                    src={mapCoords 
+                      ? `https://maps.google.com/maps?q=${mapCoords.lat},${mapCoords.lng}&z=15&output=embed`
+                      : event.location_url.includes('/search/')
+                      ? `https://maps.google.com/maps?q=${event.location_url.split('/search/')[1]}&output=embed`
+                      : `https://maps.google.com/maps?q=${encodeURIComponent(event.location_name || '')}&output=embed`
+                    }
+                    width="100%"
+                    height="300"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
               )}
             </div>
           </div>
 
-          {/* DETAY BLOKLARI */}
+          {/* DETAIL BLOCKS */}
           {detailBlocks.length > 0 && (
             <div className="space-y-8 mb-4">
               <h3 className="text-center font-bold text-gray-400 text-xs uppercase tracking-widest mb-4">
@@ -224,32 +278,39 @@ export default function EventView({ slug }: { slug: string }) {
                         )}
                       </div>
                       <div className="flex-1 pl-4 pb-8">
-                        <h4 className="font-bold text-gray-800 text-lg">{block.subContent}</h4>
+                        <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                          {block.emoji && <span>{block.emoji}</span>}
+                          {block.subContent}
+                        </h4>
                       </div>
                     </div>
                   )}
+                  
                   {block.type === 'note' && (
-                    <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm text-center mb-4">
+                    <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm text-center mb-4">
                       {block.imageUrl && (
                         <div className="mb-4 rounded-lg overflow-hidden h-40 w-full">
                           <img src={block.imageUrl} className="w-full h-full object-cover" alt="Note" />
                         </div>
                       )}
-                      <h3 className="font-bold text-lg mb-2" style={{ color: themeColor }}>
+                      <h3 className="font-bold text-lg mb-2 flex items-center justify-center gap-2" style={{ color: themeColor }}>
+                        {block.emoji && <span>{block.emoji}</span>}
                         {block.title}
                       </h3>
                       <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">{block.content}</p>
                     </div>
                   )}
+                  
                   {block.type === 'link' && (
                     <div className="mb-4">
                       <a
                         href={block.content}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
+                        className="block w-full text-center py-4 rounded-xl font-bold text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-2"
                         style={{ backgroundColor: themeColor }}
                       >
+                        {block.emoji && <span className="text-xl">{block.emoji}</span>}
                         {block.title} ↗
                       </a>
                     </div>
@@ -261,9 +322,8 @@ export default function EventView({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* 3. RSVP FORM VE DURUM ALANI */}
+      {/* RSVP FORM AND STATUS AREA */}
       <div className="max-w-xl w-full px-6 mt-12">
-        {/* DURUM 1: Form Gösterilecekse */}
         {((!currentUserEmail && !isOwner) || isEditing) && (
           <RsvpForm
             eventId={event.id}
@@ -273,18 +333,16 @@ export default function EventView({ slug }: { slug: string }) {
           />
         )}
 
-        {/* DURUM 2: Bilgi Mesajı Gösterilecekse */}
         {!isEditing && (isOwner || currentUserEmail) && (
-          <div className="bg-green-50 p-6 rounded-xl text-center border border-green-100 shadow-sm relative animate-fadeIn">
+          <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 shadow-sm relative animate-fadeIn">
             <div className="text-3xl mb-2">🎉</div>
             <p className="text-green-800 font-bold text-lg">
               {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
             </p>
             <p className="text-green-600 text-sm mt-1 mb-4">{t('public_gallery_hint')}</p>
 
-            {/* SAHİP İÇİN: TEST BUTONU */}
             {isOwner && (
-              <div className="mt-4 pt-4 border-t border-green-100">
+              <div className="mt-4 pt-4 border-t border-green-200">
                 <button
                   onClick={() => setIsEditing(true)}
                   className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
@@ -295,9 +353,8 @@ export default function EventView({ slug }: { slug: string }) {
               </div>
             )}
 
-            {/* MİSAFİR İÇİN: DÜZENLEME BUTONU */}
             {!isOwner && currentUserEmail && (
-              <div className="mt-4 pt-4 border-t border-green-100">
+              <div className="mt-4 pt-4 border-t border-green-200">
                 <button
                   onClick={() => setIsEditing(true)}
                   className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
@@ -310,7 +367,7 @@ export default function EventView({ slug }: { slug: string }) {
         )}
       </div>
 
-      {/* 4. FOTOĞRAF GALERİSİ */}
+      {/* PHOTO GALLERY */}
       <div className="max-w-xl w-full px-6 mt-12">
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ color: themeColor }}>
           {t('public_memory_wall')}
@@ -318,7 +375,7 @@ export default function EventView({ slug }: { slug: string }) {
         {canAccessGallery ? (
           <PhotoGallery eventId={event.id} currentUserEmail={isOwner ? 'owner' : currentUserEmail!} themeColor={themeColor} />
         ) : (
-          <div className="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200">
+          <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-300">
             <div className="text-5xl mb-4 opacity-50">🔒</div>
             <h3 className="font-bold text-gray-800 text-lg">{t('public_gallery_locked')}</h3>
             <p className="text-sm text-gray-500 mt-2">{t('public_gallery_hint')}</p>
@@ -326,7 +383,7 @@ export default function EventView({ slug }: { slug: string }) {
         )}
       </div>
 
-      {/* 5. ALT AKSİYON BUTONU */}
+      {/* BOTTOM ACTION BUTTON */}
       <div className="max-w-xl w-full px-6 mt-12 pb-10">
         <div className="block w-full text-center">
           <button
@@ -334,14 +391,13 @@ export default function EventView({ slug }: { slug: string }) {
               const emailToSave = currentUserEmail || localStorage.getItem(`guest_access_${slug}`)
 
               if (emailToSave) {
-                // ✅ DÜZELTİLDİ: createalist_guest_email kullanılıyor
                 localStorage.setItem('createalist_guest_email', emailToSave)
                 router.push('/')
               } else {
                 router.push('/landing')
               }
             }}
-            className="bg-gray-100 text-gray-600 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition text-sm w-full md:w-auto"
+            className="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition text-sm w-full md:w-auto"
           >
             {isOwner
               ? t('public_back_dashboard')
