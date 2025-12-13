@@ -29,7 +29,6 @@ export default function Dashboard() {
   const [detailTab, setDetailTab] = useState<'guests' | 'photos'>('guests')
   const [loadingDetails, setLoadingDetails] = useState(false)
 
-  // LOGO URL
   const logoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/brand/logo.png`
 
   useEffect(() => {
@@ -71,7 +70,7 @@ export default function Dashboard() {
     
   const handleLogout = async () => {
       await supabase.auth.signOut()
-      localStorage.removeItem('createalist_guest_email') // ✅ Misafir email'ini de temizle
+      localStorage.removeItem('createalist_guest_email')
       setSession(null)
       router.push('/landing')
       router.refresh()
@@ -130,30 +129,24 @@ export default function Dashboard() {
     setLoadingDetails(false)
   }
 
-  // ✅ YENİ FONKSIYON - Kredi Kontrolü ile Event Oluşturma
   const handleCreateEvent = () => {
-    // Misafir kontrolü
     // @ts-ignore
     if (session?.user?.isGuest) {
       alert(t('dashboard.alert_guest_cannot_create'))
       return
     }
 
-    // Kredi yükleniyor mu?
     if (credits === null) {
       alert(t('dashboard.alert_loading_credits'))
       return
     }
     
-    // Kredi var mı?
     if (credits < 1) {
       alert(t('dashboard.alert_insufficient_credits'))
-      // Scroll to packages (optional)
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
       return
     }
     
-    // Her şey OK - Forma git
     router.push('/create')
   }
 
@@ -173,7 +166,14 @@ export default function Dashboard() {
     }
   }
 
-  if (!session) return <div className="h-screen flex items-center justify-center text-xl text-gray-500">{t('loading')}</div>
+  if (!session) return (
+    <div className="h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">{t('loading')}</p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
@@ -194,63 +194,67 @@ export default function Dashboard() {
                 </div>
             </div>
             <div className="flex items-center gap-3">
-                <div className="relative group">
-                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">🌍</div>
-                    <select 
-                        value={language} 
-                        onChange={(e) => setLanguage(e.target.value as LangType)}
-                        className="bg-gray-100 border border-transparent text-gray-700 text-xs rounded-full focus:ring-2 focus:ring-indigo-500 focus:bg-white block pl-9 pr-2 py-2 appearance-none cursor-pointer font-bold hover:bg-gray-200 transition outline-none uppercase"
-                    >
-                        <option value="tr">TR</option>
-                        <option value="en">EN</option>
-                        <option value="de">DE</option>
-                        <option value="fr">FR</option>
-                        <option value="es">ES</option>
-                        <option value="it">IT</option>
-                        <option value="ru">RU</option>
-                        <option value="ar">AR</option>
-                    </select>
-                </div>
-                <button onClick={handleLogout} className="text-gray-400 hover:text-black text-sm underline shrink-0 ml-2">
+                <select 
+                    value={language} 
+                    onChange={(e) => setLanguage(e.target.value as LangType)}
+                    className="bg-gray-100 border border-gray-200 text-gray-700 text-xs rounded-lg px-3 py-2 font-semibold uppercase cursor-pointer hover:bg-gray-200 transition focus:ring-2 focus:ring-indigo-500 outline-none"
+                >
+                    <option value="tr">TR</option>
+                    <option value="en">EN</option>
+                    <option value="de">DE</option>
+                    <option value="fr">FR</option>
+                    <option value="es">ES</option>
+                    <option value="it">IT</option>
+                    <option value="ru">RU</option>
+                    <option value="ar">AR</option>
+                </select>
+                <button onClick={handleLogout} className="text-gray-400 hover:text-gray-700 text-sm font-medium transition">
                     {t('logout')}
                 </button>
             </div>
         </div>
         
         {/* KREDİ & AKSİYON ALANI */}
-        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-lg border-b border-x mb-8 space-y-3 md:space-y-0">
-            <div className="order-2 md:order-1 bg-yellow-50 text-yellow-700 px-6 py-3 rounded-xl font-bold border border-yellow-200 flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-                <div className="bg-yellow-200 text-yellow-800 p-1 rounded-full">💰</div>
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-b-xl shadow-sm border-b border-x mb-8 space-y-3 md:space-y-0">
+            <div className="order-2 md:order-1 bg-gray-50 border border-gray-200 px-6 py-4 rounded-lg flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
+                <div className="text-2xl">💰</div>
                 <div>
-                    <p className="text-xs uppercase font-bold">{t('my_credits')}</p>
-                    <p className="text-xl font-bold text-gray-800">{credits !== null ? credits : '...'}</p>
+                    <p className="text-xs uppercase font-semibold text-gray-500">{t('my_credits')}</p>
+                    <p className="text-2xl font-bold text-gray-900">{credits !== null ? credits : '...'}</p>
                 </div>
             </div>
             
             <div className="order-1 md:order-2 w-full md:w-auto">
-                {/* ✅ SYNTAX HATASI DÜZELTİLDİ - onClick doğru yerde */}
                 <button 
                     onClick={handleCreateEvent}
-                    className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-[1.01] transition w-full flex items-center justify-center gap-2"
+                    className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition w-full md:w-auto"
                 >
-                    ✨ {t('create_new_event')}
+                    {t('create_new_event')}
                 </button>
             </div>
         </div>
 
         {/* SEKME BAŞLIKLARI */}
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-2 mb-6">
             <button 
                 onClick={() => setActiveTab('created')}
-                className={`px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'created' ? 'bg-white text-indigo-600 border-x border-t border-gray-200 shadow-sm relative top-[1px]' : 'text-gray-500 hover:bg-gray-100'}`}
+                className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${
+                    activeTab === 'created' 
+                        ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' 
+                        : 'text-gray-600 hover:bg-white/50'
+                }`}
             >
-                👑 {t('tab_created')}
+                {t('tab_created')}
             </button>
             <button 
                 onClick={() => setActiveTab('invited')}
-                className={`px-6 py-3 font-bold text-sm rounded-t-lg transition ${activeTab === 'invited' ? 'bg-white text-indigo-600 border-x border-t border-gray-200 shadow-sm relative top-[1px]' : 'text-gray-500 hover:bg-gray-100'}`}
+                className={`px-6 py-3 rounded-lg font-semibold text-sm transition ${
+                    activeTab === 'invited' 
+                        ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' 
+                        : 'text-gray-600 hover:bg-white/50'
+                }`}
             >
-                💌 {t('tab_invited')} ({invitedEvents.length})
+                {t('tab_invited')} ({invitedEvents.length})
             </button>
         </div>
 
@@ -263,21 +267,22 @@ export default function Dashboard() {
                     {myEvents.length === 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center animate-fadeIn">
                             <div className="max-w-3xl mx-auto">
-                                <div className="text-6xl mb-4">🚀</div>
+                                <div className="text-6xl mb-4">📝</div>
                                 <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('dashboard.empty_state_title')}</h2>
                                 <p className="text-gray-500 mb-8">{t('dashboard.empty_state_desc')}</p>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {packages.map((pkg) => (
-                                        <div key={pkg.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-xl hover:border-indigo-300 transition flex flex-col items-center bg-gray-50 hover:bg-white relative overflow-hidden group">
-                                            <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                                        <div key={pkg.id} className="border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg hover:border-indigo-600 transition flex flex-col items-center bg-white">
                                             <h3 className="font-bold text-lg text-gray-800 mb-2">{pkg.package_name || t('dashboard.package_default_name')}</h3>
-                                            <div className="text-4xl font-extrabold text-indigo-600 mb-2">{pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">{t('dashboard.credit_label')}</span></div>
+                                            <div className="text-4xl font-bold text-indigo-600 mb-2">
+                                                {pkg.credits_amount} <span className="text-sm text-gray-400 font-normal">{t('dashboard.credit_label')}</span>
+                                            </div>
                                             <p className="text-xs text-gray-400 mb-6 text-center">{t('dashboard.package_lifetime_note')}</p>
                                             <a 
                                                 href={pkg.etsy_link || `https://www.etsy.com/listing/${pkg.etsy_listing_id}`} 
                                                 target="_blank" 
-                                                className="w-full bg-black text-white py-3 rounded-lg font-bold text-sm hover:bg-gray-800 transition shadow-md flex items-center justify-center gap-2"
+                                                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold text-sm hover:bg-indigo-700 transition flex items-center justify-center gap-2"
                                             >
                                                 {t('dashboard.btn_buy_etsy')}
                                             </a>
@@ -290,52 +295,101 @@ export default function Dashboard() {
                     )}
                     
                     {myEvents.map(event => (
-                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition hover:shadow-md">
                             <div className="flex justify-between items-center flex-wrap gap-4">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-2 h-12 rounded-full" style={{ backgroundColor: event.design_settings?.theme }}></div>
+                                    <div className="w-2 h-12 rounded-full bg-indigo-600" style={{ backgroundColor: event.design_settings?.theme }}></div>
                                     <div>
-                                        <h3 className="font-bold text-lg">{event.title}</h3>
-                                        <a href={`/${event.slug}`} target="_blank" className="text-indigo-500 text-xs font-medium bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100">{origin}/{event.slug} ↗</a>
+                                        <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
+                                        <a href={`/${event.slug}`} target="_blank" className="text-indigo-600 text-xs font-medium hover:underline">
+                                            {origin}/{event.slug} ↗
+                                        </a>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 flex-wrap">
-                                    <button onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} className="bg-gray-800 text-white px-3 py-2 rounded text-sm font-medium hover:bg-black transition">📱 {t('dashboard.btn_qr_short')}</button>
+                                    <button 
+                                        onClick={() => setShowQrId(showQrId === event.id ? null : event.id)} 
+                                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
+                                    >
+                                        QR
+                                    </button>
                                     <Link href={`/create?edit=${event.id}`}>
-                                        <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-blue-700 transition">✏️ {t('edit')}</button>
+                                        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                                            {t('edit')}
+                                        </button>
                                     </Link>
-                                    <button onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-medium hover:bg-gray-200 transition">⚙️ {t('manage')}</button>
+                                    <button 
+                                        onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} 
+                                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
+                                    >
+                                        {t('manage')}
+                                    </button>
                                 </div>
                             </div>
 
                             {showQrId === event.id && (
                                 <div className="mt-6 p-6 bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center animate-fadeIn">
-                                    <div className="p-3 bg-white rounded shadow-sm mb-4"><QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/></div>
-                                    <button onClick={() => downloadQRCode(event.slug)} className="mt-2 text-sm text-indigo-600 font-bold hover:underline">📥 {t('download')}</button>
+                                    <div className="p-3 bg-white rounded-lg shadow-sm mb-4">
+                                        <QRCodeCanvas id={`qr-${event.slug}`} value={`${origin}/${event.slug}`} size={160} level={"H"}/>
+                                    </div>
+                                    <button 
+                                        onClick={() => downloadQRCode(event.slug)} 
+                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
+                                    >
+                                        {t('download')}
+                                    </button>
                                 </div>
                             )}
 
                             {selectedEventId === event.id && (
                                 <div className="mt-6 border-t pt-6">
-                                    <div className="flex gap-6 border-b border-gray-100 mb-6 pb-1">
-                                        <button onClick={() => setDetailTab('guests')} className={`pb-2 px-3 text-sm font-bold transition ${detailTab==='guests' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                    <div className="flex gap-6 border-b border-gray-200 mb-6 pb-1">
+                                        <button 
+                                            onClick={() => setDetailTab('guests')} 
+                                            className={`pb-2 px-3 text-sm font-semibold transition ${
+                                                detailTab==='guests' 
+                                                    ? 'text-indigo-600 border-b-2 border-indigo-600' 
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                        >
                                             {t('guests_tab')}
                                         </button>
-                                        <button onClick={() => setDetailTab('photos')} className={`pb-2 px-3 text-sm font-bold transition ${detailTab==='photos' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                                        <button 
+                                            onClick={() => setDetailTab('photos')} 
+                                            className={`pb-2 px-3 text-sm font-semibold transition ${
+                                                detailTab==='photos' 
+                                                    ? 'text-indigo-600 border-b-2 border-indigo-600' 
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                        >
                                             {t('photos_tab')} ({photos.length})
                                         </button>
                                     </div>
 
-                                    {loadingDetails ? <p className="text-gray-400 text-sm">{t('loading')}</p> : (
+                                    {loadingDetails ? (
+                                        <div className="text-center py-8">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                                            <p className="text-gray-400 text-sm">{t('loading')}</p>
+                                        </div>
+                                    ) : (
                                         detailTab === 'guests' ? (
                                             <GuestManager eventId={event.id} eventSlug={event.slug} eventTitle={event.title} />
                                         ) : (
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                {photos.length === 0 && <p className="col-span-4 text-center text-gray-400 text-sm py-4">{t('dashboard.photos_empty')}</p>}
+                                                {photos.length === 0 && (
+                                                    <p className="col-span-4 text-center text-gray-400 text-sm py-4">
+                                                        {t('dashboard.photos_empty')}
+                                                    </p>
+                                                )}
                                                 {photos.map(p => (
                                                     <div key={p.id} className="relative group">
-                                                        <img src={p.image_url} className="h-24 w-full object-cover rounded shadow-sm"/>
-                                                        <button onClick={() => deletePhoto(p.id)} className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700">{t('delete')}</button>
+                                                        <img src={p.image_url} className="h-24 w-full object-cover rounded-lg shadow-sm"/>
+                                                        <button 
+                                                            onClick={() => deletePhoto(p.id)} 
+                                                            className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded shadow hover:bg-red-700"
+                                                        >
+                                                            {t('delete')}
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -351,10 +405,15 @@ export default function Dashboard() {
             {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER */}
             {activeTab === 'invited' && (
                 <>
-                    {invitedEvents.length === 0 && <div className="text-center py-10 text-gray-400 bg-white rounded-xl border">{t('no_invited_events')}</div>}
+                    {invitedEvents.length === 0 && (
+                        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                            <div className="text-6xl mb-4">📬</div>
+                            <p className="text-gray-500">{t('no_invited_events')}</p>
+                        </div>
+                    )}
                     
                     {invitedEvents.map(event => (
-                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-indigo-500 transition hover:shadow-xl flex flex-col md:flex-row gap-6">
+                        <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition hover:shadow-md flex flex-col md:flex-row gap-6">
                              {event.image_url && (
                                  <div className="w-full md:w-48 h-32 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                                      <img src={event.image_url} className="w-full h-full object-cover" />
@@ -362,11 +421,19 @@ export default function Dashboard() {
                              )}
 
                              <div className="flex-1 flex flex-col justify-center">
-                                 <h3 className="font-bold text-xl text-gray-800 mb-1">{event.title}</h3>
-                                 <p className="text-gray-500 text-sm mb-2">📍 {event.location_name || t('dashboard.location_fallback')}</p>
-                                 <p className="text-gray-500 text-sm mb-4">📅 {event.event_date ? new Date(event.event_date).toLocaleDateString() : t('dashboard.date_fallback')}</p>
+                                 <h3 className="font-bold text-xl text-gray-900 mb-1">{event.title}</h3>
+                                 <p className="text-gray-500 text-sm mb-2">
+                                     {event.location_name || t('dashboard.location_fallback')}
+                                 </p>
+                                 <p className="text-gray-500 text-sm mb-4">
+                                     {event.event_date ? new Date(event.event_date).toLocaleDateString() : t('dashboard.date_fallback')}
+                                 </p>
                                  
-                                 <a href={`/${event.slug}`} target="_blank" className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 hover:scale-105 transition w-fit shadow-md">
+                                 <a 
+                                     href={`/${event.slug}`} 
+                                     target="_blank" 
+                                     className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition w-fit"
+                                 >
                                      {t('go_to_event')}
                                  </a>
                              </div>
@@ -381,9 +448,9 @@ export default function Dashboard() {
       {/* FOOTER */}
       <footer className="mt-12 pt-6 border-t border-gray-200 max-w-5xl mx-auto text-center">
         <div className="flex justify-center space-x-6 text-sm text-gray-500">
-          <Link href="/legal/terms" className="hover:text-black">{t('footer.link_terms')}</Link>
-          <Link href="/legal/privacy" className="hover:text-black">{t('footer.link_privacy')}</Link>
-          <button onClick={handleLogout} className="hover:text-black">{t('logout')}</button>
+          <Link href="/legal/terms" className="hover:text-gray-700 transition">{t('footer.link_terms')}</Link>
+          <Link href="/legal/privacy" className="hover:text-gray-700 transition">{t('footer.link_privacy')}</Link>
+          <button onClick={handleLogout} className="hover:text-gray-700 transition">{t('logout')}</button>
         </div>
         <p className="mt-3 text-xs text-gray-400">{t('footer.copyright_text')}</p>
       </footer>
