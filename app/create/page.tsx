@@ -107,7 +107,7 @@ const EmojiModal = ({ isOpen, onClose, onSelect }: { isOpen: boolean, onClose: (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Emoji Seç</h3>
+          <h3 className="text-lg font-bold text-gray-900">Select Emoji</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
         <div className="grid grid-cols-8 gap-2 max-h-80 overflow-y-auto">
@@ -240,7 +240,7 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>İpucu:</strong> You can see the location on the map after searching.</p>
+              <p>💡 <strong>Hint:</strong> You can see the location on the map after searching.</p>
               <p>📍 Find the location you want by panning the map and open it in Google Maps.</p>
             </div>
           </div>
@@ -628,7 +628,7 @@ function CreateEventContent() {
                   <section>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('section_images')}</h3>
-                        <Tooltip text="Davetiye için kapak ve ana görseli yükleyin">
+                        <Tooltip text="Upload the cover and main image for the invitation.">
                           <span className="text-gray-400 hover:text-gray-600 cursor-help">ℹ️</span>
                         </Tooltip>
                       </div>
@@ -642,7 +642,7 @@ function CreateEventContent() {
                                         <img src={coverPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Görsel
+                                         Image
                                         </div>
                                       )}
                                   </div>
@@ -661,7 +661,7 @@ function CreateEventContent() {
                                         <img src={mainPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Görsel
+                                         Image
                                         </div>
                                       )}
                                   </div>
@@ -827,7 +827,7 @@ function CreateEventContent() {
                             type="text" 
                             value={locationName} 
                             onChange={e => setLocationName(e.target.value)} 
-                            placeholder="Örn: Hilton Otel, İstanbul"
+                            placeholder="e.g.: Eiffel Tower, Paris"
                             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                           />
                         </div>
@@ -910,7 +910,7 @@ function CreateEventContent() {
                                           <option value="text">{t('create.field_type_text')}</option>
                                           <option value="textarea">{t('create.field_type_textarea')}</option>
                                           <option value="select">{t('create.field_type_dropdown')}</option>
-                                          <option value="emoji">Emoji Seçimi</option>
+                                          <option value="emoji">Emoji Selection</option>
                                       </select>
                                       <label className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
                                           <input 
@@ -1216,7 +1216,7 @@ function CreateEventContent() {
                                           {f.type === 'select' 
                                             ? <select className="flex-1 border p-2 rounded text-xs"><option>{f.label}</option></select>
                                             : f.type === 'emoji'
-                                            ? <div className="flex-1 border p-2 rounded text-xs bg-gray-50">{f.label} (Emoji Seçimi)</div>
+                                            ? <div className="flex-1 border p-2 rounded text-xs bg-gray-50">{f.label} (Emoji Selection)</div>
                                             : <input className="flex-1 border p-2 rounded text-xs" placeholder={f.label}/>
                                           }
                                         </div>
