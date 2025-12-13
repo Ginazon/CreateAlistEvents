@@ -48,11 +48,11 @@ const MESSAGE_SIZES = [
 const EMOJIS = ['😊', '❤️', '🎉', '🎊', '💐', '🎈', '🎁', '💍', '👰', '🤵', '🍾', '🥂', '🎵', '🎶', '⭐', '✨', '💫', '🌟', '🔔', '📅', '📍', '🏠', '🌸', '🌹', '🌺', '🌻', '🌷', '🎂', '🍰', '🥳', '🎭', '🎪', '🎨', '🎬', '📸', '💌', '💝', '💖', '💗', '💓', '💞', '💕', '🌈', '☀️', '🌙', '⭐', '💎', '👑', '🦋', '🌺']
 
 const SAMPLE_MESSAGES = {
-  wedding: "Hayatımızın en özel günü! Sizleri düğünümüze davet ediyoruz. Mutluluğumuza ortak olmanızı isteriz.",
-  birthday: "Bir yaş daha büyüyorum! Doğum günü partimde yanımda olmanı istiyorum. Eğlence garantili!",
-  engagement: "Aşkımızı kutlamak için bir araya geliyoruz. Nişanımızda bizimle olur musunuz?",
-  baby: "Küçük prensimiz/prensesimiz dünyaya geliyor! Baby shower'ımızda buluşalım.",
-  graduation: "Mezuniyet sevincimi sizinle paylaşmak istiyorum. Kutlamaya davetlisiniz!",
+  wedding: "The most special day of our lives! We invite you to our wedding. We would love for you to share our happiness.",
+  birthday: "I'm turning another year older! I want you by my side at my birthday party. Fun guaranteed!",
+  engagement: "We are gathering to celebrate our love. Would you join us for our engagement?",
+  baby: "Our little prince/princess is on the way! Let's meet at our baby shower.",
+  graduation: "I want to share the joy of my graduation with you. You are invited to the celebration!",
 }
 
 const turkishSlugify = (text: string) => {
@@ -203,7 +203,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
+          {showMap ? '🗺️ Hide Map' : '📍 Select from Map'}
         </button>
         {locationUrl && (
           <a
@@ -227,7 +227,7 @@ const MapLocationPicker = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="🔍 Adres ara... (örn: Taksim Meydanı, İstanbul)"
+                placeholder="🔍 Search address... (e.g. Eiffel Tower, Paris)"
                 className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
@@ -235,13 +235,13 @@ const MapLocationPicker = ({
                 onClick={handleSearch}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
               >
-                Ara
+                Search
               </button>
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
-              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
+              <p>💡 <strong>İpucu:</strong> You can see the location on the map after searching.</p>
+              <p>📍 Find the location you want by panning the map and open it in Google Maps.</p>
             </div>
           </div>
           
@@ -263,12 +263,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
+                <p className="font-semibold mb-1">How to Select a Location?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
-                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
-                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
-                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
+                  <li>Type an address in the search box above and click the 'Search' button.</li>
+                  <li>Click the 'Open in Google Maps' button when the map shows the desired location.</li>
+                  <li>Copy the URL from the page that opens and paste it into the field below.</li>
+                  <li>Or you can manually enter a Google Maps URL.</li>
                 </ol>
               </div>
             </div>
@@ -290,7 +290,7 @@ const MapLocationPicker = ({
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
+            ✓ URL saved - Guests will be directed to the map.
           </p>
         )}
       </div>
@@ -690,14 +690,14 @@ function CreateEventContent() {
                               }}
                               className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                             >
-                              Emoji Ekle
+                              Add Emoji
                             </button>
                           </div>
                           <input 
                             type="text" 
                             value={title} 
                             onChange={e => setTitle(e.target.value)} 
-                            placeholder="Örn: Düğünümüze Davetlisiniz"
+                            placeholder="You are invited"
                             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-3"
                           />
                           <div className="flex gap-2">
@@ -744,14 +744,14 @@ function CreateEventContent() {
                                 }}
                                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                               >
-                                Emoji Ekle
+                                Add Emoji
                               </button>
                               <div className="relative group">
                                 <button
                                   type="button"
                                   className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200 transition"
                                 >
-                                  Örnekler
+                                  Drafts
                                 </button>
                                 <div className="absolute hidden group-hover:block top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 z-10">
                                   {Object.entries(SAMPLE_MESSAGES).map(([key, msg]) => (
@@ -771,7 +771,7 @@ function CreateEventContent() {
                           <textarea 
                             value={message} 
                             onChange={e => setMessage(e.target.value)} 
-                            placeholder="Misafirlerinize özel mesajınızı buraya yazın..."
+                            placeholder="Write a special message for the invitation."
                             className="w-full border border-gray-300 p-3 rounded-lg mb-3 h-24 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
                           />
                           <div className="flex gap-2">
@@ -1143,7 +1143,7 @@ function CreateEventContent() {
                               )}
                               
                               <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
-                                {message || 'Mesajınızı buraya yazın...'}
+                                {message || 'Write your message here...'}
                               </p>
                               
                               {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
