@@ -647,7 +647,7 @@ function CreateEventContent() {
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {coverPreview ? 'Değiştir' : t('file_btn_cover')}
+                                    {coverPreview ? 'Change' : t('file_btn_cover')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
                                   </label>
                               </div>
@@ -666,7 +666,7 @@ function CreateEventContent() {
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {mainPreview ? 'Değiştir' : t('file_btn_main')}
+                                    {mainPreview ? 'Change' : t('file_btn_main')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
