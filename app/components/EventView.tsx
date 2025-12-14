@@ -40,6 +40,9 @@ export default function EventView({ slug }: { slug: string }) {
   const [isEditing, setIsEditing] = useState(false)
   const [showMap, setShowMap] = useState(false)
 
+  // Google Fonts URL - Same as Create Page
+  const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&display=swap"
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -140,6 +143,9 @@ export default function EventView({ slug }: { slug: string }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pb-20 font-sans">
+      {/* Load Google Fonts */}
+      <link href={GOOGLE_FONTS_URL} rel="stylesheet" />
+      
       {/* LANGUAGE SELECTOR - Fixed Top Right */}
       <div className="fixed top-4 right-4 z-50">
         <select 
@@ -218,7 +224,7 @@ export default function EventView({ slug }: { slug: string }) {
                     onClick={() => setShowMap(!showMap)}
                     className="inline-block px-6 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition mr-2"
                   >
-                    {showMap ? '🗺️ Hide Map' : '📍See Map'}
+                    {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritayı Göster'}
                   </button>
                   
                   <a
