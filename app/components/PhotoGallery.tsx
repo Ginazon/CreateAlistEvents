@@ -36,7 +36,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
     if (!file) return
 
     if (file.size > 10 * 1024 * 1024) {
-      alert(t('error.file_too_large') || 'Dosya çok büyük (Max 10MB)')
+      alert(t('error.file_too_large') || 'File too large (Max 10MB)')
       return
     }
 
@@ -108,7 +108,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }
 
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
-    if (!confirm(t('confirm_delete') || 'Silmek istediğinize emin misiniz?')) return
+    if (!confirm(t('confirm_delete') || 'Are you sure you want to delete?')) return
 
     try {
       const path = imageUrl.split('/gallery/')[1]
@@ -123,7 +123,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm(t('confirm_delete') || 'Silmek istediğinize emin misiniz?')) return
+    if (!confirm(t('confirm_delete') || 'Are you sure you want to delete?')) return
     await supabase.from('photo_comments').delete().eq('id', commentId)
     fetchPhotos()
   }
@@ -142,7 +142,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       {showUploadOptions ? (
         <div className="bg-white border-2 border-indigo-500 rounded-xl p-6 space-y-3">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-800">Fotoğraf Ekle</h3>
+            <h3 className="font-bold text-gray-800">Add Photo</h3>
             <button
               onClick={() => setShowUploadOptions(false)}
               className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
@@ -167,7 +167,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
               className="flex items-center justify-center gap-3 bg-indigo-600 text-white p-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition"
             >
               <span className="text-2xl">📷</span>
-              <span className="font-semibold">Fotoğraf Çek</span>
+              <span className="font-semibold">Take Photo</span>
             </label>
           </div>
 
@@ -186,7 +186,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
               className="flex items-center justify-center gap-3 bg-gray-100 text-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-200 transition"
             >
               <span className="text-2xl">🖼️</span>
-              <span className="font-semibold">Galeriden Seç</span>
+              <span className="font-semibold">Choose from Gallery</span>
             </label>
           </div>
 
@@ -201,9 +201,9 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
         >
           <div className="text-4xl mb-2 group-hover:scale-110 transition">{uploading ? '⏳' : '📸'}</div>
           <p className="text-gray-500 font-bold text-sm">
-            {uploading ? t('loading') : 'Fotoğraf Ekle'}
+            {uploading ? t('loading') : 'Add Photo'}
           </p>
-          <p className="text-xs text-gray-400 mt-1">Kamera veya Galeri</p>
+          <p className="text-xs text-gray-400 mt-1">Camera or Gallery</p>
         </button>
       )}
 
@@ -211,49 +211,54 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       {photos.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-5xl mb-4">📷</div>
-          <p className="font-medium">{t('gallery_empty') || 'Henüz fotoğraf yok'}</p>
-          <p className="text-sm mt-2">{t('gallery_empty_hint') || 'İlk fotoğrafı siz ekleyin!'}</p>
+          <p className="font-medium">{t('gallery_empty') || 'No photos yet'}</p>
+          <p className="text-sm mt-2">{t('gallery_empty_hint') || 'Be the first to add a photo!'}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-1">
           {photos.map((photo) => {
             const isOwner = photo.user_email === currentUserEmail
-            const hasLiked = photo.photo_likes?.some((l: any) => l.user_email === currentUserEmail)
             const likeCount = photo.photo_likes?.length || 0
+            const commentCount = photo.photo_comments?.length || 0
 
             return (
-              <div key={photo.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
-                <div
-                  className="relative aspect-square cursor-pointer bg-gray-100"
-                  onClick={() => setSelectedPhoto(photo)}
-                >
-                  <img src={photo.image_url} className="w-full h-full object-cover" alt="Memory" />
-                </div>
-
-                <div className="p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => handleLike(photo.id)}
-                      className="flex items-center gap-1 text-sm"
-                      style={{ color: hasLiked ? themeColor : '#6B7280' }}
-                    >
-                      {hasLiked ? '❤️' : '🤍'} {likeCount}
-                    </button>
-
-                    {isOwner && (
-                      <button
-                        onClick={() => handleDeletePhoto(photo.id, photo.image_url)}
-                        className="text-xs text-red-500 hover:text-red-700"
-                      >
-                        🗑️
-                      </button>
-                    )}
+              <div
+                key={photo.id}
+                className="relative aspect-square cursor-pointer group bg-gray-100 overflow-hidden"
+                onClick={() => setSelectedPhoto(photo)}
+              >
+                <img 
+                  src={photo.image_url} 
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                  alt="Memory" 
+                />
+                
+                {/* Instagram-style hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center gap-4">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-4 text-white font-bold">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xl">❤️</span>
+                      <span>{likeCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xl">💬</span>
+                      <span>{commentCount}</span>
+                    </div>
                   </div>
-
-                  <p className="text-xs text-gray-500">
-                    {photo.uploader_name} • {new Date(photo.created_at).toLocaleDateString('tr-TR')}
-                  </p>
                 </div>
+
+                {/* Delete button for owner */}
+                {isOwner && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeletePhoto(photo.id, photo.image_url)
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             )
           })}
@@ -303,7 +308,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
 
               <div className="border-t pt-4">
                 <h4 className="font-bold text-gray-800 mb-3">
-                  {t('comments') || 'Yorumlar'} ({selectedPhoto.photo_comments?.length || 0})
+                  {t('comments') || 'Comments'} ({selectedPhoto.photo_comments?.length || 0})
                 </h4>
 
                 <div className="space-y-3 mb-4 max-h-40 overflow-y-auto">
@@ -335,7 +340,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                     type="text"
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
-                    placeholder={t('add_comment') || 'Yorum ekle...'}
+                    placeholder={t('add_comment') || 'Add a comment...'}
                     className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400"
                     onKeyPress={(e) => e.key === 'Enter' && handleComment(selectedPhoto.id)}
                   />
@@ -344,7 +349,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                     className="px-6 py-2 rounded-lg font-semibold text-sm text-white"
                     style={{ backgroundColor: themeColor }}
                   >
-                    {t('send') || 'Gönder'}
+                    {t('send') || 'Send'}
                   </button>
                 </div>
               </div>
