@@ -48,11 +48,11 @@ const MESSAGE_SIZES = [
 const EMOJIS = ['😊', '❤️', '🎉', '🎊', '💐', '🎈', '🎁', '💍', '👰', '🤵', '🍾', '🥂', '🎵', '🎶', '⭐', '✨', '💫', '🌟', '🔔', '📅', '📍', '🏠', '🌸', '🌹', '🌺', '🌻', '🌷', '🎂', '🍰', '🥳', '🎭', '🎪', '🎨', '🎬', '📸', '💌', '💝', '💖', '💗', '💓', '💞', '💕', '🌈', '☀️', '🌙', '⭐', '💎', '👑', '🦋', '🌺']
 
 const SAMPLE_MESSAGES = {
-  wedding: "Hayatımızın en özel günü! Sizleri düğünümüze davet ediyoruz. Mutluluğumuza ortak olmanızı isteriz.",
-  birthday: "Bir yaş daha büyüyorum! Doğum günü partimde yanımda olmanı istiyorum. Eğlence garantili!",
-  engagement: "Aşkımızı kutlamak için bir araya geliyoruz. Nişanımızda bizimle olur musunuz?",
-  baby: "Küçük prensimiz/prensesimiz dünyaya geliyor! Baby shower'ımızda buluşalım.",
-  graduation: "Mezuniyet sevincimi sizinle paylaşmak istiyorum. Kutlamaya davetlisiniz!",
+  wedding: "The most special day of our lives! We invite you to our wedding. We would love for you to share our happiness.",
+  birthday: "I'm turning a year older! I want you by my side at my birthday party. Fun guaranteed!",
+  engagement: "We are gathering to celebrate our love. Will you join us at our engagement?",
+  baby: "Our little prince/princess is on the way! Join us for our baby shower.",
+  graduation: "I want to share the joy of my graduation with you. You are invited to the celebration!",
 }
 
 const turkishSlugify = (text: string) => {
@@ -227,7 +227,7 @@ const MapLocationPicker = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="🔍 Adres ara... (örn: Taksim Meydanı, İstanbul)"
+                placeholder="🔍 Search for address... (e.g. Times Square, New York)"
                 className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
@@ -240,8 +240,8 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
-              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
+              <p>💡 <strong>Hint:</strong>You can view the location on the map after searching</p>
+              <p>📍Pan the map to find your desired location and open in Google Maps</p>
             </div>
           </div>
           
@@ -263,12 +263,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
+                <p className="font-semibold mb-1">How to Select a Location?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
-                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
-                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
-                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
+                  <li>Type an address in the search box above and click the 'Search' button</li>
+                  <li>When the map shows your desired location, click the 'Open in Google Maps' button</li>
+                  <li>Copy the URL from the opened page and paste it into the field below</li>
+                  <li>Or you can manually enter a Google Maps URL</li>
                 </ol>
               </div>
             </div>
@@ -660,7 +660,7 @@ function CreateEventContent() {
                   <section>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('section_images')}</h3>
-                        <Tooltip text="Davetiye için kapak ve ana görseli yükleyin">
+                        <Tooltip text="Upload the cover and main image for the invitation.">
                           <span className="text-gray-400 hover:text-gray-600 cursor-help">ℹ️</span>
                         </Tooltip>
                       </div>
@@ -674,12 +674,12 @@ function CreateEventContent() {
                                         <img src={coverPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Görsel
+                                          Image
                                         </div>
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {coverPreview ? 'Değiştir' : t('file_btn_cover')}
+                                    {coverPreview ? 'Change' : t('file_btn_cover')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
                                   </label>
                               </div>
@@ -693,12 +693,12 @@ function CreateEventContent() {
                                         <img src={mainPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Görsel
+                                          Image
                                         </div>
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {mainPreview ? 'Değiştir' : t('file_btn_main')}
+                                    {mainPreview ? 'Change' : t('file_btn_main')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
@@ -722,14 +722,14 @@ function CreateEventContent() {
                               }}
                               className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                             >
-                              Emoji Ekle
+                              Add Emoji
                             </button>
                           </div>
                           <input 
                             type="text" 
                             value={title} 
                             onChange={e => setTitle(e.target.value)} 
-                            placeholder="Örn: Düğünümüze Davetlisiniz"
+                            placeholder="e.g. You are invited to our wedding"
                             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-3"
                           />
                           <div className="flex gap-2">
@@ -776,14 +776,14 @@ function CreateEventContent() {
                                 }}
                                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                               >
-                                Emoji Ekle
+                                Add Emoji
                               </button>
                               <div className="relative group">
                                 <button
                                   type="button"
                                   className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200 transition"
                                 >
-                                  Örnekler
+                                  Drafts
                                 </button>
                                 <div className="absolute hidden group-hover:block top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 z-10">
                                   {Object.entries(SAMPLE_MESSAGES).map(([key, msg]) => (
@@ -803,7 +803,7 @@ function CreateEventContent() {
                           <textarea 
                             value={message} 
                             onChange={e => setMessage(e.target.value)} 
-                            placeholder="Misafirlerinize özel mesajınızı buraya yazın..."
+                            placeholder="Write your special message for your guests here..."
                             className="w-full border border-gray-300 p-3 rounded-lg mb-3 h-24 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
                           />
                           <div className="flex gap-2">
@@ -859,7 +859,7 @@ function CreateEventContent() {
                             type="text" 
                             value={locationName} 
                             onChange={e => setLocationName(e.target.value)} 
-                            placeholder="Örn: Hilton Otel, İstanbul"
+                            placeholder="Ex: The Plaza Hotel, New York"
                             className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                           />
                         </div>
@@ -942,7 +942,7 @@ function CreateEventContent() {
                                           <option value="text">{t('create.field_type_text')}</option>
                                           <option value="textarea">{t('create.field_type_textarea')}</option>
                                           <option value="select">{t('create.field_type_dropdown')}</option>
-                                          <option value="emoji">Emoji Seçimi</option>
+                                          <option value="emoji">Emoji</option>
                                       </select>
                                       <label className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
                                           <input 
@@ -1175,7 +1175,7 @@ function CreateEventContent() {
                               )}
                               
                               <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
-                                {message || 'Mesajınızı buraya yazın...'}
+                                {message || 'Write your special message for your guests here...'}
                               </p>
                               
                               {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
