@@ -294,16 +294,33 @@ export default function Dashboard() {
                         </div>
                     )}
                     
-                    {myEvents.map(event => (
+                    {myEvents.map(event => {
+                        // Etkinlik düzenlenebilir mi? (tarih geçmemişse)
+                        const isEditable = !event.event_date || new Date(event.event_date) > new Date()
+                        const isPast = event.event_date && new Date(event.event_date) <= new Date()
+                        
+                        return (
                         <div key={event.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 transition hover:shadow-md">
                             <div className="flex justify-between items-center flex-wrap gap-4">
                                 <div className="flex items-center gap-4">
                                     <div className="w-2 h-12 rounded-full bg-indigo-600" style={{ backgroundColor: event.design_settings?.theme }}></div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
+                                            {isPast && (
+                                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">
+                                                    Tamamlandı
+                                                </span>
+                                            )}
+                                        </div>
                                         <a href={`/${event.slug}`} target="_blank" className="text-indigo-600 text-xs font-medium hover:underline">
                                             {origin}/{event.slug} ↗
                                         </a>
+                                        {event.event_date && (
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                📅 {new Date(event.event_date).toLocaleDateString('tr-TR')}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex gap-2 flex-wrap">
@@ -313,11 +330,26 @@ export default function Dashboard() {
                                     >
                                         QR
                                     </button>
-                                    <Link href={`/create?edit=${event.id}`}>
-                                        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                            {t('edit')}
+                                    
+                                    {isEditable ? (
+                                        <Link href={`/create?edit=${event.id}`}>
+                                            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                                                {t('edit')}
+                                            </button>
+                                        </Link>
+                                    ) : (
+                                        <button 
+                                            disabled
+                                            className="bg-gray-100 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed relative group"
+                                            title="Etkinlik tarihi geçti, düzenlenemez"
+                                        >
+                                            🔒 {t('edit')}
+                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none">
+                                                Etkinlik tarihi geçti
+                                            </span>
                                         </button>
-                                    </Link>
+                                    )}
+                                    
                                     <button 
                                         onClick={() => selectedEventId === event.id ? setSelectedEventId(null) : fetchEventDetails(event.id)} 
                                         className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
@@ -398,8 +430,8 @@ export default function Dashboard() {
                                 </div>
                             )}
                         </div>
-                    ))}
-                </>
+                    )})
+                                                }</>
             )}
 
             {/* 2. DAVET EDİLDİĞİM ETKİNLİKLER */}
