@@ -9,9 +9,10 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   const [photos, setPhotos] = useState<any[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedPhoto, setSelectedPhoto] = useState<any>(null)
-  const [commentText, setCommentText] = useState('')
   const [showUploadOptions, setShowUploadOptions] = useState(false)
+  const [viewMode, setViewMode] = useState<'feed' | 'grid'>('feed') // feed or grid
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set())
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetchPhotos()
@@ -93,17 +94,18 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }
 
   const handleComment = async (photoId: string) => {
-    if (!commentText.trim()) return
+    const text = commentInputs[photoId]?.trim()
+    if (!text) return
 
     await supabase.from('photo_comments').insert([
       {
         photo_id: photoId,
         user_email: currentUserEmail,
-        content: commentText,
+        content: text,
       },
     ])
 
-    setCommentText('')
+    setCommentInputs({ ...commentInputs, [photoId]: '' })
     fetchPhotos()
   }
 
@@ -128,6 +130,16 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
     fetchPhotos()
   }
 
+  const toggleComments = (photoId: string) => {
+    const newExpanded = new Set(expandedComments)
+    if (newExpanded.has(photoId)) {
+      newExpanded.delete(photoId)
+    } else {
+      newExpanded.add(photoId)
+    }
+    setExpandedComments(newExpanded)
+  }
+
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
@@ -137,103 +149,179 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }
 
   return (
-    <div className="space-y-6">
-      {/* UPLOAD OPTIONS */}
-      {showUploadOptions ? (
-        <div className="bg-white border-2 border-indigo-500 rounded-xl p-6 space-y-3">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-800">Add Photo</h3>
-            <button
-              onClick={() => setShowUploadOptions(false)}
-              className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-            >
-              ×
-            </button>
-          </div>
-
-          {/* CAMERA OPTION */}
-          <div className="relative">
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => handleUpload(e, 'camera')}
-              disabled={uploading}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              id="camera-input"
-            />
-            <label
-              htmlFor="camera-input"
-              className="flex items-center justify-center gap-3 bg-indigo-600 text-white p-4 rounded-lg cursor-pointer hover:bg-indigo-700 transition"
-            >
-              <span className="text-2xl">📷</span>
-              <span className="font-semibold">Take Photo</span>
-            </label>
-          </div>
-
-          {/* GALLERY OPTION */}
-          <div className="relative">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleUpload(e, 'gallery')}
-              disabled={uploading}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              id="gallery-input"
-            />
-            <label
-              htmlFor="gallery-input"
-              className="flex items-center justify-center gap-3 bg-gray-100 text-gray-700 p-4 rounded-lg cursor-pointer hover:bg-gray-200 transition"
-            >
-              <span className="text-2xl">🖼️</span>
-              <span className="font-semibold">Choose from Gallery</span>
-            </label>
-          </div>
-
-          <p className="text-xs text-gray-500 text-center">Max 10MB</p>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowUploadOptions(true)}
-          disabled={uploading}
-          className="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-indigo-400 transition group"
-          style={{ borderColor: uploading ? themeColor : undefined }}
-        >
-          <div className="text-4xl mb-2 group-hover:scale-110 transition">{uploading ? '⏳' : '📸'}</div>
-          <p className="text-gray-500 font-bold text-sm">
-            {uploading ? t('loading') : 'Add Photo'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Camera or Gallery</p>
-        </button>
-      )}
-
-      {/* PHOTOS GRID */}
-      {photos.length === 0 ? (
+    <div className="space-y-6 relative pb-24">
+      {/* EMPTY STATE */}
+      {photos.length === 0 && (
         <div className="text-center py-12 text-gray-400">
           <div className="text-5xl mb-4">📷</div>
           <p className="font-medium">{t('gallery_empty') || 'No photos yet'}</p>
           <p className="text-sm mt-2">{t('gallery_empty_hint') || 'Be the first to add a photo!'}</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-1">
+      )}
+
+      {/* FEED VIEW */}
+      {viewMode === 'feed' && photos.length > 0 && (
+        <div className="space-y-6">
           {photos.map((photo) => {
             const isOwner = photo.user_email === currentUserEmail
+            const hasLiked = photo.photo_likes?.some((l: any) => l.user_email === currentUserEmail)
+            const likeCount = photo.photo_likes?.length || 0
+            const comments = photo.photo_comments || []
+            const commentCount = comments.length
+            const showAllComments = expandedComments.has(photo.id)
+            const visibleComments = showAllComments ? comments : comments.slice(0, 2)
+
+            return (
+              <div key={photo.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                {/* HEADER */}
+                <div className="p-4 flex items-center justify-between border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold" style={{ backgroundColor: `${themeColor}20`, color: themeColor }}>
+                      {photo.uploader_name[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{photo.uploader_name}</p>
+                      <p className="text-xs text-gray-500">{new Date(photo.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  {isOwner && (
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id, photo.image_url)}
+                      className="text-gray-400 hover:text-red-500 text-xl"
+                    >
+                      ⋯
+                    </button>
+                  )}
+                </div>
+
+                {/* IMAGE with FLOATING STATS */}
+                <div className="relative bg-gray-100">
+                  <img src={photo.image_url} className="w-full h-auto" alt="Memory" />
+                  
+                  {/* FLOATING STATS - Top Right */}
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    <div className="bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1">
+                      ❤️ {likeCount}
+                    </div>
+                    <div className="bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1">
+                      💬 {commentCount}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="p-4 space-y-3">
+                  {/* LIKE BUTTON */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleLike(photo.id)}
+                      className="flex items-center gap-2 transition-transform active:scale-90"
+                    >
+                      <span className="text-2xl">{hasLiked ? '❤️' : '🤍'}</span>
+                    </button>
+                  </div>
+
+                  {/* LIKES COUNT */}
+                  {likeCount > 0 && (
+                    <p className="text-sm font-semibold text-gray-900">
+                      {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                    </p>
+                  )}
+
+                  {/* COMMENTS */}
+                  {commentCount > 0 && (
+                    <div className="space-y-2">
+                      {visibleComments.map((comment: any) => (
+                        <div key={comment.id} className="flex gap-2 text-sm">
+                          <p className="flex-1">
+                            <span className="font-semibold text-gray-900 mr-2">
+                              {comment.user_email.split('@')[0]}
+                            </span>
+                            <span className="text-gray-700">{comment.content}</span>
+                          </p>
+                          {comment.user_email === currentUserEmail && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-xs text-gray-400 hover:text-red-500"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* VIEW MORE COMMENTS */}
+                      {commentCount > 2 && (
+                        <button
+                          onClick={() => toggleComments(photo.id)}
+                          className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                        >
+                          {showAllComments 
+                            ? 'Hide comments' 
+                            : `View all ${commentCount} comments`}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* TIME */}
+                  <p className="text-xs text-gray-400 uppercase">
+                    {new Date(photo.created_at).toLocaleString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+
+                {/* ADD COMMENT */}
+                <div className="border-t border-gray-100 p-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={commentInputs[photo.id] || ''}
+                      onChange={(e) => setCommentInputs({ ...commentInputs, [photo.id]: e.target.value })}
+                      placeholder="Add a comment..."
+                      className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-900"
+                      onKeyPress={(e) => e.key === 'Enter' && handleComment(photo.id)}
+                    />
+                    {commentInputs[photo.id]?.trim() && (
+                      <button
+                        onClick={() => handleComment(photo.id)}
+                        className="text-sm font-semibold"
+                        style={{ color: themeColor }}
+                      >
+                        Post
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-1">
+          {photos.map((photo) => {
             const likeCount = photo.photo_likes?.length || 0
             const commentCount = photo.photo_comments?.length || 0
 
             return (
               <div
                 key={photo.id}
-                className="relative aspect-square cursor-pointer group bg-gray-100 overflow-hidden"
-                onClick={() => setSelectedPhoto(photo)}
+                className="relative aspect-square bg-gray-100 group cursor-pointer"
               >
                 <img 
                   src={photo.image_url} 
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105" 
+                  className="w-full h-full object-cover" 
                   alt="Memory" 
                 />
                 
-                {/* Instagram-style hover overlay */}
+                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center gap-4">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-4 text-white font-bold">
                     <div className="flex items-center gap-1">
@@ -246,117 +334,113 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                     </div>
                   </div>
                 </div>
-
-                {/* Delete button for owner */}
-                {isOwner && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeletePhoto(photo.id, photo.image_url)
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600"
-                  >
-                    ×
-                  </button>
-                )}
               </div>
             )
           })}
         </div>
       )}
 
-      {/* PHOTO MODAL */}
-      {selectedPhoto && (
+      {/* FLOATING ACTION BAR */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xl w-full px-6">
+        <div className="bg-white rounded-full shadow-2xl border border-gray-200 p-2 flex items-center justify-center gap-2">
+          {/* UPLOAD BUTTON */}
+          <button
+            onClick={() => setShowUploadOptions(!showUploadOptions)}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-white transition-all hover:scale-105"
+            style={{ backgroundColor: themeColor }}
+          >
+            <span className="text-xl">📸</span>
+            <span>{uploading ? 'Uploading...' : 'Add Photo'}</span>
+          </button>
+
+          {/* VIEW TOGGLE */}
+          <button
+            onClick={() => setViewMode(viewMode === 'feed' ? 'grid' : 'feed')}
+            className="px-4 py-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-all text-xl"
+          >
+            {viewMode === 'feed' ? '▦' : '☰'}
+          </button>
+        </div>
+      </div>
+
+      {/* UPLOAD OPTIONS MODAL */}
+      {showUploadOptions && (
         <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center p-4"
+          onClick={() => setShowUploadOptions(false)}
         >
           <div
-            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-t-3xl max-w-xl w-full p-6 space-y-3 animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative">
-              <img src={selectedPhoto.image_url} className="w-full h-auto" alt="Full" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-800 text-lg">Add Photo</h3>
               <button
-                onClick={() => setSelectedPhoto(null)}
-                className="absolute top-4 right-4 bg-black/50 text-white rounded-full w-10 h-10 flex items-center justify-center text-2xl hover:bg-black/70"
+                onClick={() => setShowUploadOptions(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
               >
                 ×
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-600">
-                  {selectedPhoto.uploader_name} • {new Date(selectedPhoto.created_at).toLocaleString('tr-TR')}
-                </p>
-                <button
-                  onClick={() => handleLike(selectedPhoto.id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm"
-                  style={{
-                    backgroundColor: selectedPhoto.photo_likes?.some((l: any) => l.user_email === currentUserEmail)
-                      ? themeColor
-                      : '#F3F4F6',
-                    color: selectedPhoto.photo_likes?.some((l: any) => l.user_email === currentUserEmail)
-                      ? 'white'
-                      : '#6B7280',
-                  }}
-                >
-                  ❤️ {selectedPhoto.photo_likes?.length || 0}
-                </button>
-              </div>
-
-              <div className="border-t pt-4">
-                <h4 className="font-bold text-gray-800 mb-3">
-                  {t('comments') || 'Comments'} ({selectedPhoto.photo_comments?.length || 0})
-                </h4>
-
-                <div className="space-y-3 mb-4 max-h-40 overflow-y-auto">
-                  {selectedPhoto.photo_comments?.map((comment: any) => (
-                    <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-xs text-gray-500 mb-1">
-                            {comment.user_email.split('@')[0]} •{' '}
-                            {new Date(comment.created_at).toLocaleString('tr-TR')}
-                          </p>
-                          <p className="text-sm text-gray-800">{comment.content}</p>
-                        </div>
-                        {comment.user_email === currentUserEmail && (
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            className="text-xs text-red-500 hover:text-red-700 ml-2"
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder={t('add_comment') || 'Add a comment...'}
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white text-gray-900 placeholder:text-gray-400"
-                    onKeyPress={(e) => e.key === 'Enter' && handleComment(selectedPhoto.id)}
-                  />
-                  <button
-                    onClick={() => handleComment(selectedPhoto.id)}
-                    className="px-6 py-2 rounded-lg font-semibold text-sm text-white"
-                    style={{ backgroundColor: themeColor }}
-                  >
-                    {t('send') || 'Send'}
-                  </button>
-                </div>
-              </div>
+            {/* CAMERA OPTION */}
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => handleUpload(e, 'camera')}
+                disabled={uploading}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                id="camera-input"
+              />
+              <label
+                htmlFor="camera-input"
+                className="flex items-center justify-center gap-3 text-white p-4 rounded-2xl cursor-pointer transition-all hover:scale-105"
+                style={{ backgroundColor: themeColor }}
+              >
+                <span className="text-2xl">📷</span>
+                <span className="font-semibold">Take Photo</span>
+              </label>
             </div>
+
+            {/* GALLERY OPTION */}
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleUpload(e, 'gallery')}
+                disabled={uploading}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                id="gallery-input"
+              />
+              <label
+                htmlFor="gallery-input"
+                className="flex items-center justify-center gap-3 bg-gray-100 text-gray-700 p-4 rounded-2xl cursor-pointer hover:bg-gray-200 transition-all"
+              >
+                <span className="text-2xl">🖼️</span>
+                <span className="font-semibold">Choose from Gallery</span>
+              </label>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center pt-2">Max 10MB</p>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
