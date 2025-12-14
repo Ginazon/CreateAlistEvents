@@ -16,6 +16,8 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   const [showFloatingBar, setShowFloatingBar] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null) // For grid modal
   const [modalCommentText, setModalCommentText] = useState('')
+  const [previewFile, setPreviewFile] = useState<File | null>(null) // Preview before upload
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null) // Preview URL
   const galleryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
     if (data) setPhotos(data)
   }
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, source: 'camera' | 'gallery') => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, source: 'camera' | 'gallery') => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -63,17 +65,25 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       return
     }
 
+    // Show preview
+    setPreviewFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+    setShowUploadOptions(false)
+  }
+
+  const handleUpload = async () => {
+    if (!previewFile) return
+
     setUploading(true)
     setError(null)
-    setShowUploadOptions(false)
 
     try {
-      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const fileExt = previewFile.name.split('.').pop()?.toLowerCase() || 'jpg'
       const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('event-images')
-        .upload(`gallery/${eventId}/${fileName}`, file)
+        .upload(`gallery/${eventId}/${fileName}`, previewFile)
 
       if (uploadError) throw uploadError
 
@@ -93,12 +103,25 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
       if (insertError) throw insertError
 
       await fetchPhotos()
+      
+      // Clear preview
+      setPreviewFile(null)
+      setPreviewUrl(null)
     } catch (err: any) {
       console.error('Upload error:', err)
       setError(err.message || t('error.something_went_wrong'))
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleCancelPreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
+    setPreviewFile(null)
+    setPreviewUrl(null)
+    setShowUploadOptions(true)
   }
 
   const handleLike = async (photoId: string) => {
@@ -251,20 +274,22 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                       💬 {commentCount}
                     </div>
                   </div>
+
+                  {/* FLOATING LIKE BUTTON - Bottom Left */}
+                  <div className="absolute bottom-3 left-3">
+                    <button
+                      onClick={() => handleLike(photo.id)}
+                      className="transition-transform active:scale-90 hover:scale-110 drop-shadow-lg"
+                    >
+                      <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+                        {hasLiked ? '❤️' : '🤍'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* ACTIONS */}
                 <div className="p-4 space-y-3">
-                  {/* LIKE BUTTON */}
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleLike(photo.id)}
-                      className="flex items-center gap-2 transition-transform active:scale-90"
-                    >
-                      <span className="text-2xl">{hasLiked ? '❤️' : '🤍'}</span>
-                    </button>
-                  </div>
-
                   {/* LIKES COUNT */}
                   {likeCount > 0 && (
                     <p className="text-sm font-semibold text-gray-900">
@@ -436,7 +461,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={(e) => handleUpload(e, 'camera')}
+                onChange={(e) => handleFileSelect(e, 'camera')}
                 disabled={uploading}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 id="camera-input"
@@ -456,7 +481,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleUpload(e, 'gallery')}
+                onChange={(e) => handleFileSelect(e, 'gallery')}
                 disabled={uploading}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 id="gallery-input"
@@ -471,6 +496,51 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
             </div>
 
             <p className="text-xs text-gray-500 text-center pt-2">Max 10MB</p>
+          </div>
+        </div>
+      )}
+
+      {/* PREVIEW MODAL - Before Upload */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={handleCancelPreview}
+        >
+          <div
+            className="max-w-2xl w-full space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Preview Image */}
+            <div className="bg-black rounded-xl overflow-hidden">
+              <img 
+                src={previewUrl} 
+                className="w-full h-auto max-h-[70vh] object-contain" 
+                alt="Preview" 
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelPreview}
+                className="flex-1 bg-white text-gray-700 px-6 py-4 rounded-2xl font-semibold hover:bg-gray-100 transition-all"
+              >
+                ❌ Retake / Choose Another
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploading}
+                className="flex-1 text-white px-6 py-4 rounded-2xl font-semibold transition-all hover:scale-105 disabled:opacity-50"
+                style={{ backgroundColor: themeColor }}
+              >
+                {uploading ? '⏳ Uploading...' : '✅ Upload'}
+              </button>
+            </div>
+
+            {/* Info */}
+            <p className="text-white text-center text-sm opacity-75">
+              Preview your photo before uploading
+            </p>
           </div>
         </div>
       )}
