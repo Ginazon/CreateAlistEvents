@@ -623,7 +623,7 @@ function CreateEventContent() {
                  onClick={handleSave} 
                  disabled={uploading || isEventLocked} 
                  className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                 title={isEventLocked ? 'Etkinlik tarihi geçti, düzenlenemez' : ''}
+                 title={isEventLocked ? 'The event date has passed, cannot be edited' : ''}
                >
                   {uploading ? t('loading') : (editId ? t('save_changes_btn') : t('publish_btn'))}
                </button>
@@ -638,14 +638,14 @@ function CreateEventContent() {
               <span className="text-2xl">🔒</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-amber-900">
-                  Bu etkinlik tamamlandı
+                This event has ended
                 </p>
                 <p className="text-xs text-amber-700">
-                  Etkinlik tarihi geçtiği için artık düzenlenemez. Ancak davetiye hala görüntülenebilir ve misafirler fotoğraf galerisine erişmeye devam edebilir.
+                The event cannot be edited because the date has passed. However, the invitation is still viewable and guests can continue to access the photo gallery.
                 </p>
               </div>
               <Link href="/" className="text-xs text-amber-800 hover:text-amber-900 font-medium underline">
-                Dashboard'a Dön
+              Back to Dashboard
               </Link>
             </div>
           </div>
