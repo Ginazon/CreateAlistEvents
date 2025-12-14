@@ -203,7 +203,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
+          {showMap ? '🗺️ Hide Map' : '📍 Select from Map'}
         </button>
         {locationUrl && (
           <a
@@ -279,7 +279,7 @@ const MapLocationPicker = ({
       {/* Manual URL Input */}
       <div>
         <label className="text-xs font-semibold text-gray-700 mb-1 block">
-          Manuel Google Maps URL (Opsiyonel)
+        Manual Google Maps URL (Optional)
         </label>
         <input 
           type="text" 
@@ -290,7 +290,7 @@ const MapLocationPicker = ({
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
+            ✓ URL saved - Guests will be directed to the map
           </p>
         )}
       </div>
