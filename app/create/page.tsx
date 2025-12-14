@@ -48,11 +48,11 @@ const MESSAGE_SIZES = [
 const EMOJIS = ['😊', '❤️', '🎉', '🎊', '💐', '🎈', '🎁', '💍', '👰', '🤵', '🍾', '🥂', '🎵', '🎶', '⭐', '✨', '💫', '🌟', '🔔', '📅', '📍', '🏠', '🌸', '🌹', '🌺', '🌻', '🌷', '🎂', '🍰', '🥳', '🎭', '🎪', '🎨', '🎬', '📸', '💌', '💝', '💖', '💗', '💓', '💞', '💕', '🌈', '☀️', '🌙', '⭐', '💎', '👑', '🦋', '🌺']
 
 const SAMPLE_MESSAGES = {
-  wedding: "The most special day of our lives! We invite you to our wedding. We would love for you to share our happiness.",
-  birthday: "I'm turning a year older! I want you by my side at my birthday party. Fun guaranteed!",
-  engagement: "We are gathering to celebrate our love. Will you join us at our engagement?",
-  baby: "Our little prince/princess is on the way! Join us for our baby shower.",
-  graduation: "I want to share the joy of my graduation with you. You are invited to the celebration!",
+  wedding: "Hayatımızın en özel günü! Sizleri düğünümüze davet ediyoruz. Mutluluğumuza ortak olmanızı isteriz.",
+  birthday: "Bir yaş daha büyüyorum! Doğum günü partimde yanımda olmanı istiyorum. Eğlence garantili!",
+  engagement: "Aşkımızı kutlamak için bir araya geliyoruz. Nişanımızda bizimle olur musunuz?",
+  baby: "Küçük prensimiz/prensesimiz dünyaya geliyor! Baby shower'ımızda buluşalım.",
+  graduation: "Mezuniyet sevincimi sizinle paylaşmak istiyorum. Kutlamaya davetlisiniz!",
 }
 
 const turkishSlugify = (text: string) => {
@@ -203,7 +203,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? '🗺️ Hide Map' : '📍 Select from Map'}
+          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
         </button>
         {locationUrl && (
           <a
@@ -227,8 +227,8 @@ const MapLocationPicker = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="🔍 Search for address... (e.g. Times Square, New York)"
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="🔍 Adres ara... (örn: Taksim Meydanı, İstanbul)"
+                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <button
                 type="button"
@@ -240,8 +240,8 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>Hint:</strong>You can view the location on the map after searching</p>
-              <p>📍Pan the map to find your desired location and open in Google Maps</p>
+              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
+              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
             </div>
           </div>
           
@@ -263,12 +263,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">How to Select a Location?</p>
+                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Type an address in the search box above and click the 'Search' button</li>
-                  <li>When the map shows your desired location, click the 'Open in Google Maps' button</li>
-                  <li>Copy the URL from the opened page and paste it into the field below</li>
-                  <li>Or you can manually enter a Google Maps URL</li>
+                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
+                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
+                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
+                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
                 </ol>
               </div>
             </div>
@@ -279,18 +279,18 @@ const MapLocationPicker = ({
       {/* Manual URL Input */}
       <div>
         <label className="text-xs font-semibold text-gray-700 mb-1 block">
-        Manual Google Maps URL (Optional)
+          Manuel Google Maps URL (Opsiyonel)
         </label>
         <input 
           type="text" 
           value={locationUrl} 
           onChange={e => handleManualUrl(e.target.value)} 
           placeholder="https://www.google.com/maps/place/..."
-          className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
+          className="w-full border border-gray-300 p-3 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ URL saved - Guests will be directed to the map
+            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
           </p>
         )}
       </div>
@@ -623,7 +623,7 @@ function CreateEventContent() {
                  onClick={handleSave} 
                  disabled={uploading || isEventLocked} 
                  className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                 title={isEventLocked ? 'The event date has passed, cannot be edited' : ''}
+                 title={isEventLocked ? 'Etkinlik tarihi geçti, düzenlenemez' : ''}
                >
                   {uploading ? t('loading') : (editId ? t('save_changes_btn') : t('publish_btn'))}
                </button>
@@ -638,14 +638,14 @@ function CreateEventContent() {
               <span className="text-2xl">🔒</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-amber-900">
-                This event has ended
+                  Bu etkinlik tamamlandı
                 </p>
                 <p className="text-xs text-amber-700">
-                The event cannot be edited because the date has passed. However, the invitation is still viewable and guests can continue to access the photo gallery.
+                  Etkinlik tarihi geçtiği için artık düzenlenemez. Ancak davetiye hala görüntülenebilir ve misafirler fotoğraf galerisine erişmeye devam edebilir.
                 </p>
               </div>
               <Link href="/" className="text-xs text-amber-800 hover:text-amber-900 font-medium underline">
-              Back to Dashboard
+                Dashboard'a Dön
               </Link>
             </div>
           </div>
@@ -660,7 +660,7 @@ function CreateEventContent() {
                   <section>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('section_images')}</h3>
-                        <Tooltip text="Upload the cover and main image for the invitation.">
+                        <Tooltip text="Davetiye için kapak ve ana görseli yükleyin">
                           <span className="text-gray-400 hover:text-gray-600 cursor-help">ℹ️</span>
                         </Tooltip>
                       </div>
@@ -674,12 +674,12 @@ function CreateEventContent() {
                                         <img src={coverPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Image
+                                          Görsel
                                         </div>
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {coverPreview ? 'Change' : t('file_btn_cover')}
+                                    {coverPreview ? 'Değiştir' : t('file_btn_cover')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
                                   </label>
                               </div>
@@ -693,12 +693,12 @@ function CreateEventContent() {
                                         <img src={mainPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Image
+                                          Görsel
                                         </div>
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {mainPreview ? 'Change' : t('file_btn_main')}
+                                    {mainPreview ? 'Değiştir' : t('file_btn_main')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
@@ -722,21 +722,21 @@ function CreateEventContent() {
                               }}
                               className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                             >
-                              Add Emoji
+                              Emoji Ekle
                             </button>
                           </div>
                           <input 
                             type="text" 
                             value={title} 
                             onChange={e => setTitle(e.target.value)} 
-                            placeholder="e.g. You are invited to our wedding"
-                            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-3"
+                            placeholder="Örn: Düğünümüze Davetlisiniz"
+                            className="w-full border border-gray-300 p-3 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition mb-3"
                           />
                           <div className="flex gap-2">
                               <select 
                                 value={titleFont} 
                                 onChange={e => setTitleFont(e.target.value)} 
-                                className="flex-1 border border-gray-300 p-2 rounded-lg text-sm bg-white"
+                                className="flex-1 border border-gray-300 p-2 rounded-lg text-sm bg-white text-gray-900"
                               >
                                   {FONT_OPTIONS.map(o => (
                                     <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>
@@ -776,14 +776,14 @@ function CreateEventContent() {
                                 }}
                                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                               >
-                                Add Emoji
+                                Emoji Ekle
                               </button>
                               <div className="relative group">
                                 <button
                                   type="button"
                                   className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200 transition"
                                 >
-                                  Drafts
+                                  Örnekler
                                 </button>
                                 <div className="absolute hidden group-hover:block top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-64 z-10">
                                   {Object.entries(SAMPLE_MESSAGES).map(([key, msg]) => (
@@ -803,14 +803,14 @@ function CreateEventContent() {
                           <textarea 
                             value={message} 
                             onChange={e => setMessage(e.target.value)} 
-                            placeholder="Write your special message for your guests here..."
-                            className="w-full border border-gray-300 p-3 rounded-lg mb-3 h-24 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
+                            placeholder="Misafirlerinize özel mesajınızı buraya yazın..."
+                            className="w-full border border-gray-300 p-3 rounded-lg mb-3 h-24 text-sm bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-none"
                           />
                           <div className="flex gap-2">
                               <select 
                                 value={messageFont} 
                                 onChange={e => setMessageFont(e.target.value)} 
-                                className="flex-1 border border-gray-300 p-2 rounded-lg text-sm bg-white"
+                                className="flex-1 border border-gray-300 p-2 rounded-lg text-sm bg-white text-gray-900"
                               >
                                   {FONT_OPTIONS.map(o => (
                                     <option key={o.value} value={o.value} style={{fontFamily: o.value.replace(/'/g, "")}}>
@@ -849,7 +849,7 @@ function CreateEventContent() {
                             type="datetime-local" 
                             value={eventDate} 
                             onChange={e => setEventDate(e.target.value)} 
-                            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                            className="w-full border border-gray-300 p-3 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                           />
                         </div>
                         
@@ -859,8 +859,8 @@ function CreateEventContent() {
                             type="text" 
                             value={locationName} 
                             onChange={e => setLocationName(e.target.value)} 
-                            placeholder="Ex: The Plaza Hotel, New York"
-                            className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                            placeholder="Örn: Hilton Otel, İstanbul"
+                            className="w-full border border-gray-300 p-3 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                           />
                         </div>
                         
@@ -929,7 +929,7 @@ function CreateEventContent() {
                                     type="text" 
                                     value={field.label} 
                                     onChange={(e) => updateField(index, 'label', e.target.value)} 
-                                    className="w-full font-semibold text-sm border-b border-gray-200 text-gray-900 outline-none pb-2 mb-2" 
+                                    className="w-full font-semibold text-sm border-b border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none pb-2 mb-2" 
                                     placeholder={t('question_place_holder')}
                                   />
                                   
@@ -937,12 +937,12 @@ function CreateEventContent() {
                                       <select 
                                         value={field.type} 
                                         onChange={(e) => updateField(index, 'type', e.target.value)} 
-                                        className="text-xs border border-gray-200 rounded-lg p-2 bg-white flex-1"
+                                        className="text-xs border border-gray-200 rounded-lg p-2 bg-white text-gray-900 flex-1"
                                       >
                                           <option value="text">{t('create.field_type_text')}</option>
                                           <option value="textarea">{t('create.field_type_textarea')}</option>
                                           <option value="select">{t('create.field_type_dropdown')}</option>
-                                          <option value="emoji">Emoji</option>
+                                          <option value="emoji">Emoji Seçimi</option>
                                       </select>
                                       <label className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
                                           <input 
@@ -971,7 +971,7 @@ function CreateEventContent() {
                                       value={field.options} 
                                       onChange={(e) => updateField(index, 'options', e.target.value)} 
                                       placeholder={t('option_placeholder')} 
-                                      className="w-full text-xs border border-gray-200 p-2 rounded-lg mt-2 bg-gray-50"
+                                      className="w-full text-xs border border-gray-200 p-2 rounded-lg mt-2 bg-gray-50 text-gray-900 placeholder:text-gray-400"
                                     />
                                   )}
                               </div>
@@ -1041,14 +1041,14 @@ function CreateEventContent() {
                                               value={block.content} 
                                               onChange={(e) => updateBlock(index, 'content', e.target.value)} 
                                               placeholder={t('timeline_time_ph')} 
-                                              className="w-1/3 text-sm border border-gray-200 p-2 rounded-lg"
+                                              className="w-1/3 text-sm border border-gray-200 p-2 rounded-lg bg-white text-gray-900 placeholder:text-gray-400"
                                             />
                                             <input 
                                               type="text" 
                                               value={block.subContent} 
                                               onChange={(e) => updateBlock(index, 'subContent', e.target.value)} 
                                               placeholder={t('timeline_title_ph')} 
-                                              className="flex-1 text-sm border border-gray-200 p-2 rounded-lg"
+                                              className="flex-1 text-sm border border-gray-200 p-2 rounded-lg bg-white text-gray-900 placeholder:text-gray-400"
                                             />
                                           </div>
                                       </div>
@@ -1080,13 +1080,13 @@ function CreateEventContent() {
                                             value={block.title} 
                                             onChange={(e) => updateBlock(index, 'title', e.target.value)} 
                                             placeholder={t('note_title_ph')} 
-                                            className="w-full text-sm border border-gray-200 p-2 rounded-lg"
+                                            className="w-full text-sm border border-gray-200 p-2 rounded-lg bg-white text-gray-900 placeholder:text-gray-400"
                                           />
                                           <textarea 
                                             value={block.content} 
                                             onChange={(e) => updateBlock(index, 'content', e.target.value)} 
                                             placeholder={t('note_desc_ph')} 
-                                            className="w-full text-xs border border-gray-200 p-2 rounded-lg h-16 resize-none"
+                                            className="w-full text-xs border border-gray-200 p-2 rounded-lg h-16 resize-none bg-white text-gray-900 placeholder:text-gray-400"
                                           />
                                           {block.imageUrl && (
                                             <div className="relative h-20 w-20 bg-gray-100 rounded-lg overflow-hidden">
@@ -1122,14 +1122,14 @@ function CreateEventContent() {
                                             value={block.title} 
                                             onChange={(e) => updateBlock(index, 'title', e.target.value)} 
                                             placeholder={t('link_title_ph')} 
-                                            className="w-full text-sm border border-gray-200 p-2 rounded-lg"
+                                            className="w-full text-sm border border-gray-200 p-2 rounded-lg bg-white text-gray-900 placeholder:text-gray-400"
                                           />
                                           <input 
                                             type="text" 
                                             value={block.content} 
                                             onChange={(e) => updateBlock(index, 'content', e.target.value)} 
                                             placeholder={t('link_url_ph')} 
-                                            className="w-full text-xs border border-gray-200 p-2 rounded-lg"
+                                            className="w-full text-xs border border-gray-200 p-2 rounded-lg bg-white text-gray-900 placeholder:text-gray-400"
                                           />
                                       </div>
                                   )}
@@ -1175,7 +1175,7 @@ function CreateEventContent() {
                               )}
                               
                               <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
-                                {message || 'Write your special message for your guests here...'}
+                                {message || 'Mesajınızı buraya yazın...'}
                               </p>
                               
                               {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
