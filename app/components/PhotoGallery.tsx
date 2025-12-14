@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useTranslation } from '../i18n'
 
@@ -13,10 +13,32 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   const [viewMode, setViewMode] = useState<'feed' | 'grid'>('feed') // feed or grid
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set())
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
+  const [showFloatingBar, setShowFloatingBar] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState<any>(null) // For grid modal
+  const [modalCommentText, setModalCommentText] = useState('')
+  const galleryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchPhotos()
   }, [eventId])
+
+  // Intersection Observer for floating bar
+  useEffect(() => {
+    if (!galleryRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowFloatingBar(entry.isIntersecting)
+      },
+      {
+        threshold: 0.1, // Show when 10% of gallery is visible
+      }
+    )
+
+    observer.observe(galleryRef.current)
+
+    return () => observer.disconnect()
+  }, [])
 
   const fetchPhotos = async () => {
     const { data } = await supabase
@@ -109,6 +131,28 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
     fetchPhotos()
   }
 
+  const handleModalComment = async (photoId: string) => {
+    const text = modalCommentText.trim()
+    if (!text) return
+
+    await supabase.from('photo_comments').insert([
+      {
+        photo_id: photoId,
+        user_email: currentUserEmail,
+        content: text,
+      },
+    ])
+
+    setModalCommentText('')
+    await fetchPhotos()
+    
+    // Update selected photo with new comments
+    const updatedPhoto = photos.find(p => p.id === photoId)
+    if (updatedPhoto) {
+      setSelectedPhoto(updatedPhoto)
+    }
+  }
+
   const handleDeletePhoto = async (photoId: string, imageUrl: string) => {
     if (!confirm(t('confirm_delete') || 'Are you sure you want to delete?')) return
 
@@ -149,7 +193,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
   }
 
   return (
-    <div className="space-y-6 relative pb-24">
+    <div ref={galleryRef} className="space-y-6 relative pb-24">
       {/* EMPTY STATE */}
       {photos.length === 0 && (
         <div className="text-center py-12 text-gray-400">
@@ -314,6 +358,7 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
               <div
                 key={photo.id}
                 className="relative aspect-square bg-gray-100 group cursor-pointer"
+                onClick={() => setSelectedPhoto(photo)}
               >
                 <img 
                   src={photo.image_url} 
@@ -340,28 +385,30 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
         </div>
       )}
 
-      {/* FLOATING ACTION BAR */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xl w-full px-6">
-        <div className="bg-white rounded-full shadow-2xl border border-gray-200 p-2 flex items-center justify-center gap-2">
-          {/* UPLOAD BUTTON */}
-          <button
-            onClick={() => setShowUploadOptions(!showUploadOptions)}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-white transition-all hover:scale-105"
-            style={{ backgroundColor: themeColor }}
-          >
-            <span className="text-xl">📸</span>
-            <span>{uploading ? 'Uploading...' : 'Add Photo'}</span>
-          </button>
+      {/* FLOATING ACTION BAR - Only visible when gallery is in view */}
+      {showFloatingBar && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xl w-full px-6 animate-slide-up">
+          <div className="bg-white rounded-full shadow-2xl border border-gray-200 p-2 flex items-center justify-center gap-2">
+            {/* UPLOAD BUTTON */}
+            <button
+              onClick={() => setShowUploadOptions(!showUploadOptions)}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold text-sm text-white transition-all hover:scale-105"
+              style={{ backgroundColor: themeColor }}
+            >
+              <span className="text-xl">📸</span>
+              <span>{uploading ? 'Uploading...' : 'Add Photo'}</span>
+            </button>
 
-          {/* VIEW TOGGLE */}
-          <button
-            onClick={() => setViewMode(viewMode === 'feed' ? 'grid' : 'feed')}
-            className="px-4 py-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-all text-xl"
-          >
-            {viewMode === 'feed' ? '▦' : '☰'}
-          </button>
+            {/* VIEW TOGGLE */}
+            <button
+              onClick={() => setViewMode(viewMode === 'feed' ? 'grid' : 'feed')}
+              className="px-4 py-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-all text-xl"
+            >
+              {viewMode === 'feed' ? '▦' : '☰'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* UPLOAD OPTIONS MODAL */}
       {showUploadOptions && (
@@ -424,6 +471,175 @@ export default function PhotoGallery({ eventId, currentUserEmail, themeColor }: 
             </div>
 
             <p className="text-xs text-gray-500 text-center pt-2">Max 10MB</p>
+          </div>
+        </div>
+      )}
+
+      {/* PHOTO DETAIL MODAL (Grid View Only) */}
+      {selectedPhoto && (
+        <div
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => {
+            setSelectedPhoto(null)
+            setModalCommentText('')
+          }}
+        >
+          <div
+            className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* LEFT: Image */}
+            <div className="md:w-2/3 bg-black flex items-center justify-center">
+              <img 
+                src={selectedPhoto.image_url} 
+                className="w-full h-auto max-h-[90vh] object-contain" 
+                alt="Full" 
+              />
+            </div>
+
+            {/* RIGHT: Details */}
+            <div className="md:w-1/3 flex flex-col max-h-[90vh]">
+              {/* HEADER */}
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" 
+                    style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+                  >
+                    {selectedPhoto.uploader_name[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{selectedPhoto.uploader_name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedPhoto(null)
+                    setModalCommentText('')
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* COMMENTS SECTION */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Caption/First comment by uploader */}
+                <div className="flex gap-2 text-sm">
+                  <div 
+                    className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold" 
+                    style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+                  >
+                    {selectedPhoto.uploader_name[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p>
+                      <span className="font-semibold text-gray-900 mr-2">{selectedPhoto.uploader_name}</span>
+                      <span className="text-gray-600">
+                        {new Date(selectedPhoto.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Comments */}
+                {selectedPhoto.photo_comments?.map((comment: any) => (
+                  <div key={comment.id} className="flex gap-2 text-sm">
+                    <div 
+                      className="w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600"
+                    >
+                      {comment.user_email.split('@')[0][0].toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <p>
+                        <span className="font-semibold text-gray-900 mr-2">
+                          {comment.user_email.split('@')[0]}
+                        </span>
+                        <span className="text-gray-700">{comment.content}</span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(comment.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                    {comment.user_email === currentUserEmail && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-xs text-gray-400 hover:text-red-500 flex-shrink-0"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {selectedPhoto.photo_comments?.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-8">No comments yet</p>
+                )}
+              </div>
+
+              {/* ACTIONS */}
+              <div className="border-t border-gray-200 p-4 space-y-3">
+                {/* Like & Stats */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handleLike(selectedPhoto.id)}
+                    className="flex items-center gap-2 transition-transform active:scale-90"
+                  >
+                    <span className="text-2xl">
+                      {selectedPhoto.photo_likes?.some((l: any) => l.user_email === currentUserEmail) ? '❤️' : '🤍'}
+                    </span>
+                  </button>
+                  {selectedPhoto.user_email === currentUserEmail && (
+                    <button
+                      onClick={() => {
+                        handleDeletePhoto(selectedPhoto.id, selectedPhoto.image_url)
+                        setSelectedPhoto(null)
+                      }}
+                      className="text-sm text-red-500 hover:text-red-700"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+
+                {selectedPhoto.photo_likes?.length > 0 && (
+                  <p className="text-sm font-semibold text-gray-900">
+                    {selectedPhoto.photo_likes.length} {selectedPhoto.photo_likes.length === 1 ? 'like' : 'likes'}
+                  </p>
+                )}
+
+                {/* Add Comment */}
+                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                  <input
+                    type="text"
+                    value={modalCommentText}
+                    onChange={(e) => setModalCommentText(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 text-sm outline-none bg-transparent placeholder:text-gray-400 text-gray-900"
+                    onKeyPress={(e) => e.key === 'Enter' && handleModalComment(selectedPhoto.id)}
+                  />
+                  {modalCommentText.trim() && (
+                    <button
+                      onClick={() => handleModalComment(selectedPhoto.id)}
+                      className="text-sm font-semibold"
+                      style={{ color: themeColor }}
+                    >
+                      Post
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
