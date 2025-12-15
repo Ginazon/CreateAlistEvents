@@ -340,6 +340,49 @@ export default function RsvpForm({ eventId, themeColor, onLoginSuccess, initialE
                   ))}
                 </select>
               )}
+
+              {field.type === 'checkbox' && (
+                <div className="space-y-2">
+                  {field.options?.split(',').map((opt: string) => {
+                    const optValue = opt.trim()
+                    const currentValues = formResponses[field.label] 
+                      ? (Array.isArray(formResponses[field.label]) 
+                          ? formResponses[field.label] 
+                          : formResponses[field.label].split(','))
+                      : []
+                    
+                    return (
+                      <label
+                        key={optValue}
+                        className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition"
+                        style={inputStyle}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={currentValues.includes(optValue)}
+                          onChange={(e) => {
+                            let newValues = [...currentValues]
+                            if (e.target.checked) {
+                              newValues.push(optValue)
+                            } else {
+                              newValues = newValues.filter(v => v !== optValue)
+                            }
+                            handleCustomChange(field.label, newValues.join(','))
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm text-gray-700">{optValue}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+
+              {field.type === 'emoji' && (
+                <div className="text-center p-4 border rounded-lg bg-gray-50">
+                  <p className="text-sm text-gray-600">Emoji Picker</p>
+                </div>
+              )}
             </div>
           ))}
         </div>

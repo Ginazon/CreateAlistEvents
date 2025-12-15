@@ -332,7 +332,7 @@ function CreateEventContent() {
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
   const [messageSize, setMessageSize] = useState(1)
 
-  interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'emoji'; options?: string; required: boolean; emoji?: string; }
+  interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'checkbox' | 'emoji'; options?: string; required: boolean; emoji?: string; }
   const [formFields, setFormFields] = useState<FormField[]>([])
 
   interface DetailBlock {
@@ -894,21 +894,21 @@ function CreateEventContent() {
                       </div>
                   </section>
 
-                  {/* FORM BUILDER */}
+                  {/* ADDITIONAL DETAILS FIELDS */}
                   <section className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('section_form')}</h3>
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Additional Details</h3>
                         <button 
                           onClick={addField} 
                           className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium"
                         >
-                          {t('add_question_btn')}
+                          Add Field
                         </button>
                       </div>
                       
                       <div className="space-y-3">
                           <div className="bg-white/70 p-3 rounded-lg border border-gray-200 opacity-60">
-                              <p className="text-xs font-semibold text-gray-700 mb-2">{t('locked_fields')}</p>
+                              <p className="text-xs font-semibold text-gray-700 mb-2">RSVP Form (Fixed)</p>
                               <div className="space-y-1 text-xs text-gray-500">
                                   <div>{t('preview_ph_name')}</div>
                                   <div>{t('preview_ph_email')}</div>
@@ -930,19 +930,20 @@ function CreateEventContent() {
                                     value={field.label} 
                                     onChange={(e) => updateField(index, 'label', e.target.value)} 
                                     className="w-full font-semibold text-sm border-b border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 outline-none pb-2 mb-2" 
-                                    placeholder={t('question_place_holder')}
+                                    placeholder="e.g. Which events will you attend?"
                                   />
                                   
-                                  <div className="flex gap-2 items-center">
+                                  <div className="flex gap-2 items-center flex-wrap">
                                       <select 
                                         value={field.type} 
                                         onChange={(e) => updateField(index, 'type', e.target.value)} 
-                                        className="text-xs border border-gray-200 rounded-lg p-2 bg-white text-gray-900 flex-1"
+                                        className="text-xs border border-gray-200 rounded-lg p-2 bg-white text-gray-900 flex-1 min-w-[120px]"
                                       >
-                                          <option value="text">{t('create.field_type_text')}</option>
-                                          <option value="textarea">{t('create.field_type_textarea')}</option>
-                                          <option value="select">{t('create.field_type_dropdown')}</option>
-                                          <option value="emoji">Emoji Seçimi</option>
+                                          <option value="text">Short Text</option>
+                                          <option value="textarea">Long Text</option>
+                                          <option value="select">Dropdown (Single)</option>
+                                          <option value="checkbox">Checkboxes (Multiple)</option>
+                                          <option value="emoji">Emoji Picker</option>
                                       </select>
                                       <label className="flex items-center gap-1 text-xs text-gray-700 cursor-pointer">
                                           <input 
@@ -951,7 +952,7 @@ function CreateEventContent() {
                                             onChange={(e) => updateField(index, 'required', e.target.checked)}
                                             className="rounded"
                                           />
-                                          {t('required_checkbox')}
+                                          Required
                                       </label>
                                       <button
                                         type="button"
@@ -959,20 +960,31 @@ function CreateEventContent() {
                                           setEmojiTarget({ type: 'field', index })
                                           setEmojiModalOpen(true)
                                         }}
-                                        className="text-xs text-indigo-600 hover:text-indigo-700"
+                                        className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                                       >
-                                        {field.emoji || 'Emoji'}
+                                        {field.emoji || '+ Icon'}
                                       </button>
                                   </div>
                                   
-                                  {field.type === 'select' && (
-                                    <input 
-                                      type="text" 
-                                      value={field.options} 
-                                      onChange={(e) => updateField(index, 'options', e.target.value)} 
-                                      placeholder={t('option_placeholder')} 
-                                      className="w-full text-xs border border-gray-200 p-2 rounded-lg mt-2 bg-gray-50 text-gray-900 placeholder:text-gray-400"
-                                    />
+                                  {(field.type === 'select' || field.type === 'checkbox') && (
+                                    <div className="mt-2">
+                                      <input 
+                                        type="text" 
+                                        value={field.options} 
+                                        onChange={(e) => updateField(index, 'options', e.target.value)} 
+                                        placeholder={field.type === 'checkbox' 
+                                          ? "e.g. Ceremony, Reception, After Party (comma separated)" 
+                                          : t('option_placeholder')
+                                        }
+                                        className="w-full text-xs border border-gray-200 p-2 rounded-lg bg-gray-50 text-gray-900 placeholder:text-gray-400"
+                                      />
+                                      <p className="text-[10px] text-gray-400 mt-1">
+                                        {field.type === 'checkbox' 
+                                          ? "Users can select multiple options" 
+                                          : "Users can select one option"
+                                        }
+                                      </p>
+                                    </div>
                                   )}
                               </div>
                           ))}
@@ -1243,13 +1255,25 @@ function CreateEventContent() {
                                       </select>
                                       
                                       {formFields.map(f => (
-                                        <div key={f.id} className="flex items-center gap-2">
-                                          {f.emoji && <span className="text-sm">{f.emoji}</span>}
+                                        <div key={f.id} className="flex items-start gap-2">
+                                          {f.emoji && <span className="text-sm mt-2">{f.emoji}</span>}
                                           {f.type === 'select' 
-                                            ? <select className="flex-1 border p-2 rounded text-xs"><option>{f.label}</option></select>
+                                            ? <select className="flex-1 border p-2 rounded text-xs bg-gray-50"><option>{f.label}</option></select>
+                                            : f.type === 'checkbox'
+                                            ? <div className="flex-1 space-y-1.5">
+                                                <p className="text-xs font-semibold text-gray-700 mb-1">{f.label}</p>
+                                                {f.options?.split(',').map((opt, i) => (
+                                                  <label key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <input type="checkbox" className="rounded" />
+                                                    <span>{opt.trim()}</span>
+                                                  </label>
+                                                ))}
+                                              </div>
                                             : f.type === 'emoji'
-                                            ? <div className="flex-1 border p-2 rounded text-xs bg-gray-50">{f.label} (Emoji Seçimi)</div>
-                                            : <input className="flex-1 border p-2 rounded text-xs" placeholder={f.label}/>
+                                            ? <div className="flex-1 border p-2 rounded text-xs bg-gray-50">{f.label} (Emoji)</div>
+                                            : f.type === 'textarea'
+                                            ? <textarea className="flex-1 border p-2 rounded text-xs h-16 bg-gray-50" placeholder={f.label}/>
+                                            : <input className="flex-1 border p-2 rounded text-xs bg-gray-50" placeholder={f.label}/>
                                           }
                                         </div>
                                       ))}
