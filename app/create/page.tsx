@@ -811,34 +811,31 @@ function CreateEventContent() {
                                         onChange={(e) => setShowDateOnImage(e.target.checked)}
                                         className="rounded"
                                       />
-                                      <span>Show Date on Image</span>
+                                      <span>Show Date on Image (bottom overlay)</span>
                                     </label>
-                                    <p className="text-xs text-gray-500 ml-6">If unchecked, date will appear above countdown</p>
                                   </div>
                                   
                                   {/* DATE STYLE SELECTOR */}
-                                  {showDateOnImage && (
-                                    <div className="pt-2">
-                                      <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
-                                      <div className="grid grid-cols-2 gap-2">
-                                        {DATE_DISPLAY_STYLES.map(style => (
-                                          <button
-                                            key={style.id}
-                                            type="button"
-                                            onClick={() => setDateDisplayStyle(style.id)}
-                                            className={`p-2 rounded-lg border-2 text-left transition text-xs ${
-                                              dateDisplayStyle === style.id
-                                                ? 'border-indigo-600 bg-indigo-50'
-                                                : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                          >
-                                            <p className="font-semibold text-gray-900">{style.name}</p>
-                                            <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
-                                          </button>
-                                        ))}
-                                      </div>
+                                  <div className="pt-2">
+                                    <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {DATE_DISPLAY_STYLES.map(style => (
+                                        <button
+                                          key={style.id}
+                                          type="button"
+                                          onClick={() => setDateDisplayStyle(style.id)}
+                                          className={`p-2 rounded-lg border-2 text-left transition text-xs ${
+                                            dateDisplayStyle === style.id
+                                              ? 'border-indigo-600 bg-indigo-50'
+                                              : 'border-gray-200 hover:border-gray-300'
+                                          }`}
+                                        >
+                                          <p className="font-semibold text-gray-900">{style.name}</p>
+                                          <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
+                                        </button>
+                                      ))}
                                     </div>
-                                  )}
+                                  </div>
                                   
                                   {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
                                     <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
@@ -1367,25 +1364,25 @@ function CreateEventContent() {
                                         </div>
                                       )}
                                       
-                                      {/* BOTTOM - DATE */}
+                                      {/* Empty spacer to push date to bottom if no message */}
+                                      {!showMessageOnImage && <div className="flex-1"></div>}
+                                      
+                                      {/* BOTTOM - DATE (Always at bottom when enabled) */}
                                       {showDateOnImage && eventDate && (
                                         <div className="text-center">
                                           {(() => {
                                             const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
                                             const formatted = style?.format(eventDate)
+                                            if (!formatted) return null
                                             return (
                                               <div className="space-y-1">
-                                                {formatted?.line1 && (
-                                                  <p className="text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                                                    {formatted.line1}
-                                                  </p>
-                                                )}
-                                                {formatted?.line2 && (
-                                                  <p className="text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                                                    {formatted.line2}
-                                                  </p>
-                                                )}
-                                                {formatted?.line3 && (
+                                                <p className="text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                  {formatted.line1}
+                                                </p>
+                                                <p className="text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                  {formatted.line2}
+                                                </p>
+                                                {formatted.line3 && (
                                                   <p className="text-xs font-semibold drop-shadow-lg opacity-90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                     {formatted.line3}
                                                   </p>
@@ -1410,32 +1407,6 @@ function CreateEventContent() {
                                 <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
                                   {message || 'Write your special message for your guests here...'}
                                 </p>
-                              )}
-                              
-                              {/* DATE - If not on image, show above countdown (Normal style) */}
-                              {eventDate && !showDateOnImage && (
-                                <div className="text-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                  {(() => {
-                                    const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
-                                    const formatted = style?.format(eventDate)
-                                    if (!formatted) return null
-                                    return (
-                                      <div className="space-y-2">
-                                        <p className="text-base font-bold" style={{ color: themeColor }}>
-                                          {formatted.line1}
-                                        </p>
-                                        <p className="text-2xl font-bold" style={{ color: themeColor }}>
-                                          {formatted.line2}
-                                        </p>
-                                        {formatted.line3 && (
-                                          <p className="text-sm font-semibold text-gray-600">
-                                            {formatted.line3}
-                                          </p>
-                                        )}
-                                      </div>
-                                    )
-                                  })()}
-                                </div>
                               )}
                               
                               {/* COUNTDOWN - Always show */}
