@@ -1412,23 +1412,23 @@ function CreateEventContent() {
                                 </p>
                               )}
                               
-                              {/* DATE - If not on image, show above countdown */}
+                              {/* DATE - If not on image, show above countdown (Normal style) */}
                               {eventDate && !showDateOnImage && (
-                                <div className="text-center mb-4">
+                                <div className="text-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                   {(() => {
                                     const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
                                     const formatted = style?.format(eventDate)
                                     if (!formatted) return null
                                     return (
-                                      <div className="space-y-1 text-gray-700">
+                                      <div className="space-y-2">
                                         <p className="text-base font-bold" style={{ color: themeColor }}>
                                           {formatted.line1}
                                         </p>
-                                        <p className="text-xl font-bold" style={{ color: themeColor }}>
+                                        <p className="text-2xl font-bold" style={{ color: themeColor }}>
                                           {formatted.line2}
                                         </p>
                                         {formatted.line3 && (
-                                          <p className="text-sm font-semibold opacity-75">
+                                          <p className="text-sm font-semibold text-gray-600">
                                             {formatted.line3}
                                           </p>
                                         )}
