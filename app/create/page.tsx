@@ -1325,21 +1325,20 @@ function CreateEventContent() {
                               
                               {/* MAIN IMAGE with OVERLAY */}
                               {mainPreview ? (
-                                <div className="relative w-full h-80 rounded-lg overflow-hidden mb-4">
+                                <div className="relative w-full h-96 min-h-[400px] sm:h-80 rounded-lg overflow-hidden mb-4">
                                   <img src={mainPreview} className="w-full h-full object-cover"/>
                                   
                                   {/* TEXT OVERLAY */}
                                   {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-6 text-white">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-3 sm:p-6 text-white">
                                       
                                       {/* TOP - TITLE */}
                                       {showTitleOnImage && (
                                         <div className="text-center">
                                           <h1 
-                                            className="font-bold drop-shadow-2xl" 
+                                            className="font-bold drop-shadow-2xl text-xl sm:text-2xl md:text-3xl" 
                                             style={{ 
                                               fontFamily: titleFont, 
-                                              fontSize: `${titleSize * 0.8}rem`,
                                               textShadow: '0 4px 8px rgba(0,0,0,0.8)'
                                             }}
                                           >
@@ -1350,12 +1349,11 @@ function CreateEventContent() {
                                       
                                       {/* CENTER - MESSAGE */}
                                       {showMessageOnImage && (
-                                        <div className="flex-1 flex items-center justify-center">
+                                        <div className="flex-1 flex items-center justify-center py-2">
                                           <p 
-                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs" 
+                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs text-sm sm:text-base" 
                                             style={{ 
                                               fontFamily: messageFont, 
-                                              fontSize: `${messageSize * 0.7}rem`,
                                               textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                                             }}
                                           >
@@ -1365,7 +1363,7 @@ function CreateEventContent() {
                                       )}
                                       
                                       {/* Empty spacer to push date to bottom if no message */}
-                                      {!showMessageOnImage && <div className="flex-1"></div>}
+                                      {!showMessageOnImage && <div className="flex-1 min-h-[20px]"></div>}
                                       
                                       {/* BOTTOM - DATE (Always at bottom when enabled) */}
                                       {showDateOnImage && eventDate && (
@@ -1375,15 +1373,15 @@ function CreateEventContent() {
                                             const formatted = style?.format(eventDate)
                                             if (!formatted) return null
                                             return (
-                                              <div className="space-y-1">
-                                                <p className="text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                              <div className="space-y-0.5 sm:space-y-1">
+                                                <p className="text-xs sm:text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                   {formatted.line1}
                                                 </p>
-                                                <p className="text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                <p className="text-base sm:text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                   {formatted.line2}
                                                 </p>
                                                 {formatted.line3 && (
-                                                  <p className="text-xs font-semibold drop-shadow-lg opacity-90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                  <p className="text-[10px] sm:text-xs font-semibold drop-shadow-lg opacity-90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                     {formatted.line3}
                                                   </p>
                                                 )}

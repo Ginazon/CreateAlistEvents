@@ -238,64 +238,60 @@ export default function EventView({ slug }: { slug: string }) {
           )}
 
 {event.main_image_url && (
-            <div className="relative mb-8 rounded-xl overflow-hidden shadow-sm">
-              <img src={event.main_image_url} className="w-full h-auto object-cover" alt={`${event.title} - Main`} />
+           <div className="relative mb-8 rounded-xl overflow-hidden shadow-sm min-h-[400px]">
+           <img src={event.main_image_url} className="w-full h-full min-h-[400px] object-cover" alt={`${event.title} - Main`} />
               
               {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-8 text-white">
                   
                   {showTitleOnImage && (
-                    <div className="text-center">
-                      <h1 
-                        className="font-bold drop-shadow-2xl" 
-                        style={{ 
-                          fontFamily: titleFont, 
-                          fontSize: `${titleSize}rem`,
-                          textShadow: '0 4px 8px rgba(0,0,0,0.8)'
-                        }}
-                      >
-                        {event.title}
-                      </h1>
-                    </div>
-                  )}
+  <div className="text-center">
+    <h1 
+      className="font-bold drop-shadow-2xl text-xl sm:text-2xl md:text-3xl" 
+      style={{ 
+        fontFamily: titleFont, 
+        textShadow: '0 4px 8px rgba(0,0,0,0.8)'
+      }}
+    >
+      {event.title}
+    </h1>
+  </div>
+)}
                   
                   {showMessageOnImage && event.message && (
-                    <div className="flex-1 flex items-center justify-center">
-                      <p 
-                        className="text-center whitespace-pre-line drop-shadow-lg max-w-md" 
-                        style={{ 
-                          fontFamily: messageFont, 
-                          fontSize: `${messageSize}rem`,
-                          textShadow: '0 2px 4px rgba(0,0,0,0.8)'
-                        }}
-                      >
-                        {event.message}
-                      </p>
-                    </div>
-                  )}
+  <div className="flex-1 flex items-center justify-center py-2">
+    <p 
+      className="text-center whitespace-pre-line drop-shadow-lg max-w-xs text-sm sm:text-base" 
+      style={{ 
+        fontFamily: messageFont, 
+        textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+      }}
+    >
+      {event.message}
+    </p>
+  </div>
+)}
                   {/* Empty spacer to push date to bottom if no message */}
-{!showMessageOnImage && <div className="flex-1"></div>}
+                  {!showMessageOnImage && <div className="flex-1 min-h-[20px]"></div>}
                   
                   {showDateOnImage && event.event_date && (
   <div className="text-center">
     {(() => {
       const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
       if (!style) return null
-      
       const formatted = style.format(event.event_date)
-      
       return (
-        <div className="space-y-1">
-          <p className="text-base font-bold drop-shadow-lg" 
+        <div className="space-y-0.5 sm:space-y-1">
+          <p className="text-xs sm:text-base font-bold drop-shadow-lg" 
              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
             {formatted.line1}
           </p>
-          <p className="text-xl font-bold drop-shadow-lg" 
+          <p className="text-base sm:text-xl font-bold drop-shadow-lg" 
              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
             {formatted.line2}
           </p>
           {formatted.line3 && (
-            <p className="text-sm font-semibold drop-shadow-lg opacity-90" 
+            <p className="text-[10px] sm:text-sm font-semibold drop-shadow-lg opacity-90" 
                style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
               {formatted.line3}
             </p>
