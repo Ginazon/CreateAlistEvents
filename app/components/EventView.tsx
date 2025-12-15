@@ -365,7 +365,7 @@ export default function EventView({ slug }: { slug: string }) {
                     onClick={() => setShowMap(!showMap)}
                     className="inline-block px-6 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition mr-2"
                   >
-                    {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritayı Göster'}
+                    {showMap ? '🗺️ Hide Map' : '📍 Show Map'}
                   </button>
                   
                   <a
