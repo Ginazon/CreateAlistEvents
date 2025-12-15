@@ -9,40 +9,68 @@ import { useTranslation } from '../i18n'
 
 const THEME_COLORS = [
   { name: 'Blue', hex: '#4F46E5' },
+  { name: 'Sky Blue', hex: '#0EA5E9' },
+  { name: 'Navy', hex: '#1E40AF' },
   { name: 'Gold', hex: '#D97706' },
+  { name: 'Amber', hex: '#F59E0B' },
+  { name: 'Yellow', hex: '#EAB308' },
   { name: 'Rose', hex: '#E11D48' },
+  { name: 'Pink', hex: '#EC4899' },
+  { name: 'Red', hex: '#DC2626' },
   { name: 'Green', hex: '#059669' },
+  { name: 'Emerald', hex: '#10B981' },
+  { name: 'Lime', hex: '#84CC16' },
   { name: 'Black', hex: '#111827' },
+  { name: 'Slate', hex: '#475569' },
+  { name: 'Gray', hex: '#6B7280' },
   { name: 'Purple', hex: '#7C3AED' },
+  { name: 'Violet', hex: '#8B5CF6' },
+  { name: 'Indigo', hex: '#6366F1' },
   { name: 'Teal', hex: '#0D9488' },
+  { name: 'Cyan', hex: '#06B6D4' },
+  { name: 'Orange', hex: '#EA580C' },
 ]
 
 const FONT_OPTIONS = [
   { name: 'Inter', value: "'Inter', sans-serif" },
   { name: 'Roboto', value: "'Roboto', sans-serif" },
+  { name: 'Open Sans', value: "'Open Sans', sans-serif" },
+  { name: 'Lato', value: "'Lato', sans-serif" },
+  { name: 'Montserrat', value: "'Montserrat', sans-serif" },
   { name: 'Playfair Display', value: "'Playfair Display', serif" },
   { name: 'Merriweather', value: "'Merriweather', serif" },
+  { name: 'Lora', value: "'Lora', serif" },
+  { name: 'Crimson Text', value: "'Crimson Text', serif" },
   { name: 'Dancing Script', value: "'Dancing Script', cursive" },
   { name: 'Great Vibes', value: "'Great Vibes', cursive" },
   { name: 'Pacifico', value: "'Pacifico', cursive" },
   { name: 'Lobster', value: "'Lobster', display" },
+  { name: 'Bebas Neue', value: "'Bebas Neue', display" },
+  { name: 'Caveat', value: "'Caveat', cursive" },
 ]
 
-const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&display=swap"
+const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=Bebas+Neue&family=Caveat:wght@400;700&display=swap"
 
 const TITLE_SIZES = [
+  { label: 'XXS', value: 0.75 },
   { label: 'XS', value: 1 },
   { label: 'S', value: 1.5 },
   { label: 'M', value: 2 },
   { label: 'L', value: 2.5 },
   { label: 'XL', value: 3 },
+  { label: 'XXL', value: 3.5 },
+  { label: '3XL', value: 4 },
 ]
 
 const MESSAGE_SIZES = [
-  { label: 'XS', value: 0.5 },
-  { label: 'S', value: 1 },
-  { label: 'M', value: 1.5 },
-  { label: 'L', value: 2 },
+  { label: 'XXS', value: 0.4 },
+  { label: 'XS', value: 0.6 },
+  { label: 'S', value: 0.8 },
+  { label: 'M', value: 1 },
+  { label: 'L', value: 1.25 },
+  { label: 'XL', value: 1.5 },
+  { label: 'XXL', value: 1.75 },
+  { label: '3XL', value: 2 },
 ]
 
 const DATE_DISPLAY_STYLES = [
@@ -776,74 +804,6 @@ function CreateEventContent() {
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
-                              
-                              {/* TEXT OVERLAY OPTIONS */}
-                              {mainPreview && (
-                                <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                                  <p className="text-xs font-bold text-gray-700 uppercase">Text Overlay</p>
-                                  
-                                  {/* TOGGLE OPTIONS */}
-                                  <div className="space-y-2">
-                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={showTitleOnImage}
-                                        onChange={(e) => setShowTitleOnImage(e.target.checked)}
-                                        className="rounded"
-                                      />
-                                      <span>Show Title on Image (top)</span>
-                                    </label>
-                                    
-                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={showMessageOnImage}
-                                        onChange={(e) => setShowMessageOnImage(e.target.checked)}
-                                        className="rounded"
-                                      />
-                                      <span>Show Message on Image (center)</span>
-                                    </label>
-                                    
-                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={showDateOnImage}
-                                        onChange={(e) => setShowDateOnImage(e.target.checked)}
-                                        className="rounded"
-                                      />
-                                      <span>Show Date on Image (bottom overlay)</span>
-                                    </label>
-                                  </div>
-                                  
-                                  {/* DATE STYLE SELECTOR */}
-                                  <div className="pt-2">
-                                    <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      {DATE_DISPLAY_STYLES.map(style => (
-                                        <button
-                                          key={style.id}
-                                          type="button"
-                                          onClick={() => setDateDisplayStyle(style.id)}
-                                          className={`p-2 rounded-lg border-2 text-left transition text-xs ${
-                                            dateDisplayStyle === style.id
-                                              ? 'border-indigo-600 bg-indigo-50'
-                                              : 'border-gray-200 hover:border-gray-300'
-                                          }`}
-                                        >
-                                          <p className="font-semibold text-gray-900">{style.name}</p>
-                                          <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  
-                                  {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
-                                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                                      💡 Text will appear on the image in preview below
-                                    </div>
-                                  )}
-                                </div>
-                              )}
                           </div>
                       </div>
                   </section>
@@ -1018,16 +978,89 @@ function CreateEventContent() {
                       </div>
                   </section>
 
+                  {/* TEXT OVERLAY SETTINGS */}
+                  {mainPreview && (
+                    <section>
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Text Overlay</h3>
+                      
+                      <div className="space-y-4">
+                        {/* TOGGLE OPTIONS */}
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                            <input
+                              type="checkbox"
+                              checked={showTitleOnImage}
+                              onChange={(e) => setShowTitleOnImage(e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="font-medium">Show Title on Image</span>
+                            <span className="text-xs text-gray-500">(top)</span>
+                          </label>
+                          
+                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                            <input
+                              type="checkbox"
+                              checked={showMessageOnImage}
+                              onChange={(e) => setShowMessageOnImage(e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="font-medium">Show Message on Image</span>
+                            <span className="text-xs text-gray-500">(center)</span>
+                          </label>
+                          
+                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                            <input
+                              type="checkbox"
+                              checked={showDateOnImage}
+                              onChange={(e) => setShowDateOnImage(e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="font-medium">Show Date on Image</span>
+                            <span className="text-xs text-gray-500">(bottom)</span>
+                          </label>
+                        </div>
+                        
+                        {/* DATE STYLE SELECTOR */}
+                        <div>
+                          <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {DATE_DISPLAY_STYLES.map(style => (
+                              <button
+                                key={style.id}
+                                type="button"
+                                onClick={() => setDateDisplayStyle(style.id)}
+                                className={`p-3 rounded-lg border-2 text-left transition ${
+                                  dateDisplayStyle === style.id
+                                    ? 'border-indigo-600 bg-indigo-50'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <p className="font-bold text-gray-900 text-sm">{style.name}</p>
+                                <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
+                            <span className="font-semibold">💡 Preview:</span> Text will appear on your main image below
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
+
                   {/* THEME COLOR */}
                   <section>
                       <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">{t('section_color')}</h3>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-7 gap-2">
                         {THEME_COLORS.map(c => (
                           <Tooltip key={c.hex} text={c.name}>
                             <button 
                               onClick={() => setThemeColor(c.hex)} 
-                              className={`w-10 h-10 rounded-lg border-2 transition ${
-                                themeColor === c.hex ? 'border-gray-900 scale-110' : 'border-gray-200'
+                              className={`w-full h-10 rounded-lg border-2 transition ${
+                                themeColor === c.hex ? 'border-gray-900 scale-110 shadow-lg' : 'border-gray-200 hover:scale-105'
                               }`} 
                               style={{ backgroundColor: c.hex }}
                             />
