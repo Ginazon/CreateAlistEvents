@@ -45,6 +45,60 @@ const MESSAGE_SIZES = [
   { label: 'L', value: 2 },
 ]
 
+const DATE_DISPLAY_STYLES = [
+  { 
+    id: 'full', 
+    name: 'Full', 
+    preview: 'Friday\n15 August 2025\nAT 4:30 PM',
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase(),
+        line2: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+        line3: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+      }
+    }
+  },
+  { 
+    id: 'short', 
+    name: 'Short', 
+    preview: '15 AUG 2025\n4:30 PM',
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}`,
+        line2: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+      }
+    }
+  },
+  { 
+    id: 'elegant', 
+    name: 'Elegant', 
+    preview: '19th & 20th Feb 2024\nat 11:00 Am Onwards',
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      const day = d.getDate()
+      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th'
+      return {
+        line1: `${day}${suffix} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
+        line2: `at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+      }
+    }
+  },
+  { 
+    id: 'minimal', 
+    name: 'Minimal', 
+    preview: 'August 15\n2025',
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: `${d.toLocaleDateString('en-US', { month: 'long' })} ${d.getDate()}`,
+        line2: d.getFullYear().toString()
+      }
+    }
+  }
+]
+
 const EMOJIS = ['😊', '❤️', '🎉', '🎊', '💐', '🎈', '🎁', '💍', '👰', '🤵', '🍾', '🥂', '🎵', '🎶', '⭐', '✨', '💫', '🌟', '🔔', '📅', '📍', '🏠', '🌸', '🌹', '🌺', '🌻', '🌷', '🎂', '🍰', '🥳', '🎭', '🎪', '🎨', '🎬', '📸', '💌', '💝', '💖', '💗', '💓', '💞', '💕', '🌈', '☀️', '🌙', '⭐', '💎', '👑', '🦋', '🌺']
 
 const SAMPLE_MESSAGES = {
@@ -331,6 +385,12 @@ function CreateEventContent() {
   const [titleSize, setTitleSize] = useState(2)
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
   const [messageSize, setMessageSize] = useState(1)
+  
+  // Image Overlay Settings
+  const [showTitleOnImage, setShowTitleOnImage] = useState(false)
+  const [showMessageOnImage, setShowMessageOnImage] = useState(false)
+  const [showDateOnImage, setShowDateOnImage] = useState(false)
+  const [dateDisplayStyle, setDateDisplayStyle] = useState('full') // 'full', 'short', 'elegant', 'minimal'
 
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'checkbox' | 'emoji'; options?: string; required: boolean; emoji?: string; }
   const [formFields, setFormFields] = useState<FormField[]>([])
@@ -431,6 +491,10 @@ function CreateEventContent() {
               setTitleSize(data.design_settings.titleSize || 2)
               setMessageFont(data.design_settings.messageFont || FONT_OPTIONS[0].value)
               setMessageSize(data.design_settings.messageSize || 1)
+              setShowTitleOnImage(data.design_settings.showTitleOnImage || false)
+              setShowMessageOnImage(data.design_settings.showMessageOnImage || false)
+              setShowDateOnImage(data.design_settings.showDateOnImage || false)
+              setDateDisplayStyle(data.design_settings.dateDisplayStyle || 'full')
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
           if(data.event_details) setDetailBlocks(data.event_details)
@@ -505,7 +569,17 @@ function CreateEventContent() {
             message, 
             image_url: finalCoverUrl, 
             main_image_url: finalMainUrl,
-            design_settings: { theme: themeColor, titleFont, titleSize, messageFont, messageSize },
+            design_settings: { 
+              theme: themeColor, 
+              titleFont, 
+              titleSize, 
+              messageFont, 
+              messageSize,
+              showTitleOnImage,
+              showMessageOnImage,
+              showDateOnImage,
+              dateDisplayStyle
+            },
             custom_form_schema: formFields,
             event_details: detailBlocks
         }
@@ -693,15 +767,85 @@ function CreateEventContent() {
                                         <img src={mainPreview} className="w-full h-full object-cover"/>
                                       ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                                          Görsel
+                                          Image
                                         </div>
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {mainPreview ? 'Değiştir' : t('file_btn_main')}
+                                    {mainPreview ? 'Change' : t('file_btn_main')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
+                              
+                              {/* TEXT OVERLAY OPTIONS */}
+                              {mainPreview && (
+                                <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                                  <p className="text-xs font-bold text-gray-700 uppercase">Text Overlay</p>
+                                  
+                                  {/* TOGGLE OPTIONS */}
+                                  <div className="space-y-2">
+                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={showTitleOnImage}
+                                        onChange={(e) => setShowTitleOnImage(e.target.checked)}
+                                        className="rounded"
+                                      />
+                                      <span>Show Title on Image (top)</span>
+                                    </label>
+                                    
+                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={showMessageOnImage}
+                                        onChange={(e) => setShowMessageOnImage(e.target.checked)}
+                                        className="rounded"
+                                      />
+                                      <span>Show Message on Image (center)</span>
+                                    </label>
+                                    
+                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={showDateOnImage}
+                                        onChange={(e) => setShowDateOnImage(e.target.checked)}
+                                        className="rounded"
+                                      />
+                                      <span>Show Date on Image (bottom)</span>
+                                    </label>
+                                  </div>
+                                  
+                                  {/* DATE STYLE SELECTOR */}
+                                  {showDateOnImage && (
+                                    <div className="pt-2">
+                                      <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {DATE_DISPLAY_STYLES.map(style => (
+                                          <button
+                                            key={style.id}
+                                            type="button"
+                                            onClick={() => setDateDisplayStyle(style.id)}
+                                            className={`p-2 rounded-lg border-2 text-left transition text-xs ${
+                                              dateDisplayStyle === style.id
+                                                ? 'border-indigo-600 bg-indigo-50'
+                                                : 'border-gray-200 hover:border-gray-300'
+                                            }`}
+                                          >
+                                            <p className="font-semibold text-gray-900">{style.name}</p>
+                                            <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                                    <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                                      💡 Text will appear on the image in preview below
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                           </div>
                       </div>
                   </section>
@@ -1174,23 +1318,103 @@ function CreateEventContent() {
                       <div className="px-5 -mt-6 relative z-10">
                            <div className="bg-white rounded-xl shadow-lg p-4 border-t-4" style={{ borderColor: themeColor }}>
                               
-                              <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>
-                                {title || t('preview_title_placeholder')}
-                              </h1>
+                              {/* TITLE - Only if not on image */}
+                              {!showTitleOnImage && (
+                                <h1 className="text-center font-bold mb-2 leading-tight break-words" style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}>
+                                  {title || t('preview_title_placeholder')}
+                                </h1>
+                              )}
                               
+                              {/* MAIN IMAGE with OVERLAY */}
                               {mainPreview ? (
-                                <img src={mainPreview} className="w-full h-80 object-cover rounded-lg mb-4"/>
+                                <div className="relative w-full h-80 rounded-lg overflow-hidden mb-4">
+                                  <img src={mainPreview} className="w-full h-full object-cover"/>
+                                  
+                                  {/* TEXT OVERLAY */}
+                                  {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-6 text-white">
+                                      
+                                      {/* TOP - TITLE */}
+                                      {showTitleOnImage && (
+                                        <div className="text-center">
+                                          <h1 
+                                            className="font-bold drop-shadow-2xl" 
+                                            style={{ 
+                                              fontFamily: titleFont, 
+                                              fontSize: `${titleSize * 0.8}rem`,
+                                              textShadow: '0 4px 8px rgba(0,0,0,0.8)'
+                                            }}
+                                          >
+                                            {title || 'Your Title'}
+                                          </h1>
+                                        </div>
+                                      )}
+                                      
+                                      {/* CENTER - MESSAGE */}
+                                      {showMessageOnImage && (
+                                        <div className="flex-1 flex items-center justify-center">
+                                          <p 
+                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs" 
+                                            style={{ 
+                                              fontFamily: messageFont, 
+                                              fontSize: `${messageSize * 0.7}rem`,
+                                              textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                            }}
+                                          >
+                                            {message || 'Your message here...'}
+                                          </p>
+                                        </div>
+                                      )}
+                                      
+                                      {/* BOTTOM - DATE */}
+                                      {showDateOnImage && eventDate && (
+                                        <div className="text-center">
+                                          {(() => {
+                                            const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+                                            const formatted = style?.format(eventDate)
+                                            return (
+                                              <div className="space-y-1">
+                                                {formatted?.line1 && (
+                                                  <p className="text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                    {formatted.line1}
+                                                  </p>
+                                                )}
+                                                {formatted?.line2 && (
+                                                  <p className="text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                    {formatted.line2}
+                                                  </p>
+                                                )}
+                                                {formatted?.line3 && (
+                                                  <p className="text-xs font-semibold drop-shadow-lg opacity-90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                    {formatted.line3}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            )
+                                          })()}
+                                        </div>
+                                      )}
+                                      
+                                    </div>
+                                  )}
+                                </div>
                               ) : (
                                 <div className="w-full h-80 bg-gray-100 rounded-lg mb-4 flex items-center justify-center text-xs text-gray-400">
                                   {t('preview_main_placeholder')}
                                 </div>
                               )}
                               
-                              <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
-                                {message || 'Mesajınızı buraya yazın...'}
-                              </p>
+                              {/* MESSAGE - Only if not on image */}
+                              {!showMessageOnImage && (
+                                <p className="text-center text-sm text-gray-600 whitespace-pre-line mb-4" style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}>
+                                  {message || 'Write your special message for your guests here...'}
+                                </p>
+                              )}
                               
-                              {eventDate && <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>}
+                              {/* COUNTDOWN - Only if date not on image */}
+                              {eventDate && !showDateOnImage && (
+                                <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>
+                              )}
 
                               <hr className="my-4"/>
                               

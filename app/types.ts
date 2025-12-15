@@ -6,6 +6,10 @@ export interface DesignSettings {
   titleSize: number
   messageFont: string
   messageSize: number
+  showTitleOnImage?: boolean
+  showMessageOnImage?: boolean
+  showDateOnImage?: boolean
+  dateDisplayStyle?: string
 }
 
 export interface DetailBlock {

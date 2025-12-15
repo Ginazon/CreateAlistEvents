@@ -10,6 +10,52 @@ import Link from 'next/link'
 import { useTranslation, LangType } from '../i18n'
 import type { Event, DetailBlock } from '../types'
 
+const DATE_DISPLAY_STYLES = [
+  { 
+    id: 'full', 
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase(),
+        line2: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
+        line3: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+      }
+    }
+  },
+  { 
+    id: 'short', 
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}`,
+        line2: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+      }
+    }
+  },
+  { 
+    id: 'elegant', 
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      const day = d.getDate()
+      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th'
+      return {
+        line1: `${day}${suffix} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
+        line2: `at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+      }
+    }
+  },
+  { 
+    id: 'minimal', 
+    format: (date: string): { line1: string; line2: string; line3?: string } => {
+      const d = new Date(date)
+      return {
+        line1: `${d.toLocaleDateString('en-US', { month: 'long' })} ${d.getDate()}`,
+        line2: d.getFullYear().toString()
+      }
+    }
+  }
+]
+
 // Helper: Extract Google Maps coordinates from URL
 const extractMapCoordinates = (url: string): { lat: number, lng: number } | null => {
   try {
@@ -129,6 +175,10 @@ export default function EventView({ slug }: { slug: string }) {
   const titleSize = event.design_settings?.titleSize || 2.5
   const messageFont = event.design_settings?.messageFont || "'Inter', sans-serif"
   const messageSize = event.design_settings?.messageSize || 1
+  const showTitleOnImage = event.design_settings?.showTitleOnImage || false
+  const showMessageOnImage = event.design_settings?.showMessageOnImage || false
+  const showDateOnImage = event.design_settings?.showDateOnImage || false
+  const dateDisplayStyle = event.design_settings?.dateDisplayStyle || 'full'
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, {
@@ -177,20 +227,88 @@ export default function EventView({ slug }: { slug: string }) {
       {/* MAIN CARD */}
       <div className="max-w-xl w-full px-5 -mt-10 relative z-10">
         <div className="bg-white rounded-xl shadow-lg p-8 border-t-4" style={{ borderColor: themeColor }}>
-          <h1
-            className="font-bold text-center mb-6 leading-tight"
-            style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}
-          >
-            {event.title}
-          </h1>
+        {!showTitleOnImage && (
+            <h1
+              className="font-bold text-center mb-6 leading-tight"
+              style={{ color: themeColor, fontFamily: titleFont, fontSize: `${titleSize}rem` }}
+            >
+              {event.title}
+            </h1>
+          )}
 
-          {event.main_image_url && (
-            <div className="mb-8 rounded-xl overflow-hidden shadow-sm">
+{event.main_image_url && (
+            <div className="relative mb-8 rounded-xl overflow-hidden shadow-sm">
               <img src={event.main_image_url} className="w-full h-auto object-cover" alt={`${event.title} - Main`} />
+              
+              {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-8 text-white">
+                  
+                  {showTitleOnImage && (
+                    <div className="text-center">
+                      <h1 
+                        className="font-bold drop-shadow-2xl" 
+                        style={{ 
+                          fontFamily: titleFont, 
+                          fontSize: `${titleSize}rem`,
+                          textShadow: '0 4px 8px rgba(0,0,0,0.8)'
+                        }}
+                      >
+                        {event.title}
+                      </h1>
+                    </div>
+                  )}
+                  
+                  {showMessageOnImage && event.message && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <p 
+                        className="text-center whitespace-pre-line drop-shadow-lg max-w-md" 
+                        style={{ 
+                          fontFamily: messageFont, 
+                          fontSize: `${messageSize}rem`,
+                          textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                        }}
+                      >
+                        {event.message}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {showDateOnImage && event.event_date && (
+  <div className="text-center">
+    {(() => {
+      const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+      if (!style) return null
+      
+      const formatted = style.format(event.event_date)
+      
+      return (
+        <div className="space-y-1">
+          <p className="text-base font-bold drop-shadow-lg" 
+             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+            {formatted.line1}
+          </p>
+          <p className="text-xl font-bold drop-shadow-lg" 
+             style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+            {formatted.line2}
+          </p>
+          {formatted.line3 && (
+            <p className="text-sm font-semibold drop-shadow-lg opacity-90" 
+               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+              {formatted.line3}
+            </p>
+          )}
+        </div>
+      )
+    })()}
+  </div>
+)}
+                  
+                </div>
+              )}
             </div>
           )}
 
-          {event.message && (
+{!showMessageOnImage && event.message && (
             <p
               className="text-center text-gray-600 mb-8 whitespace-pre-line leading-relaxed"
               style={{ fontFamily: messageFont, fontSize: `${messageSize}rem` }}
@@ -198,13 +316,11 @@ export default function EventView({ slug }: { slug: string }) {
               {event.message}
             </p>
           )}
-
-          {event.event_date && (
+            {event.event_date && !showDateOnImage && (
             <div className="mb-8">
               <Countdown targetDate={event.event_date} themeColor={themeColor} />
             </div>
           )}
-
           <hr className="my-8 border-gray-200" />
 
           <div className="grid grid-cols-1 gap-4 text-center mb-10">
