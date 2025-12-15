@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslation, LangType } from '../i18n'
 import type { Event, DetailBlock } from '../types'
+// Gith push için 
 
 const DATE_DISPLAY_STYLES = [
   { 
