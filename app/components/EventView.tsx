@@ -273,6 +273,8 @@ export default function EventView({ slug }: { slug: string }) {
                       </p>
                     </div>
                   )}
+                  {/* Empty spacer to push date to bottom if no message */}
+{!showMessageOnImage && <div className="flex-1"></div>}
                   
                   {showDateOnImage && event.event_date && (
   <div className="text-center">
