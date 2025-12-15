@@ -811,8 +811,9 @@ function CreateEventContent() {
                                         onChange={(e) => setShowDateOnImage(e.target.checked)}
                                         className="rounded"
                                       />
-                                      <span>Show Date on Image (bottom)</span>
+                                      <span>Show Date on Image</span>
                                     </label>
+                                    <p className="text-xs text-gray-500 ml-6">If unchecked, date will appear above countdown</p>
                                   </div>
                                   
                                   {/* DATE STYLE SELECTOR */}
@@ -1411,8 +1412,34 @@ function CreateEventContent() {
                                 </p>
                               )}
                               
-                              {/* COUNTDOWN - Only if date not on image */}
+                              {/* DATE - If not on image, show above countdown */}
                               {eventDate && !showDateOnImage && (
+                                <div className="text-center mb-4">
+                                  {(() => {
+                                    const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+                                    const formatted = style?.format(eventDate)
+                                    if (!formatted) return null
+                                    return (
+                                      <div className="space-y-1 text-gray-700">
+                                        <p className="text-base font-bold" style={{ color: themeColor }}>
+                                          {formatted.line1}
+                                        </p>
+                                        <p className="text-xl font-bold" style={{ color: themeColor }}>
+                                          {formatted.line2}
+                                        </p>
+                                        {formatted.line3 && (
+                                          <p className="text-sm font-semibold opacity-75">
+                                            {formatted.line3}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )
+                                  })()}
+                                </div>
+                              )}
+                              
+                              {/* COUNTDOWN - Always show */}
+                              {eventDate && (
                                 <div className="my-4"><Countdown targetDate={eventDate} themeColor={themeColor} /></div>
                               )}
 

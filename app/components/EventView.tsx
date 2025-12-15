@@ -317,11 +317,37 @@ export default function EventView({ slug }: { slug: string }) {
               {event.message}
             </p>
           )}
-            {event.event_date && !showDateOnImage && (
-            <div className="mb-8">
-              <Countdown targetDate={event.event_date} themeColor={themeColor} />
-            </div>
+          {event.event_date && !showDateOnImage && (
+  <div className="text-center mb-4">
+    {(() => {
+      const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+      if (!style) return null
+      const formatted = style.format(event.event_date)
+      return (
+        <div className="space-y-1 text-gray-700">
+          <p className="text-base font-bold" style={{ color: themeColor }}>
+            {formatted.line1}
+          </p>
+          <p className="text-xl font-bold" style={{ color: themeColor }}>
+            {formatted.line2}
+          </p>
+          {formatted.line3 && (
+            <p className="text-sm font-semibold opacity-75">
+              {formatted.line3}
+            </p>
           )}
+        </div>
+      )
+    })()}
+  </div>
+)}
+          
+           {/* COUNTDOWN - Always show */}
+{event.event_date && (
+  <div className="mb-8">
+    <Countdown targetDate={event.event_date} themeColor={themeColor} />
+  </div>
+)}
           <hr className="my-8 border-gray-200" />
 
           <div className="grid grid-cols-1 gap-4 text-center mb-10">
