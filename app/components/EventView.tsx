@@ -88,7 +88,7 @@ export default function EventView({ slug }: { slug: string }) {
   const [showMap, setShowMap] = useState(false)
 
   // Google Fonts URL - Same as Create Page
-  const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&display=swap"
+  const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=Bebas+Neue&family=Caveat:wght@400;700&display=swap"
 
   useEffect(() => {
     const fetchData = async () => {
