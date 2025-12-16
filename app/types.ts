@@ -10,6 +10,7 @@ export interface DesignSettings {
   showMessageOnImage?: boolean
   showDateOnImage?: boolean
   dateDisplayStyle?: string
+  showRsvpForm?: boolean
 }
 
 export interface DetailBlock {

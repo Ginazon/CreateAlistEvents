@@ -85,14 +85,14 @@ const TITLE_SIZES = [
 ]
 
 const MESSAGE_SIZES = [
-  { label: 'XXS', value: 0.4 },
-  { label: 'XS', value: 0.6 },
-  { label: 'S', value: 0.8 },
-  { label: 'M', value: 1 },
-  { label: 'L', value: 1.25 },
-  { label: 'XL', value: 1.5 },
-  { label: 'XXL', value: 1.75 },
-  { label: '3XL', value: 2 },
+  { label: 'XXS', value: 0.6 },
+  { label: 'XS', value: 0.8 },
+  { label: 'S', value: 1 },
+  { label: 'M', value: 1.25 },
+  { label: 'L', value: 1.5 },
+  { label: 'XL', value: 1.75 },
+  { label: 'XXL', value: 2 },
+  { label: '3XL', value: 2.5 },
 ]
 
 const DATE_DISPLAY_STYLES = [
@@ -434,13 +434,14 @@ function CreateEventContent() {
   const [titleFont, setTitleFont] = useState(FONT_OPTIONS[0].value)
   const [titleSize, setTitleSize] = useState(2)
   const [messageFont, setMessageFont] = useState(FONT_OPTIONS[0].value)
-  const [messageSize, setMessageSize] = useState(1)
+  const [messageSize, setMessageSize] = useState(1.25)
   
   // Image Overlay Settings
   const [showTitleOnImage, setShowTitleOnImage] = useState(false)
   const [showMessageOnImage, setShowMessageOnImage] = useState(false)
   const [showDateOnImage, setShowDateOnImage] = useState(false)
   const [dateDisplayStyle, setDateDisplayStyle] = useState('full') // 'full', 'short', 'elegant', 'minimal'
+  const [showRsvpForm, setShowRsvpForm] = useState(true) // RSVP form visibility
 
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'checkbox' | 'emoji'; options?: string; required: boolean; emoji?: string; }
   const [formFields, setFormFields] = useState<FormField[]>([])
@@ -545,6 +546,7 @@ function CreateEventContent() {
               setShowMessageOnImage(data.design_settings.showMessageOnImage || false)
               setShowDateOnImage(data.design_settings.showDateOnImage || false)
               setDateDisplayStyle(data.design_settings.dateDisplayStyle || 'full')
+              setShowRsvpForm(data.design_settings.showRsvpForm !== undefined ? data.design_settings.showRsvpForm : true)
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
           if(data.event_details) setDetailBlocks(data.event_details)
@@ -628,7 +630,8 @@ function CreateEventContent() {
               showTitleOnImage,
               showMessageOnImage,
               showDateOnImage,
-              dateDisplayStyle
+              dateDisplayStyle,
+              showRsvpForm
             },
             custom_form_schema: formFields,
             event_details: detailBlocks
@@ -1104,13 +1107,31 @@ function CreateEventContent() {
                       </div>
                       
                       <div className="space-y-3">
-                          <div className="bg-white/70 p-3 rounded-lg border border-gray-200 opacity-60">
-                              <p className="text-xs font-semibold text-gray-700 mb-2">RSVP Form (Fixed)</p>
-                              <div className="space-y-1 text-xs text-gray-500">
-                                  <div>{t('preview_ph_name')}</div>
-                                  <div>{t('preview_ph_email')}</div>
-                                  <div>{t('preview_ph_status')}</div>
+                          {/* RSVP FORM TOGGLE */}
+                          <div className={`p-3 rounded-lg border transition ${showRsvpForm ? 'bg-white border-gray-200' : 'bg-gray-100 border-gray-300 opacity-60'}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-semibold text-gray-700">RSVP Form (Built-in)</p>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={showRsvpForm}
+                                    onChange={(e) => setShowRsvpForm(e.target.checked)}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
                               </div>
+                              {showRsvpForm && (
+                                <div className="space-y-1 text-xs text-gray-500">
+                                    <div>✓ {t('preview_ph_name')}</div>
+                                    <div>✓ {t('preview_ph_email')}</div>
+                                    <div>✓ {t('preview_ph_status')}</div>
+                                    <div className="text-[10px] text-gray-400 mt-2">Fixed fields always included</div>
+                                </div>
+                              )}
+                              {!showRsvpForm && (
+                                <p className="text-xs text-gray-500 italic">RSVP form will be hidden from guests</p>
+                              )}
                           </div>
                           
                           {formFields.map((field, index) => (

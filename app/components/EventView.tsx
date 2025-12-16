@@ -181,6 +181,7 @@ export default function EventView({ slug }: { slug: string }) {
   const showMessageOnImage = event.design_settings?.showMessageOnImage || false
   const showDateOnImage = event.design_settings?.showDateOnImage || false
   const dateDisplayStyle = event.design_settings?.dateDisplayStyle || 'full'
+  const showRsvpForm = event.design_settings?.showRsvpForm !== undefined ? event.design_settings.showRsvpForm : true
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, {
@@ -457,49 +458,51 @@ export default function EventView({ slug }: { slug: string }) {
       </div>
 
       {/* RSVP FORM AND STATUS AREA */}
-      <div className="max-w-xl w-full px-6 mt-12">
-        {((!currentUserEmail && !isOwner) || isEditing) && (
-          <RsvpForm
-            eventId={event.id}
-            themeColor={themeColor}
-            onLoginSuccess={handleGuestLogin}
-            initialEmail={currentUserEmail}
-          />
-        )}
+      {showRsvpForm && (
+        <div className="max-w-xl w-full px-6 mt-12">
+          {((!currentUserEmail && !isOwner) || isEditing) && (
+            <RsvpForm
+              eventId={event.id}
+              themeColor={themeColor}
+              onLoginSuccess={handleGuestLogin}
+              initialEmail={currentUserEmail}
+            />
+          )}
 
-        {!isEditing && (isOwner || currentUserEmail) && (
-          <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 shadow-sm relative animate-fadeIn">
-            <div className="text-3xl mb-2">🎉</div>
-            <p className="text-green-800 font-bold text-lg">
-              {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
-            </p>
-            <p className="text-green-600 text-sm mt-1 mb-4">{t('public_gallery_hint')}</p>
+          {!isEditing && (isOwner || currentUserEmail) && (
+            <div className="bg-green-50 p-6 rounded-xl text-center border border-green-200 shadow-sm relative animate-fadeIn">
+              <div className="text-3xl mb-2">🎉</div>
+              <p className="text-green-800 font-bold text-lg">
+                {isOwner ? t('owner_view_alert') : t('rsvp_registered_success')}
+              </p>
+              <p className="text-green-600 text-sm mt-1 mb-4">{t('public_gallery_hint')}</p>
 
-            {isOwner && (
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
-                >
-                  <span>📝</span> {t('rsvp_title')} {t('preview_submit_btn')} / {t('preview_rsvp_title')}
-                </button>
-                <p className="text-[10px] text-green-600 mt-2 opacity-70">({t('rsvp_already_registered')})</p>
-              </div>
-            )}
+              {isOwner && (
+                <div className="mt-4 pt-4 border-t border-green-200">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition flex items-center justify-center gap-2 w-full"
+                  >
+                    <span>📝</span> {t('rsvp_title')} {t('preview_submit_btn')} / {t('preview_rsvp_title')}
+                  </button>
+                  <p className="text-[10px] text-green-600 mt-2 opacity-70">({t('rsvp_already_registered')})</p>
+                </div>
+              )}
 
-            {!isOwner && currentUserEmail && (
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
-                >
-                  {t('rsvp.edit_prompt')}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              {!isOwner && currentUserEmail && (
+                <div className="mt-4 pt-4 border-t border-green-200">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-xs font-bold underline text-green-700 hover:text-green-900 cursor-pointer transition"
+                  >
+                    {t('rsvp.edit_prompt')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* PHOTO GALLERY */}
       <div className="max-w-xl w-full px-6 mt-12">
