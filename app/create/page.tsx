@@ -239,12 +239,15 @@ const MapLocationPicker = ({
   locationName, 
   locationUrl, 
   onLocationNameChange, 
-  onLocationUrlChange 
+  onLocationUrlChange ,
+  t
 }: { 
   locationName: string
   locationUrl: string
   onLocationNameChange: (name: string) => void
   onLocationUrlChange: (url: string) => void 
+  t: (key: string) => string 
+  
 }) => {
   const [showMap, setShowMap] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -307,7 +310,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
+          {showMap ? t('map_hide') : t('map_select')}
         </button>
         {locationUrl && (
           <a
@@ -316,7 +319,7 @@ const MapLocationPicker = ({
             rel="noopener noreferrer"
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
           >
-            Google Maps'te Aç ↗
+            {t(' map_open_inGoogle')}
           </a>
         )}
       </div>
@@ -344,8 +347,8 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
-              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
+              <p>💡 <strong>{t('hint')}:</strong> {t(' see_later_search')}</p>
+              <p>📍 {t('pan_and_open')}</p>
             </div>
           </div>
           
@@ -367,12 +370,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
+                <p className="font-semibold mb-1">{t('how_to_select_location')}</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
-                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
-                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
-                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
+                  <li>{t('type_and_search')}</li>
+                  <li>{t('see_location_and_open')}</li>
+                  <li>{t('copy_map_url')}</li>
+                  <li>{t('manuel_paste_url')}</li>
                 </ol>
               </div>
             </div>
@@ -383,7 +386,7 @@ const MapLocationPicker = ({
       {/* Manual URL Input */}
       <div>
         <label className="text-xs font-semibold text-gray-700 mb-1 block">
-          Manuel Google Maps URL (Opsiyonel)
+         {t('manuel_google_maps_url')}
         </label>
         <input 
           type="text" 
@@ -394,7 +397,7 @@ const MapLocationPicker = ({
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
+            ✓ {t('url_saved')}
           </p>
         )}
       </div>
@@ -407,6 +410,7 @@ function CreateEventContent() {
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
   const { t } = useTranslation()
+  
 
   const [session, setSession] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
@@ -998,6 +1002,7 @@ function CreateEventContent() {
                             locationUrl={locationUrl}
                             onLocationNameChange={setLocationName}
                             onLocationUrlChange={setLocationUrl}
+                            t={t}
                           />
                         </div>
                       </div>
@@ -1006,7 +1011,7 @@ function CreateEventContent() {
                   {/* TEXT OVERLAY SETTINGS */}
                   {mainPreview && (
                     <section>
-                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Text Overlay</h3>
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">{t('section_text_overlay')}</h3>
                       
                       <div className="space-y-4">
                         {/* TOGGLE OPTIONS */}
@@ -1018,8 +1023,8 @@ function CreateEventContent() {
                               onChange={(e) => setShowTitleOnImage(e.target.checked)}
                               className="rounded border-gray-300"
                             />
-                            <span className="font-medium">Show Title on Image</span>
-                            <span className="text-xs text-gray-500">(top)</span>
+                            <span className="font-medium">{t('text_overlay_title')}</span>
+                            <span className="text-xs text-gray-500">{t('text_overlay_title_hint')}</span>
                           </label>
                           
                           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
@@ -1029,8 +1034,8 @@ function CreateEventContent() {
                               onChange={(e) => setShowMessageOnImage(e.target.checked)}
                               className="rounded border-gray-300"
                             />
-                            <span className="font-medium">Show Message on Image</span>
-                            <span className="text-xs text-gray-500">(center)</span>
+                            <span className="font-medium">{t('text_overlay_message')}</span>
+                            <span className="text-xs text-gray-500">{t('text_overlay_message_hint')}</span>
                           </label>
                           
                           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
@@ -1040,14 +1045,14 @@ function CreateEventContent() {
                               onChange={(e) => setShowDateOnImage(e.target.checked)}
                               className="rounded border-gray-300"
                             />
-                            <span className="font-medium">Show Date on Image</span>
-                            <span className="text-xs text-gray-500">(bottom)</span>
+                            <span className="font-medium">{t('text_overlay_date')}</span>
+                            <span className="text-xs text-gray-500">{t('text_overlay_date_hint')}</span>
                           </label>
                         </div>
                         
                         {/* DATE STYLE SELECTOR */}
                         <div>
-                          <label className="text-xs font-semibold text-gray-700 mb-2 block">Date Display Style</label>
+                          <label className="text-xs font-semibold text-gray-700 mb-2 block">{t('date_display_style')}</label>
                           <div className="grid grid-cols-2 gap-2">
                             {DATE_DISPLAY_STYLES.map(style => (
                               <button
@@ -1069,7 +1074,7 @@ function CreateEventContent() {
                         
                         {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
                           <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
-                            <span className="font-semibold">💡 Preview:</span> Text will appear on your main image below
+                            <span className="font-semibold">💡 Preview:</span> {t('text_overlay_preview_hint')}
                           </div>
                         )}
                       </div>
@@ -1097,12 +1102,12 @@ function CreateEventContent() {
                   {/* ADDITIONAL DETAILS FIELDS */}
                   <section className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Additional Details</h3>
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('section_additional')}</h3>
                         <button 
                           onClick={addField} 
                           className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium"
                         >
-                          Add Field
+                          {t('add_field_btn')}
                         </button>
                       </div>
                       
@@ -1110,7 +1115,7 @@ function CreateEventContent() {
                           {/* RSVP FORM TOGGLE */}
                           <div className={`p-3 rounded-lg border transition ${showRsvpForm ? 'bg-white border-gray-200' : 'bg-gray-100 border-gray-300 opacity-60'}`}>
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-semibold text-gray-700">RSVP Form (Built-in)</p>
+                                <p className="text-xs font-semibold text-gray-700">{t('rsvp_form_builtin')}</p>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                   <input
                                     type="checkbox"
@@ -1126,11 +1131,11 @@ function CreateEventContent() {
                                     <div>✓ {t('preview_ph_name')}</div>
                                     <div>✓ {t('preview_ph_email')}</div>
                                     <div>✓ {t('preview_ph_status')}</div>
-                                    <div className="text-[10px] text-gray-400 mt-2">Fixed fields always included</div>
+                                    <div className="text-[10px] text-gray-400 mt-2">{t('rsvp_form_fixed_fields')}</div>
                                 </div>
                               )}
                               {!showRsvpForm && (
-                                <p className="text-xs text-gray-500 italic">RSVP form will be hidden from guests</p>
+                                <p className="text-xs text-gray-500 italic">{t('rsvp_form_hidden')}</p>
                               )}
                           </div>
                           
@@ -1198,8 +1203,8 @@ function CreateEventContent() {
                                       />
                                       <p className="text-[10px] text-gray-400 mt-1">
                                         {field.type === 'checkbox' 
-                                          ? "Users can select multiple options" 
-                                          : "Users can select one option"
+                                          ? t('form_field_multiselect_hint')
+                                          : t('form_field_singleselect_hint')
                                         }
                                       </p>
                                     </div>
