@@ -32,24 +32,46 @@ const THEME_COLORS = [
 ]
 
 const FONT_OPTIONS = [
+  // Sans-serif
   { name: 'Inter', value: "'Inter', sans-serif" },
   { name: 'Roboto', value: "'Roboto', sans-serif" },
   { name: 'Open Sans', value: "'Open Sans', sans-serif" },
   { name: 'Lato', value: "'Lato', sans-serif" },
   { name: 'Montserrat', value: "'Montserrat', sans-serif" },
+  { name: 'Poppins', value: "'Poppins', sans-serif" },
+  
+  // Serif
   { name: 'Playfair Display', value: "'Playfair Display', serif" },
   { name: 'Merriweather', value: "'Merriweather', serif" },
   { name: 'Lora', value: "'Lora', serif" },
   { name: 'Crimson Text', value: "'Crimson Text', serif" },
+  { name: 'Cormorant', value: "'Cormorant', serif" },
+  
+  // Handwriting & Cursive
   { name: 'Dancing Script', value: "'Dancing Script', cursive" },
   { name: 'Great Vibes', value: "'Great Vibes', cursive" },
   { name: 'Pacifico', value: "'Pacifico', cursive" },
+  { name: 'Caveat', value: "'Caveat', cursive" },
+  { name: 'Sacramento', value: "'Sacramento', cursive" },
+  { name: 'Allura', value: "'Allura', cursive" },
+  { name: 'Satisfy', value: "'Satisfy', cursive" },
+  { name: 'Cookie', value: "'Cookie', cursive" },
+  { name: 'Courgette', value: "'Courgette', cursive" },
+  { name: 'Alex Brush', value: "'Alex Brush', cursive" },
+  { name: 'Tangerine', value: "'Tangerine', cursive" },
+  { name: 'Pinyon Script', value: "'Pinyon Script', cursive" },
+  { name: 'Kaushan Script', value: "'Kaushan Script', cursive" },
+  { name: 'Parisienne', value: "'Parisienne', cursive" },
+  { name: 'Rouge Script', value: "'Rouge Script', cursive" },
+  
+  // Display
   { name: 'Lobster', value: "'Lobster', display" },
   { name: 'Bebas Neue', value: "'Bebas Neue', display" },
-  { name: 'Caveat', value: "'Caveat', cursive" },
+  { name: 'Righteous', value: "'Righteous', display" },
+  { name: 'Permanent Marker', value: "'Permanent Marker', display" },
 ]
 
-const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=Bebas+Neue&family=Caveat:wght@400;700&display=swap"
+const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;700&family=Lobster&family=Merriweather:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Lora:wght@400;700&family=Crimson+Text:wght@400;700&family=Bebas+Neue&family=Caveat:wght@400;700&family=Poppins:wght@400;700&family=Cormorant:wght@400;700&family=Sacramento&family=Allura&family=Satisfy&family=Cookie&family=Courgette&family=Alex+Brush&family=Tangerine:wght@400;700&family=Pinyon+Script&family=Kaushan+Script&family=Parisienne&family=Rouge+Script&family=Righteous&family=Permanent+Marker&display=swap"
 
 const TITLE_SIZES = [
   { label: 'XXS', value: 0.75 },
@@ -1369,9 +1391,10 @@ function CreateEventContent() {
                                       {showTitleOnImage && (
                                         <div className="text-center">
                                           <h1 
-                                            className="font-bold drop-shadow-2xl text-xl sm:text-2xl md:text-3xl" 
+                                            className="font-bold drop-shadow-2xl" 
                                             style={{ 
                                               fontFamily: titleFont, 
+                                              fontSize: `${titleSize * 0.8}rem`,
                                               textShadow: '0 4px 8px rgba(0,0,0,0.8)'
                                             }}
                                           >
@@ -1384,9 +1407,10 @@ function CreateEventContent() {
                                       {showMessageOnImage && (
                                         <div className="flex-1 flex items-center justify-center py-2">
                                           <p 
-                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs text-sm sm:text-base" 
+                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs" 
                                             style={{ 
                                               fontFamily: messageFont, 
+                                              fontSize: `${messageSize * 0.9}rem`,
                                               textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                                             }}
                                           >
