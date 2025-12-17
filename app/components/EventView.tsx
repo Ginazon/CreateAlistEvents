@@ -28,15 +28,16 @@ const extractMapCoordinates = (url: string): { lat: number, lng: number } | null
   }
 }
 
-const DATE_DISPLAY_STYLES = [
+const getDateDisplayStyles = (language: string) => [
   { 
     id: 'full', 
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase(),
-        line2: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
-        line3: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+        line1: d.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase(),
+        line2: `${d.getDate()} ${d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}`,
+        line3: d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }).toUpperCase()
       }
     }
   },
@@ -44,9 +45,10 @@ const DATE_DISPLAY_STYLES = [
     id: 'short', 
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}`,
-        line2: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+        line1: `${d.getDate()} ${d.toLocaleDateString(locale, { month: 'short', year: 'numeric' }).toUpperCase()}`,
+        line2: d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }).toUpperCase()
       }
     }
   },
@@ -54,11 +56,12 @@ const DATE_DISPLAY_STYLES = [
     id: 'elegant', 
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       const day = d.getDate()
-      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th'
+      const suffix = language === 'en' ? (day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th') : ''
       return {
-        line1: `${day}${suffix} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
-        line2: `at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+        line1: `${day}${suffix} ${d.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}`,
+        line2: `${language === 'tr' ? 'saat' : language === 'de' ? 'um' : 'at'} ${d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}`
       }
     }
   },
@@ -66,8 +69,9 @@ const DATE_DISPLAY_STYLES = [
     id: 'minimal', 
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: `${d.toLocaleDateString('en-US', { month: 'long' })} ${d.getDate()}`,
+        line1: `${d.toLocaleDateString(locale, { month: 'long' })} ${d.getDate()}`,
         line2: d.getFullYear().toString()
       }
     }
@@ -287,7 +291,7 @@ export default function EventView({ slug }: { slug: string }) {
                   {showDateOnImage && event.event_date && (
                     <div className="text-center">
                       {(() => {
-                        const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+                        const style = getDateDisplayStyles(language).find(s => s.id === dateDisplayStyle)
                         if (!style) return null
                         const formatted = style.format(event.event_date)
                         return (
