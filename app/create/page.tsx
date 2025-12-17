@@ -95,17 +95,18 @@ const MESSAGE_SIZES = [
   { label: '3XL', value: 2.5 },
 ]
 
-const DATE_DISPLAY_STYLES = [
+const getDateDisplayStyles = (language: string) => [
   { 
     id: 'full', 
     name: 'Full', 
     preview: 'Friday\n15 August 2025\nAT 4:30 PM',
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase(),
-        line2: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`,
-        line3: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+        line1: d.toLocaleDateString(locale, { weekday: 'long' }).toUpperCase(),
+        line2: `${d.getDate()} ${d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}`,
+        line3: d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }).toUpperCase()
       }
     }
   },
@@ -115,23 +116,26 @@ const DATE_DISPLAY_STYLES = [
     preview: '15 AUG 2025\n4:30 PM',
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()}`,
-        line2: d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toUpperCase()
+        line1: `${d.getDate()} ${d.toLocaleDateString(locale, { month: 'short', year: 'numeric' }).toUpperCase()}`,
+        line2: d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' }).toUpperCase()
       }
     }
   },
   { 
     id: 'elegant', 
     name: 'Elegant', 
-    preview: '19th & 20th Feb 2024\nat 11:00 Am Onwards',
+    preview: '19th Feb 2024\nat 11:00 AM',
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       const day = d.getDate()
-      const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th'
+      // Suffix sadece İngilizce için
+      const suffix = language === 'en' ? (day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th') : ''
       return {
-        line1: `${day}${suffix} ${d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`,
-        line2: `at ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+        line1: `${day}${suffix} ${d.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}`,
+        line2: `${language === 'tr' ? 'saat' : language === 'de' ? 'um' : 'at'} ${d.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' })}`
       }
     }
   },
@@ -141,8 +145,9 @@ const DATE_DISPLAY_STYLES = [
     preview: 'August 15\n2025',
     format: (date: string): { line1: string; line2: string; line3?: string } => {
       const d = new Date(date)
+      const locale = language === 'tr' ? 'tr-TR' : language === 'de' ? 'de-DE' : 'en-US'
       return {
-        line1: `${d.toLocaleDateString('en-US', { month: 'long' })} ${d.getDate()}`,
+        line1: `${d.toLocaleDateString(locale, { month: 'long' })} ${d.getDate()}`,
         line2: d.getFullYear().toString()
       }
     }
@@ -239,15 +244,12 @@ const MapLocationPicker = ({
   locationName, 
   locationUrl, 
   onLocationNameChange, 
-  onLocationUrlChange ,
-  t
+  onLocationUrlChange 
 }: { 
   locationName: string
   locationUrl: string
   onLocationNameChange: (name: string) => void
   onLocationUrlChange: (url: string) => void 
-  t: (key: string) => string 
-  
 }) => {
   const [showMap, setShowMap] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -310,7 +312,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? t('map_hide') : t('map_select')}
+          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
         </button>
         {locationUrl && (
           <a
@@ -319,7 +321,7 @@ const MapLocationPicker = ({
             rel="noopener noreferrer"
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
           >
-            {t(' map_open_inGoogle')}
+            Google Maps'te Aç ↗
           </a>
         )}
       </div>
@@ -347,8 +349,8 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>{t('hint')}:</strong> {t(' see_later_search')}</p>
-              <p>📍 {t('pan_and_open')}</p>
+              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
+              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
             </div>
           </div>
           
@@ -370,12 +372,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">{t('how_to_select_location')}</p>
+                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>{t('type_and_search')}</li>
-                  <li>{t('see_location_and_open')}</li>
-                  <li>{t('copy_map_url')}</li>
-                  <li>{t('manuel_paste_url')}</li>
+                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
+                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
+                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
+                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
                 </ol>
               </div>
             </div>
@@ -386,7 +388,7 @@ const MapLocationPicker = ({
       {/* Manual URL Input */}
       <div>
         <label className="text-xs font-semibold text-gray-700 mb-1 block">
-         {t('manuel_google_maps_url')}
+          Manuel Google Maps URL (Opsiyonel)
         </label>
         <input 
           type="text" 
@@ -397,7 +399,7 @@ const MapLocationPicker = ({
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ {t('url_saved')}
+            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
           </p>
         )}
       </div>
@@ -409,8 +411,7 @@ function CreateEventContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
-  const { t } = useTranslation()
-  
+  const { t, language } = useTranslation()
 
   const [session, setSession] = useState<any>(null)
   const [credits, setCredits] = useState<number | null>(null)
@@ -1002,7 +1003,6 @@ function CreateEventContent() {
                             locationUrl={locationUrl}
                             onLocationNameChange={setLocationName}
                             onLocationUrlChange={setLocationUrl}
-                            t={t}
                           />
                         </div>
                       </div>
@@ -1054,7 +1054,7 @@ function CreateEventContent() {
                         <div>
                           <label className="text-xs font-semibold text-gray-700 mb-2 block">{t('date_display_style')}</label>
                           <div className="grid grid-cols-2 gap-2">
-                            {DATE_DISPLAY_STYLES.map(style => (
+                            {getDateDisplayStyles(language).map(style => (
                               <button
                                 key={style.id}
                                 type="button"
@@ -1452,7 +1452,7 @@ function CreateEventContent() {
                                       {showDateOnImage && eventDate && (
                                         <div className="text-center">
                                           {(() => {
-                                            const style = DATE_DISPLAY_STYLES.find(s => s.id === dateDisplayStyle)
+                                            const style = getDateDisplayStyles(language).find(s => s.id === dateDisplayStyle)
                                             const formatted = style?.format(eventDate)
                                             if (!formatted) return null
                                             return (
