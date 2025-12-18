@@ -1493,12 +1493,11 @@ function CreateEventContent() {
                                       {showTitleOnImage && (
                                         <div className="text-center">
                                           <h1 
-                                            className="font-bold drop-shadow-2xl" 
+                                            className="font-bold" 
                                             style={{ 
                                               fontFamily: titleFont, 
                                               fontSize: `${titleSize * 0.8}rem`,
-                                              color: overlayTitleColor,
-                                              textShadow: '0 4px 8px rgba(0,0,0,0.8)'
+                                              color: overlayTitleColor
                                             }}
                                           >
                                             {title || 'Your Title'}
@@ -1510,12 +1509,11 @@ function CreateEventContent() {
                                       {showMessageOnImage && (
                                         <div className="flex-1 flex items-center justify-center py-2">
                                           <p 
-                                            className="text-center whitespace-pre-line drop-shadow-lg max-w-xs" 
+                                            className="text-center whitespace-pre-line max-w-xs" 
                                             style={{ 
                                               fontFamily: messageFont, 
                                               fontSize: `${messageSize * 0.9}rem`,
-                                              color: overlayMessageColor,
-                                              textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                              color: overlayMessageColor
                                             }}
                                           >
                                             {message || 'Your message here...'}
@@ -1535,17 +1533,17 @@ function CreateEventContent() {
                                             if (!formatted) return null
                                             return (
                                               <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-xs sm:text-sm font-bold drop-shadow-lg" 
-                                                   style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                <p className="text-xs sm:text-sm font-bold" 
+                                                   style={{ color: overlayDateColor }}>
                                                   {formatted.line1}
                                                 </p>
-                                                <p className="text-base sm:text-lg font-bold drop-shadow-lg" 
-                                                   style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                <p className="text-base sm:text-lg font-bold" 
+                                                   style={{ color: overlayDateColor }}>
                                                   {formatted.line2}
                                                 </p>
                                                 {formatted.line3 && (
-                                                  <p className="text-[10px] sm:text-xs font-semibold drop-shadow-lg opacity-90" 
-                                                     style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                  <p className="text-[10px] sm:text-xs font-semibold opacity-90" 
+                                                     style={{ color: overlayDateColor }}>
                                                     {formatted.line3}
                                                   </p>
                                                 )}
