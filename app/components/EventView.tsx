@@ -187,7 +187,7 @@ export default function EventView({ slug }: { slug: string }) {
   const dateDisplayStyle = event.design_settings?.dateDisplayStyle || 'full'
   const showRsvpForm = event.design_settings?.showRsvpForm !== undefined ? event.design_settings.showRsvpForm : true
   
-  // Overlay text colors
+  // Overlay text colors eklendi
   const overlayTitleColor = event.design_settings?.overlayTitleColor || '#FFFFFF'
   const overlayMessageColor = event.design_settings?.overlayMessageColor || '#FFFFFF'
   const overlayDateColor = event.design_settings?.overlayDateColor || '#FFFFFF'
