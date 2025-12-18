@@ -186,6 +186,11 @@ export default function EventView({ slug }: { slug: string }) {
   const showDateOnImage = event.design_settings?.showDateOnImage || false
   const dateDisplayStyle = event.design_settings?.dateDisplayStyle || 'full'
   const showRsvpForm = event.design_settings?.showRsvpForm !== undefined ? event.design_settings.showRsvpForm : true
+  
+  // Overlay text colors
+  const overlayTitleColor = event.design_settings?.overlayTitleColor || '#FFFFFF'
+  const overlayMessageColor = event.design_settings?.overlayMessageColor || '#FFFFFF'
+  const overlayDateColor = event.design_settings?.overlayDateColor || '#FFFFFF'
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, {
@@ -260,6 +265,7 @@ export default function EventView({ slug }: { slug: string }) {
                         style={{ 
                           fontFamily: titleFont, 
                           fontSize: `${titleSize * 0.8}rem`,
+                          color: overlayTitleColor,
                           textShadow: '0 4px 8px rgba(0,0,0,0.8)'
                         }}
                       >
@@ -276,6 +282,7 @@ export default function EventView({ slug }: { slug: string }) {
                         style={{ 
                           fontFamily: messageFont, 
                           fontSize: `${messageSize * 0.9}rem`,
+                          color: overlayMessageColor,
                           textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                         }}
                       >
@@ -297,16 +304,16 @@ export default function EventView({ slug }: { slug: string }) {
                         return (
                           <div className="space-y-0.5 sm:space-y-1">
                             <p className="text-xs sm:text-base font-bold drop-shadow-lg" 
-                               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                               style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                               {formatted.line1}
                             </p>
                             <p className="text-base sm:text-xl font-bold drop-shadow-lg" 
-                               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                               style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                               {formatted.line2}
                             </p>
                             {formatted.line3 && (
                               <p className="text-[10px] sm:text-sm font-semibold drop-shadow-lg opacity-90" 
-                                 style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                 style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                 {formatted.line3}
                               </p>
                             )}

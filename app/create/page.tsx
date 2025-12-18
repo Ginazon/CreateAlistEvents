@@ -447,6 +447,11 @@ function CreateEventContent() {
   const [showDateOnImage, setShowDateOnImage] = useState(false)
   const [dateDisplayStyle, setDateDisplayStyle] = useState('full') // 'full', 'short', 'elegant', 'minimal'
   const [showRsvpForm, setShowRsvpForm] = useState(true) // RSVP form visibility
+  
+  // Overlay text colors
+  const [overlayTitleColor, setOverlayTitleColor] = useState('#FFFFFF')
+  const [overlayMessageColor, setOverlayMessageColor] = useState('#FFFFFF')
+  const [overlayDateColor, setOverlayDateColor] = useState('#FFFFFF')
 
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'checkbox' | 'emoji'; options?: string; required: boolean; emoji?: string; }
   const [formFields, setFormFields] = useState<FormField[]>([])
@@ -552,6 +557,9 @@ function CreateEventContent() {
               setShowDateOnImage(data.design_settings.showDateOnImage || false)
               setDateDisplayStyle(data.design_settings.dateDisplayStyle || 'full')
               setShowRsvpForm(data.design_settings.showRsvpForm !== undefined ? data.design_settings.showRsvpForm : true)
+              setOverlayTitleColor(data.design_settings.overlayTitleColor || '#FFFFFF')
+              setOverlayMessageColor(data.design_settings.overlayMessageColor || '#FFFFFF')
+              setOverlayDateColor(data.design_settings.overlayDateColor || '#FFFFFF')
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
           if(data.event_details) setDetailBlocks(data.event_details)
@@ -636,7 +644,10 @@ function CreateEventContent() {
               showMessageOnImage,
               showDateOnImage,
               dateDisplayStyle,
-              showRsvpForm
+              showRsvpForm,
+              overlayTitleColor,
+              overlayMessageColor,
+              overlayDateColor
             },
             custom_form_schema: formFields,
             event_details: detailBlocks
@@ -841,40 +852,82 @@ function CreateEventContent() {
                             <div className="mt-4 bg-white border border-indigo-200 rounded-lg p-4">
                               <p className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-3">📝 Text Overlay Options</p>
                               
-                              {/* Checkboxes */}
-                              <div className="space-y-2 mb-3">
-                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                                  <input
-                                    type="checkbox"
-                                    checked={showTitleOnImage}
-                                    onChange={(e) => setShowTitleOnImage(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                  />
-                                  <span className="font-medium">{t('text_overlay_title')}</span>
-                                  <span className="text-xs text-gray-500">{t('text_overlay_title_hint')}</span>
-                                </label>
+                              {/* Checkboxes with Color Pickers */}
+                              <div className="space-y-3 mb-3">
+                                {/* Title */}
+                                <div className="flex items-center justify-between gap-2">
+                                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                    <input
+                                      type="checkbox"
+                                      checked={showTitleOnImage}
+                                      onChange={(e) => setShowTitleOnImage(e.target.checked)}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <span className="font-medium">{t('text_overlay_title')}</span>
+                                    <span className="text-xs text-gray-500">{t('text_overlay_title_hint')}</span>
+                                  </label>
+                                  {showTitleOnImage && (
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="color"
+                                        value={overlayTitleColor}
+                                        onChange={(e) => setOverlayTitleColor(e.target.value)}
+                                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                                      />
+                                      <span className="text-xs text-gray-500">🎨</span>
+                                    </div>
+                                  )}
+                                </div>
                                 
-                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                                  <input
-                                    type="checkbox"
-                                    checked={showMessageOnImage}
-                                    onChange={(e) => setShowMessageOnImage(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                  />
-                                  <span className="font-medium">{t('text_overlay_message')}</span>
-                                  <span className="text-xs text-gray-500">{t('text_overlay_message_hint')}</span>
-                                </label>
+                                {/* Message */}
+                                <div className="flex items-center justify-between gap-2">
+                                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                    <input
+                                      type="checkbox"
+                                      checked={showMessageOnImage}
+                                      onChange={(e) => setShowMessageOnImage(e.target.checked)}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <span className="font-medium">{t('text_overlay_message')}</span>
+                                    <span className="text-xs text-gray-500">{t('text_overlay_message_hint')}</span>
+                                  </label>
+                                  {showMessageOnImage && (
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="color"
+                                        value={overlayMessageColor}
+                                        onChange={(e) => setOverlayMessageColor(e.target.value)}
+                                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                                      />
+                                      <span className="text-xs text-gray-500">🎨</span>
+                                    </div>
+                                  )}
+                                </div>
                                 
-                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                                  <input
-                                    type="checkbox"
-                                    checked={showDateOnImage}
-                                    onChange={(e) => setShowDateOnImage(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                  />
-                                  <span className="font-medium">{t('text_overlay_date')}</span>
-                                  <span className="text-xs text-gray-500">{t('text_overlay_date_hint')}</span>
-                                </label>
+                                {/* Date */}
+                                <div className="flex items-center justify-between gap-2">
+                                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                    <input
+                                      type="checkbox"
+                                      checked={showDateOnImage}
+                                      onChange={(e) => setShowDateOnImage(e.target.checked)}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <span className="font-medium">{t('text_overlay_date')}</span>
+                                    <span className="text-xs text-gray-500">{t('text_overlay_date_hint')}</span>
+                                  </label>
+                                  {showDateOnImage && (
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="color"
+                                        value={overlayDateColor}
+                                        onChange={(e) => setOverlayDateColor(e.target.value)}
+                                        className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                                      />
+                                      <span className="text-xs text-gray-500">🎨</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               
                               {/* Date Style Selector - Only show when date is on image */}
@@ -1423,6 +1476,7 @@ function CreateEventContent() {
                                             style={{ 
                                               fontFamily: titleFont, 
                                               fontSize: `${titleSize * 0.8}rem`,
+                                              color: overlayTitleColor,
                                               textShadow: '0 4px 8px rgba(0,0,0,0.8)'
                                             }}
                                           >
@@ -1439,6 +1493,7 @@ function CreateEventContent() {
                                             style={{ 
                                               fontFamily: messageFont, 
                                               fontSize: `${messageSize * 0.9}rem`,
+                                              color: overlayMessageColor,
                                               textShadow: '0 2px 4px rgba(0,0,0,0.8)'
                                             }}
                                           >
@@ -1459,14 +1514,17 @@ function CreateEventContent() {
                                             if (!formatted) return null
                                             return (
                                               <div className="space-y-0.5 sm:space-y-1">
-                                                <p className="text-xs sm:text-sm font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                <p className="text-xs sm:text-sm font-bold drop-shadow-lg" 
+                                                   style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                   {formatted.line1}
                                                 </p>
-                                                <p className="text-base sm:text-lg font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                <p className="text-base sm:text-lg font-bold drop-shadow-lg" 
+                                                   style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                   {formatted.line2}
                                                 </p>
                                                 {formatted.line3 && (
-                                                  <p className="text-[10px] sm:text-xs font-semibold drop-shadow-lg opacity-90" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                  <p className="text-[10px] sm:text-xs font-semibold drop-shadow-lg opacity-90" 
+                                                     style={{ color: overlayDateColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                                     {formatted.line3}
                                                   </p>
                                                 )}

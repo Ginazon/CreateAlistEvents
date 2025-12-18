@@ -11,6 +11,9 @@ export interface DesignSettings {
   showDateOnImage?: boolean
   dateDisplayStyle?: string
   showRsvpForm?: boolean
+  overlayTitleColor?: string
+  overlayMessageColor?: string
+  overlayDateColor?: string
 }
 
 export interface DetailBlock {
