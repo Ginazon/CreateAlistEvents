@@ -811,7 +811,7 @@ function CreateEventContent() {
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {coverPreview ? 'Değiştir' : t('file_btn_cover')}
+                                    {coverPreview ? t('btn_change') : t('file_btn_cover')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'cover')} className="hidden" />
                                   </label>
                               </div>
@@ -830,11 +830,85 @@ function CreateEventContent() {
                                       )}
                                   </div>
                                   <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                                    {mainPreview ? 'Change' : t('file_btn_main')}
+                                    {mainPreview ? t('btn_change') : t('file_btn_main')}
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'main')} className="hidden" />
                                   </label>
                               </div>
                           </div>
+                          
+                          {/* OVERLAY SETTINGS - Right after main image */}
+                          {mainPreview && (
+                            <div className="mt-4 bg-white border border-indigo-200 rounded-lg p-4">
+                              <p className="text-xs font-bold text-indigo-900 uppercase tracking-wide mb-3">📝 Text Overlay Options</p>
+                              
+                              {/* Checkboxes */}
+                              <div className="space-y-2 mb-3">
+                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                  <input
+                                    type="checkbox"
+                                    checked={showTitleOnImage}
+                                    onChange={(e) => setShowTitleOnImage(e.target.checked)}
+                                    className="rounded border-gray-300"
+                                  />
+                                  <span className="font-medium">{t('text_overlay_title')}</span>
+                                  <span className="text-xs text-gray-500">{t('text_overlay_title_hint')}</span>
+                                </label>
+                                
+                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                  <input
+                                    type="checkbox"
+                                    checked={showMessageOnImage}
+                                    onChange={(e) => setShowMessageOnImage(e.target.checked)}
+                                    className="rounded border-gray-300"
+                                  />
+                                  <span className="font-medium">{t('text_overlay_message')}</span>
+                                  <span className="text-xs text-gray-500">{t('text_overlay_message_hint')}</span>
+                                </label>
+                                
+                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                                  <input
+                                    type="checkbox"
+                                    checked={showDateOnImage}
+                                    onChange={(e) => setShowDateOnImage(e.target.checked)}
+                                    className="rounded border-gray-300"
+                                  />
+                                  <span className="font-medium">{t('text_overlay_date')}</span>
+                                  <span className="text-xs text-gray-500">{t('text_overlay_date_hint')}</span>
+                                </label>
+                              </div>
+                              
+                              {/* Date Style Selector - Only show when date is on image */}
+                              {showDateOnImage && (
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-2 block">{t('date_display_style')}</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {getDateDisplayStyles(language).map(style => (
+                                      <button
+                                        key={style.id}
+                                        type="button"
+                                        onClick={() => setDateDisplayStyle(style.id)}
+                                        className={`p-2 rounded-lg border-2 text-left transition ${
+                                          dateDisplayStyle === style.id
+                                            ? 'border-indigo-600 bg-indigo-50'
+                                            : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                      >
+                                        <p className="font-bold text-gray-900 text-xs">{style.name}</p>
+                                        <p className="text-[9px] text-gray-500 mt-0.5 whitespace-pre-line leading-tight">{style.preview}</p>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Preview hint */}
+                              {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                                <div className="mt-3 p-2 bg-indigo-50 border border-indigo-200 rounded text-xs text-indigo-800">
+                                  <span className="font-semibold">💡</span> {t('text_overlay_preview_hint')}
+                                </div>
+                              )}
+                            </div>
+                          )}
                       </div>
                   </section>
 
@@ -1008,78 +1082,6 @@ function CreateEventContent() {
                       </div>
                   </section>
 
-                  {/* TEXT OVERLAY SETTINGS */}
-                  {mainPreview && (
-                    <section>
-                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">{t('section_text_overlay')}</h3>
-                      
-                      <div className="space-y-4">
-                        {/* TOGGLE OPTIONS */}
-                        <div className="space-y-2">
-                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                            <input
-                              type="checkbox"
-                              checked={showTitleOnImage}
-                              onChange={(e) => setShowTitleOnImage(e.target.checked)}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="font-medium">{t('text_overlay_title')}</span>
-                            <span className="text-xs text-gray-500">{t('text_overlay_title_hint')}</span>
-                          </label>
-                          
-                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                            <input
-                              type="checkbox"
-                              checked={showMessageOnImage}
-                              onChange={(e) => setShowMessageOnImage(e.target.checked)}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="font-medium">{t('text_overlay_message')}</span>
-                            <span className="text-xs text-gray-500">{t('text_overlay_message_hint')}</span>
-                          </label>
-                          
-                          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-gray-900">
-                            <input
-                              type="checkbox"
-                              checked={showDateOnImage}
-                              onChange={(e) => setShowDateOnImage(e.target.checked)}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="font-medium">{t('text_overlay_date')}</span>
-                            <span className="text-xs text-gray-500">{t('text_overlay_date_hint')}</span>
-                          </label>
-                        </div>
-                        
-                        {/* DATE STYLE SELECTOR */}
-                        <div>
-                          <label className="text-xs font-semibold text-gray-700 mb-2 block">{t('date_display_style')}</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {getDateDisplayStyles(language).map(style => (
-                              <button
-                                key={style.id}
-                                type="button"
-                                onClick={() => setDateDisplayStyle(style.id)}
-                                className={`p-3 rounded-lg border-2 text-left transition ${
-                                  dateDisplayStyle === style.id
-                                    ? 'border-indigo-600 bg-indigo-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                              >
-                                <p className="font-bold text-gray-900 text-sm">{style.name}</p>
-                                <p className="text-[10px] text-gray-500 mt-1 whitespace-pre-line leading-tight">{style.preview}</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        
-                        {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
-                          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg text-sm text-indigo-800">
-                            <span className="font-semibold">💡 Preview:</span> {t('text_overlay_preview_hint')}
-                          </div>
-                        )}
-                      </div>
-                    </section>
-                  )}
 
                   {/* THEME COLOR */}
                   <section>
