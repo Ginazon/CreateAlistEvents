@@ -452,6 +452,7 @@ function CreateEventContent() {
   const [overlayTitleColor, setOverlayTitleColor] = useState('#FFFFFF')
   const [overlayMessageColor, setOverlayMessageColor] = useState('#FFFFFF')
   const [overlayDateColor, setOverlayDateColor] = useState('#FFFFFF')
+  const [showOverlayGradient, setShowOverlayGradient] = useState(true) // Gradient background toggle
 
   interface FormField { id: string; label: string; type: 'text' | 'textarea' | 'select' | 'checkbox' | 'emoji'; options?: string; required: boolean; emoji?: string; }
   const [formFields, setFormFields] = useState<FormField[]>([])
@@ -560,6 +561,7 @@ function CreateEventContent() {
               setOverlayTitleColor(data.design_settings.overlayTitleColor || '#FFFFFF')
               setOverlayMessageColor(data.design_settings.overlayMessageColor || '#FFFFFF')
               setOverlayDateColor(data.design_settings.overlayDateColor || '#FFFFFF')
+              setShowOverlayGradient(data.design_settings.showOverlayGradient !== undefined ? data.design_settings.showOverlayGradient : true)
           }
           if(data.custom_form_schema) setFormFields(data.custom_form_schema)
           if(data.event_details) setDetailBlocks(data.event_details)
@@ -647,7 +649,8 @@ function CreateEventContent() {
               showRsvpForm,
               overlayTitleColor,
               overlayMessageColor,
-              overlayDateColor
+              overlayDateColor,
+              showOverlayGradient
             },
             custom_form_schema: formFields,
             event_details: detailBlocks
@@ -951,6 +954,24 @@ function CreateEventContent() {
                                       </button>
                                     ))}
                                   </div>
+                                </div>
+                              )}
+                              
+                              {/* Gradient Background Toggle */}
+                              {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <label className="flex items-center justify-between gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">Dark Gradient Background</span>
+                                      <span className="text-xs text-gray-500">(helps text readability)</span>
+                                    </div>
+                                    <input
+                                      type="checkbox"
+                                      checked={showOverlayGradient}
+                                      onChange={(e) => setShowOverlayGradient(e.target.checked)}
+                                      className="w-4 h-4 rounded border-gray-300"
+                                    />
+                                  </label>
                                 </div>
                               )}
                               
@@ -1466,7 +1487,7 @@ function CreateEventContent() {
                                   
                                   {/* TEXT OVERLAY */}
                                   {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-3 sm:p-6 text-white">
+                                    <div className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-6 ${showOverlayGradient ? 'bg-gradient-to-b from-black/30 via-black/20 to-black/40' : ''}`}>
                                       
                                       {/* TOP - TITLE */}
                                       {showTitleOnImage && (

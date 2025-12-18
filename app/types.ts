@@ -14,6 +14,7 @@ export interface DesignSettings {
   overlayTitleColor?: string
   overlayMessageColor?: string
   overlayDateColor?: string
+  showOverlayGradient?: boolean
 }
 
 export interface DetailBlock {

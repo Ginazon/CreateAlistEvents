@@ -187,10 +187,11 @@ export default function EventView({ slug }: { slug: string }) {
   const dateDisplayStyle = event.design_settings?.dateDisplayStyle || 'full'
   const showRsvpForm = event.design_settings?.showRsvpForm !== undefined ? event.design_settings.showRsvpForm : true
   
-  // Overlay text colors eklendi
+  // Overlay text colors
   const overlayTitleColor = event.design_settings?.overlayTitleColor || '#FFFFFF'
   const overlayMessageColor = event.design_settings?.overlayMessageColor || '#FFFFFF'
   const overlayDateColor = event.design_settings?.overlayDateColor || '#FFFFFF'
+  const showOverlayGradient = event.design_settings?.showOverlayGradient !== undefined ? event.design_settings.showOverlayGradient : true
 
   const formattedDate = event.event_date
     ? new Date(event.event_date).toLocaleString(language === 'tr' ? 'tr-TR' : language, {
@@ -255,7 +256,7 @@ export default function EventView({ slug }: { slug: string }) {
               
               {/* TEXT OVERLAY */}
               {(showTitleOnImage || showMessageOnImage || showDateOnImage) && (
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 flex flex-col justify-between p-3 sm:p-8 text-white">
+                <div className={`absolute inset-0 flex flex-col justify-between p-3 sm:p-8 ${showOverlayGradient ? 'bg-gradient-to-b from-black/30 via-black/20 to-black/40' : ''}`}>
                   
                   {/* TOP - TITLE */}
                   {showTitleOnImage && (
