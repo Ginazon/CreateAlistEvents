@@ -277,6 +277,8 @@ export const dictionary = {
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
     list_empty: 'Listeniz boş. Yeni davetli ekleyerek başlayın.',
+    gallery_empty:'Galeri Boş',
+    gallery_empty_hint:'İlk yükleyen sen Ol',
 
     // Common & Footer
     "common.loading_suspense": "Yükleniyor...",
@@ -285,8 +287,18 @@ export const dictionary = {
     "footer.admin": "Yönetici",
     "footer.copyright_text": "© 2025 CreateAlist. Tüm hakları saklıdır.",
     "footer.link_terms": "Kullanım Şartları",
-    "footer.link_privacy": "Gizlilik ve KVKK"
+    "footer.link_privacy": "Gizlilik ve KVKK",
+    // EventView Sayfası İçin Eklenenler
+    "common_error": "Bir hata oluştu",
+    "public_hide_map": "Haritayı Gizle",
+    "public_show_map": "Haritayı Göster",
+    "date_at_prefix": "saat",
+    "alt_cover_photo": "Kapak Görseli",
+    "alt_main_photo": "Ana Davetiye Görseli",
+    "alt_note_photo": "Not Görseli",
+    
   },
+  
 
   // 🇺🇸 İNGİLİZCE
   en: {
@@ -546,6 +558,8 @@ export const dictionary = {
     btn_send_sms: 'SMS',
     btn_send_email: 'Mail',
     list_empty: 'Your list is empty. Start by adding a new guest.',
+    gallery_empty:'Gallery is Empty',
+    gallery_empty_hint:'Be First',
     "common.loading_suspense": "Loading...",
     "footer.terms": "Terms of Use",
     "footer.privacy": "Privacy",

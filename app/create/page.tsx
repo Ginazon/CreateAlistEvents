@@ -312,7 +312,7 @@ const MapLocationPicker = ({
           onClick={() => setShowMap(!showMap)}
           className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
         >
-          {showMap ? '🗺️ Haritayı Gizle' : '📍 Haritadan Seç'}
+          {showMap ? 'Show Map' : '📍 Hide Map'}
         </button>
         {locationUrl && (
           <a
@@ -349,8 +349,8 @@ const MapLocationPicker = ({
             </div>
             
             <div className="text-xs text-gray-600 space-y-1">
-              <p>💡 <strong>İpucu:</strong> Arama yaptıktan sonra haritada konumu görebilirsiniz</p>
-              <p>📍 Haritayı kaydırarak istediğiniz yeri bulun ve Google Maps'te açın</p>
+              <p>💡 <strong>Tip:</strong> After searching, you can view the location on the map.</p>
+              <p>📍 Drag the map to find the location you want and open it in Google Maps.</p>
             </div>
           </div>
           
@@ -372,12 +372,12 @@ const MapLocationPicker = ({
             <div className="flex items-start gap-2">
               <span className="text-xl">ℹ️</span>
               <div className="flex-1 text-xs text-gray-600">
-                <p className="font-semibold mb-1">Konum Nasıl Seçilir?</p>
+                <p className="font-semibold mb-1">How to Choose a Location?</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Yukarıdaki arama kutusuna adres yazın ve "Ara" butonuna tıklayın</li>
-                  <li>Harita istediğiniz konumu gösterdiğinde "Google Maps'te Aç" butonuna tıklayın</li>
-                  <li>Açılan sayfadan URL'yi kopyalayıp aşağıdaki alana yapıştırın</li>
-                  <li>Veya manuel olarak Google Maps URL'si girebilirsiniz</li>
+                  <li>Enter an address in the search box above and click the “Search” button.</li>
+                  <li>When the map shows your desired location, click the “Open in Google Maps” button.</li>
+                  <li>Copy the URL from the opened page and paste it into the field below.</li>
+                  <li>Or you can manually enter a Google Maps URL.</li>
                 </ol>
               </div>
             </div>
@@ -399,7 +399,7 @@ const MapLocationPicker = ({
         />
         {locationUrl && (
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-            ✓ URL kaydedildi - Misafirler haritaya yönlendirilecek
+            ✓URL saved — guests will be directed to the map.
           </p>
         )}
       </div>
