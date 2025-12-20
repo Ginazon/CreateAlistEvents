@@ -566,7 +566,9 @@ export const dictionary = {
     "footer.admin": "Admin",
     "footer.copyright_text": "© 2025 CreateAlist. All rights reserved.",
     "footer.link_terms": "Terms of Use",
-    "footer.link_privacy": "Privacy Policy"
+    "footer.link_privacy": "Privacy Policy",
+    public_hide_map:'Hide Map',
+    public_show_map:'Show Map',
   },
 
   // Diğer diller için de aynı eksik anahtarları ekleyeceğim...

@@ -201,7 +201,7 @@ export default function EventView({ slug }: { slug: string }) {
     : '...'
 
   const detailBlocks = (event.event_details || []) as DetailBlock[]
-  const canAccessGallery = currentUserEmail || isOwner
+  const canAccessGallery = true // Memory Wall is now public for everyone
   const mapCoords = event.location_url ? extractMapCoordinates(event.location_url) : null
 
   return (
@@ -363,7 +363,7 @@ export default function EventView({ slug }: { slug: string }) {
                     onClick={() => setShowMap(!showMap)}
                     className="inline-block px-6 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition mr-2"
                   >
-                    {showMap ? 'Hide Map' : '📍 Show Map'}
+                    {showMap ? t('public_hide_map') : t('public_show_map')}
                   </button>
                   
                   <a
@@ -520,7 +520,7 @@ export default function EventView({ slug }: { slug: string }) {
           {t('public_memory_wall')}
         </h2>
         {canAccessGallery ? (
-          <PhotoGallery eventId={event.id} currentUserEmail={isOwner ? 'owner' : currentUserEmail!} themeColor={themeColor} />
+          <PhotoGallery eventId={event.id} currentUserEmail={isOwner ? 'Host' : (currentUserEmail || 'Guest')} themeColor={themeColor} />
         ) : (
           <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-300">
             <div className="text-5xl mb-4 opacity-50">🔒</div>
